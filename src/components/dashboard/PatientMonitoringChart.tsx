@@ -62,9 +62,9 @@ export const PatientMonitoringChart: React.FC = () => {
   };
 
   return (
-    <div className="bg-[rgba(26,27,32,1)] rounded-lg p-6 mt-6">
+    <div className="w-full max-w-full overflow-hidden mt-6">
       {/* Header with selector boxes */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-4 px-2">
         <h3 className="text-white text-xl font-medium">Patient Monitoring</h3>
         
         <div className="flex items-center gap-4 flex-wrap">
@@ -111,7 +111,7 @@ export const PatientMonitoringChart: React.FC = () => {
       </div>
 
       {/* Chart */}
-      <div className="h-80">
+      <div className="h-64 w-full px-2">
         <ChartContainer config={chartConfig}>
           <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <XAxis 
