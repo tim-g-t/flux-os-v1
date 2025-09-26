@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { PatientCard } from './PatientCard';
 import { VitalSigns } from './VitalSigns';
 import { RiskScores } from './RiskScores';
+import { PatientMonitoringChart } from './PatientMonitoringChart';
 
 export const Dashboard: React.FC = () => {
   return (
@@ -25,11 +26,7 @@ export const Dashboard: React.FC = () => {
                 <VitalSigns />
               </div>
             </div>
-            <img
-              src="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/050f8929904351d6ef901d327869f15aa6f28679?placeholderIfAbsent=true"
-              alt="Patient monitoring chart"
-              className="aspect-[3.68] object-contain w-full mt-6 max-md:max-w-full"
-            />
+            <PatientMonitoringChart />
             <RiskScores />
           </div>
         </main>
