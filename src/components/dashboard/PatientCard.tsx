@@ -23,16 +23,18 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           alt={`Patient ${patientName} background`}
           className="absolute h-full w-full object-cover inset-0"
         />
-        <div className="relative bg-[rgba(13,13,13,0.6)] flex flex-col justify-between h-full py-5 px-4 rounded-3xl max-md:px-3">
-          <div>{bedNumber}</div>
-          <div className="mt-[15px]">
-            {patientName}
-          </div>
-          <div className="mt-[9px]">
-            {demographics}
-          </div>
-          <div className="text-[44px] font-bold mt-1">
-            {duration}
+        <div className="relative bg-[rgba(13,13,13,0.6)] flex flex-col h-full py-5 px-4 rounded-3xl max-md:px-3">
+          <div className="text-xl font-medium text-white mb-auto">{bedNumber}</div>
+          <div className="flex flex-col gap-[9px] mt-auto">
+            <div className="text-xl font-medium">
+              {patientName}
+            </div>
+            <div className="text-xl font-medium">
+              {demographics}
+            </div>
+            <div className="text-[44px] font-bold">
+              {duration}
+            </div>
           </div>
         </div>
       </div>
