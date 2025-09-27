@@ -70,7 +70,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
   };
 
   return (
-    <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
+    <div className="w-full max-w-full mt-6 rounded-lg p-0 overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-white text-xl font-medium">Vital Signs</h3>
@@ -97,7 +97,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       {/* Chart */}
       <div className="h-96 w-full">
         <ChartContainer config={chartConfig}>
-          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 64 }}>
             <defs>
               <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
