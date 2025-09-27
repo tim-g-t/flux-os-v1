@@ -5,7 +5,7 @@ import { VitalReading } from '@/services/vitalsService';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
 
-// Mock patient data - carefully crafted to have specific risk levels
+// Mock patient data - carefully crafted to have specific risk levels with targeted critical conditions
 const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical'): VitalReading => {
   switch (riskLevel) {
     case 'normal':
@@ -20,21 +20,38 @@ const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical'): V
     case 'warning':
       return {
         hr: Math.random() > 0.5 ? 65 + Math.floor(Math.random() * 5) : 101 + Math.floor(Math.random() * 10), // 65-70 or 101-110
-        bps: Math.random() > 0.5 ? 85 + Math.floor(Math.random() * 5) : 141 + Math.floor(Math.random() * 10), // 85-90 or 141-150
+        bps: 120 + Math.floor(Math.random() * 15), // Keep BP mostly normal to avoid multiple triggers
         bpd: 70 + Math.floor(Math.random() * 20), // Normal range for diastolic
-        rr: Math.random() > 0.5 ? 10 + Math.floor(Math.random() * 2) : 21 + Math.floor(Math.random() * 3), // 10-12 or 21-24
-        temp: Math.random() > 0.5 ? 96.5 + Math.random() * 0.5 : 100.1 + Math.random() * 0.8, // 96.5-97 or 100.1-100.9
+        rr: 15 + Math.floor(Math.random() * 4), // Keep RR normal
+        temp: 98.0 + Math.random() * 1.5, // Keep temp normal
         spo2: 93 + Math.floor(Math.random() * 2) // 93-94% (warning range)
       };
     case 'critical':
-      return {
-        hr: Math.random() > 0.5 ? 45 + Math.floor(Math.random() * 10) : 125 + Math.floor(Math.random() * 15), // <60 or >120
-        bps: Math.random() > 0.5 ? 70 + Math.floor(Math.random() * 10) : 165 + Math.floor(Math.random() * 15), // <80 or >160
-        bpd: 70 + Math.floor(Math.random() * 20), // Keep diastolic normal
-        rr: Math.random() > 0.5 ? 8 + Math.floor(Math.random() * 2) : 26 + Math.floor(Math.random() * 4), // <10 or >25
-        temp: Math.random() > 0.5 ? 95.0 + Math.random() : 101.5 + Math.random() * 2, // <96 or >101
-        spo2: 87 + Math.floor(Math.random() * 3) // 87-89% (critical range <90)
+      // Create targeted critical conditions - only one or two parameters critical to avoid too many risk scores
+      const criticalType = Math.floor(Math.random() * 3);
+      const baseVitals = {
+        hr: 75 + Math.floor(Math.random() * 15), // Start with normal
+        bps: 110 + Math.floor(Math.random() * 20),
+        bpd: 75 + Math.floor(Math.random() * 10),
+        rr: 14 + Math.floor(Math.random() * 4),
+        temp: 98.0 + Math.random() * 1.5,
+        spo2: 97 + Math.floor(Math.random() * 3)
       };
+      
+      // Only modify 1-2 parameters to be critical
+      switch (criticalType) {
+        case 0: // Heart rate critical
+          baseVitals.hr = Math.random() > 0.5 ? 45 + Math.floor(Math.random() * 10) : 125 + Math.floor(Math.random() * 10);
+          break;
+        case 1: // Blood pressure critical
+          baseVitals.bps = Math.random() > 0.5 ? 70 + Math.floor(Math.random() * 8) : 165 + Math.floor(Math.random() * 10);
+          break;
+        case 2: // Oxygen critical
+          baseVitals.spo2 = 85 + Math.floor(Math.random() * 4); // 85-88%
+          break;
+      }
+      
+      return baseVitals;
   }
 };
 
