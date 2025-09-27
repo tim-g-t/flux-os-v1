@@ -163,16 +163,8 @@ export const PatientOverview: React.FC = () => {
     <div className="flex flex-col h-full bg-black">
       <Header />
       <div className="p-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-white text-3xl font-bold">Patient Overview Dashboard</h1>
-          <div className="text-[rgba(217,217,217,1)] text-base">
-            {mockPatients.length} Patients • Real-time monitoring
-          </div>
-        </div>
-      
         {/* Patient Grid with Dark Background Card */}
-        <div className="bg-[rgba(20,21,25,1)] rounded-3xl p-8">
+        <div className="bg-[rgba(20,21,25,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
             {mockPatients.map(patient => {
               const riskScores = calculateRiskScores(patient.vitals);
