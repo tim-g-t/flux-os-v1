@@ -5,15 +5,38 @@ import { VitalReading } from '@/services/vitalsService';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
 
-// Mock patient data - in production this would come from a service
-const generateMockVitals = (baseHr: number, baseBps: number, baseBpd: number): VitalReading => ({
-  hr: baseHr + Math.floor(Math.random() * 20 - 10),
-  bps: baseBps + Math.floor(Math.random() * 30 - 15),
-  bpd: baseBpd + Math.floor(Math.random() * 20 - 10),
-  rr: 16 + Math.floor(Math.random() * 8 - 4),
-  temp: 98.6 + Math.random() * 2 - 1,
-  spo2: 95 + Math.floor(Math.random() * 5)
-});
+// Mock patient data - carefully crafted to have specific risk levels
+const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical'): VitalReading => {
+  switch (riskLevel) {
+    case 'normal':
+      return {
+        hr: 75 + Math.floor(Math.random() * 15), // 75-90 (normal range 70-100)
+        bps: 110 + Math.floor(Math.random() * 20), // 110-130 (normal range 90-140)
+        bpd: 75 + Math.floor(Math.random() * 10), // 75-85 (normal range)
+        rr: 14 + Math.floor(Math.random() * 4), // 14-18 (normal range 12-20)
+        temp: 98.0 + Math.random() * 1.5, // 98.0-99.5°F (normal range 97-100)
+        spo2: 97 + Math.floor(Math.random() * 3) // 97-99% (normal range >95)
+      };
+    case 'warning':
+      return {
+        hr: Math.random() > 0.5 ? 65 + Math.floor(Math.random() * 5) : 101 + Math.floor(Math.random() * 10), // 65-70 or 101-110
+        bps: Math.random() > 0.5 ? 85 + Math.floor(Math.random() * 5) : 141 + Math.floor(Math.random() * 10), // 85-90 or 141-150
+        bpd: 70 + Math.floor(Math.random() * 20), // Normal range for diastolic
+        rr: Math.random() > 0.5 ? 10 + Math.floor(Math.random() * 2) : 21 + Math.floor(Math.random() * 3), // 10-12 or 21-24
+        temp: Math.random() > 0.5 ? 96.5 + Math.random() * 0.5 : 100.1 + Math.random() * 0.8, // 96.5-97 or 100.1-100.9
+        spo2: 93 + Math.floor(Math.random() * 2) // 93-94% (warning range)
+      };
+    case 'critical':
+      return {
+        hr: Math.random() > 0.5 ? 45 + Math.floor(Math.random() * 10) : 125 + Math.floor(Math.random() * 15), // <60 or >120
+        bps: Math.random() > 0.5 ? 70 + Math.floor(Math.random() * 10) : 165 + Math.floor(Math.random() * 15), // <80 or >160
+        bpd: 70 + Math.floor(Math.random() * 20), // Keep diastolic normal
+        rr: Math.random() > 0.5 ? 8 + Math.floor(Math.random() * 2) : 26 + Math.floor(Math.random() * 4), // <10 or >25
+        temp: Math.random() > 0.5 ? 95.0 + Math.random() : 101.5 + Math.random() * 2, // <96 or >101
+        spo2: 87 + Math.floor(Math.random() * 3) // 87-89% (critical range <90)
+      };
+  }
+};
 
 // Generate time series data for mini charts (last 12 hours)
 const generateTimeSeriesData = (baseValue: number, variation: number) => {
@@ -40,14 +63,19 @@ const generateAllVitalData = (vitals: VitalReading) => ({
 });
 
 const mockPatients = [
-  { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateMockVitals(75, 120, 80) },
-  { id: 'bed_03', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateMockVitals(82, 135, 85) },
-  { id: 'bed_07', name: 'David L.', age: 38, gender: 'Male', vitals: generateMockVitals(68, 110, 75) },
-  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateMockVitals(88, 145, 90) },
-  { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateMockVitals(72, 125, 82) },
-  { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateMockVitals(95, 115, 78) },
-  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateMockVitals(78, 140, 88) },
-  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateMockVitals(85, 130, 85) }
+  // Normal patients (3)
+  { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_03', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_07', name: 'David L.', age: 38, gender: 'Male', vitals: generateSpecificVitals('normal') },
+  
+  // Warning patients (3)
+  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('warning') },
+  { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('warning') },
+  { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('warning') },
+  
+  // Critical patients (2)
+  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('critical') },
+  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') }
 ].map(patient => ({
   ...patient,
   chartData: generateAllVitalData(patient.vitals)
@@ -162,9 +190,9 @@ export const PatientOverview: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-black">
       <Header />
-      <div className="p-8 space-y-6">
+      <div className="pt-6 px-6 mt-8 space-y-6">
         {/* Patient Grid with Dark Background Card */}
-        <div className="bg-[rgba(20,21,25,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-8">
+        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl pt-6 px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
             {mockPatients.map(patient => {
               const riskScores = calculateRiskScores(patient.vitals);
