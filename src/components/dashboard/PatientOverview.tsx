@@ -6,62 +6,39 @@ import { VitalReading } from '@/services/vitalsService';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
 
-// Mock patient data - carefully crafted to have specific risk levels with minimal critical risk scores
-const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical', avoidCriticalRiskScores: boolean = false): VitalReading => {
+// Mock patient data - carefully designed to minimize critical risk scores
+const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical'): VitalReading => {
   switch (riskLevel) {
     case 'normal':
+      // All values in safe normal ranges that won't trigger any risk scores
       return {
-        hr: 75 + Math.floor(Math.random() * 15), // 75-90 (normal range 70-100)
-        bps: 110 + Math.floor(Math.random() * 20), // 110-130 (normal range 90-140)
-        bpd: 75 + Math.floor(Math.random() * 10), // 75-85 (normal range)
-        rr: 14 + Math.floor(Math.random() * 4), // 14-18 (normal range 12-20)
-        temp: 98.0 + Math.random() * 1.5, // 98.0-99.5°F (normal range 97-100)
-        spo2: 97 + Math.floor(Math.random() * 3) // 97-99% (normal range >95)
+        hr: 75 + Math.floor(Math.random() * 10), // 75-85 (well within normal 70-100)
+        bps: 115 + Math.floor(Math.random() * 10), // 115-125 (safe normal range)
+        bpd: 75 + Math.floor(Math.random() * 5), // 75-80 (normal range)
+        rr: 15 + Math.floor(Math.random() * 3), // 15-18 (normal range 12-20)
+        temp: 98.2 + Math.random() * 1.0, // 98.2-99.2°F (normal range)
+        spo2: 98 + Math.floor(Math.random() * 2) // 98-99% (excellent range)
       };
     case 'warning':
+      // Slightly concerning but not critical values
       return {
-        hr: Math.random() > 0.5 ? 65 + Math.floor(Math.random() * 5) : 101 + Math.floor(Math.random() * 9), // 65-70 or 101-109 (avoid >110 to prevent critical)
-        bps: 125 + Math.floor(Math.random() * 10), // Keep BP in safe warning range
-        bpd: 75 + Math.floor(Math.random() * 10), // Normal range for diastolic
-        rr: 15 + Math.floor(Math.random() * 4), // Keep RR normal
-        temp: 98.0 + Math.random() * 1.5, // Keep temp normal
-        spo2: 94 + Math.floor(Math.random() * 2) // 94-95% (warning range, avoid <94 which triggers critical)
+        hr: Math.random() > 0.5 ? 68 + Math.floor(Math.random() * 2) : 102 + Math.floor(Math.random() * 3), // 68-70 or 102-105 (borderline)
+        bps: Math.random() > 0.5 ? 135 + Math.floor(Math.random() * 5) : 88 + Math.floor(Math.random() * 2), // 135-140 or 88-90 (warning range)
+        bpd: 78 + Math.floor(Math.random() * 8), // 78-86 (normal range)
+        rr: 16 + Math.floor(Math.random() * 3), // 16-19 (normal range)
+        temp: 98.5 + Math.random() * 1.0, // 98.5-99.5°F (normal)
+        spo2: 95 + Math.floor(Math.random() * 2) // 95-96% (acceptable but watch)
       };
     case 'critical':
-      if (avoidCriticalRiskScores) {
-        // Create patients with some concerning values but not enough to trigger critical risk scores
-        return {
-          hr: 62 + Math.floor(Math.random() * 6), // 62-67 (slightly low but not critical)
-          bps: 85 + Math.floor(Math.random() * 10), // 85-95 (low-normal, won't trigger severe risk scores)
-          bpd: 70 + Math.floor(Math.random() * 10),
-          rr: 13 + Math.floor(Math.random() * 4), // 13-16 (normal range)
-          temp: 96.8 + Math.random() * 1.0, // 96.8-97.8 (slightly low but not critical)
-          spo2: 91 + Math.floor(Math.random() * 3) // 91-93% (concerning but less likely to trigger multiple risk scores)
-        };
-      } else {
-        // Create targeted critical conditions - only one parameter critical
-        const baseVitals = {
-          hr: 75 + Math.floor(Math.random() * 10), // Normal
-          bps: 115 + Math.floor(Math.random() * 15), // Normal
-          bpd: 75 + Math.floor(Math.random() * 10), // Normal
-          rr: 14 + Math.floor(Math.random() * 4), // Normal
-          temp: 98.0 + Math.random() * 1.5, // Normal
-          spo2: 96 + Math.floor(Math.random() * 3) // Normal
-        };
-        
-        // Only modify 1 parameter to be critical
-        const criticalType = Math.floor(Math.random() * 2);
-        switch (criticalType) {
-          case 0: // Heart rate critical but not extreme
-            baseVitals.hr = Math.random() > 0.5 ? 52 + Math.floor(Math.random() * 6) : 122 + Math.floor(Math.random() * 8);
-            break;
-          case 1: // Oxygen critical
-            baseVitals.spo2 = 86 + Math.floor(Math.random() * 3); // 86-88%
-            break;
-        }
-        
-        return baseVitals;
-      }
+      // Only create truly critical scenarios for 1-2 patients max
+      return {
+        hr: 45 + Math.floor(Math.random() * 8), // 45-53 (critically low)
+        bps: 75 + Math.floor(Math.random() * 5), // 75-80 (critically low)
+        bpd: 50 + Math.floor(Math.random() * 15), // 50-65 (low but not the main issue)
+        rr: 8 + Math.floor(Math.random() * 2), // 8-10 (critically low)
+        temp: 95.5 + Math.random() * 0.5, // 95.5-96.0°F (hypothermic)
+        spo2: 85 + Math.floor(Math.random() * 3) // 85-88% (critically low)
+      };
   }
 };
 
@@ -90,19 +67,19 @@ const generateAllVitalData = (vitals: VitalReading) => ({
 });
 
 const mockPatients = [
-  // Normal patients (3)
+  // Normal patients (5) - truly normal, no risk scores
   { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateSpecificVitals('normal') },
   { id: 'bed_03', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateSpecificVitals('normal') },
   { id: 'bed_07', name: 'David L.', age: 38, gender: 'Male', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('normal') },
   
-  // Warning patients (3)
-  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('warning') },
-  { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('warning') },
+  // Warning patients (2) - concerning but not critical
   { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('warning') },
+  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('warning') },
   
-  // Critical patients (2) - one with critical risk scores, one without
-  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('critical', false) },
-  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical', true) }
+  // Critical patient (1) - only one truly critical case
+  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') }
 ].map(patient => ({
   ...patient,
   chartData: generateAllVitalData(patient.vitals)
