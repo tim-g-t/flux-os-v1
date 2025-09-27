@@ -19,7 +19,7 @@ export const Dashboard: React.FC = () => {
     );
   };
   return (
-    <div className="bg-black overflow-hidden pl-[27px] pt-10 max-md:pl-5">
+    <div className="bg-black min-h-screen pl-[27px] pt-10 max-md:pl-5">
       <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
         <Sidebar />
         <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0">
