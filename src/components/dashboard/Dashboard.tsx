@@ -12,11 +12,14 @@ export const Dashboard: React.FC = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
 
   const toggleMetric = (metric: MetricType) => {
-    setSelectedMetrics(prev => 
-      prev.includes(metric) 
+    console.log('Toggling metric:', metric, 'Current selected:', selectedMetrics);
+    setSelectedMetrics(prev => {
+      const newMetrics = prev.includes(metric) 
         ? prev.filter(m => m !== metric)
-        : [...prev, metric]
-    );
+        : [...prev, metric];
+      console.log('New selected metrics:', newMetrics);
+      return newMetrics;
+    });
   };
   return (
     <div className="bg-black overflow-hidden pl-[27px] pt-10 max-md:pl-5">
