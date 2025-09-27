@@ -23,25 +23,68 @@ const generateTimeSeriesData = (baseValue: number, variation: number) => {
     const value = baseValue + (Math.random() - 0.5) * variation;
     data.push({
       time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      value: Math.round(value)
+      value: Math.round(value * 10) / 10 // Round to 1 decimal place
     });
   }
   return data;
 };
 
+const generateAllVitalData = (vitals: VitalReading) => ({
+  hr: generateTimeSeriesData(vitals.hr, 20),
+  bps: generateTimeSeriesData(vitals.bps, 30),
+  bpd: generateTimeSeriesData(vitals.bpd, 20),
+  spo2: generateTimeSeriesData(vitals.spo2, 5),
+  temp: generateTimeSeriesData(vitals.temp, 2),
+  rr: generateTimeSeriesData(vitals.rr, 8)
+});
+
 const mockPatients = [
-  { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateMockVitals(75, 120, 80), hrData: generateTimeSeriesData(75, 20) },
-  { id: 'bed_03', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateMockVitals(82, 135, 85), hrData: generateTimeSeriesData(82, 15) },
-  { id: 'bed_07', name: 'David L.', age: 38, gender: 'Male', vitals: generateMockVitals(68, 110, 75), hrData: generateTimeSeriesData(68, 12) },
-  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateMockVitals(88, 145, 90), hrData: generateTimeSeriesData(88, 25) },
-  { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateMockVitals(72, 125, 82), hrData: generateTimeSeriesData(72, 18) },
-  { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateMockVitals(95, 115, 78), hrData: generateTimeSeriesData(95, 30) },
-  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateMockVitals(78, 140, 88), hrData: generateTimeSeriesData(78, 20) },
-  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateMockVitals(85, 130, 85), hrData: generateTimeSeriesData(85, 22) }
-];
+  { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateMockVitals(75, 120, 80) },
+  { id: 'bed_03', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateMockVitals(82, 135, 85) },
+  { id: 'bed_07', name: 'David L.', age: 38, gender: 'Male', vitals: generateMockVitals(68, 110, 75) },
+  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateMockVitals(88, 145, 90) },
+  { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateMockVitals(72, 125, 82) },
+  { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateMockVitals(95, 115, 78) },
+  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateMockVitals(78, 140, 88) },
+  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateMockVitals(85, 130, 85) }
+].map(patient => ({
+  ...patient,
+  chartData: generateAllVitalData(patient.vitals)
+}));
 
 export const PatientOverview: React.FC = () => {
   const { loading } = useVitals('bed_15');
+  const [selectedVitals, setSelectedVitals] = useState<Record<string, string>>({});
+  
+  // Initialize selected vitals to 'hr' for all patients
+  React.useEffect(() => {
+    const initialSelection: Record<string, string> = {};
+    mockPatients.forEach(patient => {
+      initialSelection[patient.id] = 'hr';
+    });
+    setSelectedVitals(initialSelection);
+  }, []);
+  
+  const vitalOptions = [
+    { key: 'hr', label: 'HR', unit: 'bpm', color: '#3b82f6' },
+    { key: 'bps', label: 'SYS', unit: 'mmHg', color: '#ef4444' },
+    { key: 'bpd', label: 'DIA', unit: 'mmHg', color: '#f59e0b' },
+    { key: 'spo2', label: 'SpO2', unit: '%', color: '#10b981' },
+    { key: 'temp', label: 'Temp', unit: '°F', color: '#8b5cf6' },
+    { key: 'rr', label: 'RR', unit: 'bpm', color: '#06b6d4' }
+  ];
+  
+  const getVitalValue = (vitals: VitalReading, key: string): number => {
+    switch (key) {
+      case 'hr': return vitals.hr;
+      case 'bps': return vitals.bps;
+      case 'bpd': return vitals.bpd;
+      case 'spo2': return vitals.spo2;
+      case 'temp': return Number(vitals.temp.toFixed(1));
+      case 'rr': return vitals.rr;
+      default: return 0;
+    }
+  };
   
   if (loading) {
     return (
@@ -123,6 +166,8 @@ export const PatientOverview: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
         {mockPatients.map(patient => {
           const riskScores = calculateRiskScores(patient.vitals);
+          const selectedVital = selectedVitals[patient.id] || 'hr';
+          const vitalOption = vitalOptions.find(opt => opt.key === selectedVital) || vitalOptions[0];
           
           // Count individual patient risks
           const patientRiskCounts = Object.values(riskScores).reduce((acc, score) => {
@@ -138,6 +183,10 @@ export const PatientOverview: React.FC = () => {
           
           // Calculate mean blood pressure
           const meanBP = Math.round((patient.vitals.bps + patient.vitals.bpd) / 2);
+          
+          // Get current vital data and latest value
+          const currentChartData = patient.chartData[selectedVital as keyof typeof patient.chartData];
+          const latestValue = currentChartData[currentChartData.length - 1]?.value || getVitalValue(patient.vitals, selectedVital);
           
           return (
             <div 
@@ -165,12 +214,38 @@ export const PatientOverview: React.FC = () => {
                 }`}></div>
               </div>
               
-              {/* Mini Chart */}
+              {/* Vital Sign Selection */}
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-2">
+                  {vitalOptions.map(option => (
+                    <button
+                      key={option.key}
+                      onClick={() => setSelectedVitals(prev => ({ ...prev, [patient.id]: option.key }))}
+                      className={`px-3 py-1 rounded-lg text-xs transition-all duration-200 ${
+                        selectedVital === option.key
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] hover:bg-[rgba(100,106,113,1)]'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Mini Chart with Latest Value */}
               <div className="mb-6">
-                <div className="text-[rgba(217,217,217,1)] text-sm mb-2">Heart Rate - Last 12h</div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="text-[rgba(217,217,217,1)] text-sm">{vitalOption.label} - Last 12h</div>
+                  <div className="text-right">
+                    <span className="text-white font-bold text-lg">{latestValue}</span>
+                    <span className="text-[rgba(128,128,128,1)] text-sm ml-1">{vitalOption.unit}</span>
+                  </div>
+                </div>
                 <MiniChart 
-                  data={patient.hrData} 
-                  color={overallStatus === 'critical' ? '#ef4444' : '#3b82f6'} 
+                  data={currentChartData} 
+                  color={vitalOption.color}
+                  selectedVital={selectedVital}
                 />
               </div>
               
