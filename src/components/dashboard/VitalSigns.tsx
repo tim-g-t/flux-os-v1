@@ -16,7 +16,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
           <h2 className="text-white text-xl font-medium my-auto">
             Current Vital Signs
           </h2>
-          <div className="flex flex-1">
+          <div className="flex flex-1 justify-end">
             <button className="border flex items-center gap-2.5 text-base text-white font-normal justify-center px-[26px] py-[18px] rounded-[32px] border-white border-solid max-md:px-5 hover:bg-white hover:text-black transition-colors">
               <div className="self-stretch my-auto">
                 See all
