@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
               className="self-stretch my-auto bg-transparent border-none outline-none text-[rgba(203,204,209,1)] placeholder-[rgba(203,204,209,1)]"
             />
           </div>
-          <div className="flex gap-[40px_48px] grow shrink basis-auto justify-end">
+          <div className="flex gap-[40px_48px] items-center">
             <div className="flex w-[122px]">
               <button className="bg-[rgba(26,27,32,1)] flex items-center gap-2.5 w-[61px] h-[61px] p-5 rounded-[50px] hover:bg-[rgba(36,37,42,1)] transition-colors">
                 <div className="flex min-h-[21px] w-[21px]" />
