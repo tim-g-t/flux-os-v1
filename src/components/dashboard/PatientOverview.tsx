@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useVitals } from '@/hooks/useVitals';
 import { calculateRiskScores } from '@/utils/riskCalculations';
 import { VitalReading } from '@/services/vitalsService';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
 
-// Mock patient data - carefully crafted to have specific risk levels with targeted critical conditions
-const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical'): VitalReading => {
+// Mock patient data - carefully crafted to have specific risk levels with minimal critical risk scores
+const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical', avoidCriticalRiskScores: boolean = false): VitalReading => {
   switch (riskLevel) {
     case 'normal':
       return {
@@ -19,39 +20,48 @@ const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical'): V
       };
     case 'warning':
       return {
-        hr: Math.random() > 0.5 ? 65 + Math.floor(Math.random() * 5) : 101 + Math.floor(Math.random() * 10), // 65-70 or 101-110
-        bps: 120 + Math.floor(Math.random() * 15), // Keep BP mostly normal to avoid multiple triggers
-        bpd: 70 + Math.floor(Math.random() * 20), // Normal range for diastolic
+        hr: Math.random() > 0.5 ? 65 + Math.floor(Math.random() * 5) : 101 + Math.floor(Math.random() * 9), // 65-70 or 101-109 (avoid >110 to prevent critical)
+        bps: 125 + Math.floor(Math.random() * 10), // Keep BP in safe warning range
+        bpd: 75 + Math.floor(Math.random() * 10), // Normal range for diastolic
         rr: 15 + Math.floor(Math.random() * 4), // Keep RR normal
         temp: 98.0 + Math.random() * 1.5, // Keep temp normal
-        spo2: 93 + Math.floor(Math.random() * 2) // 93-94% (warning range)
+        spo2: 94 + Math.floor(Math.random() * 2) // 94-95% (warning range, avoid <94 which triggers critical)
       };
     case 'critical':
-      // Create targeted critical conditions - only one or two parameters critical to avoid too many risk scores
-      const criticalType = Math.floor(Math.random() * 3);
-      const baseVitals = {
-        hr: 75 + Math.floor(Math.random() * 15), // Start with normal
-        bps: 110 + Math.floor(Math.random() * 20),
-        bpd: 75 + Math.floor(Math.random() * 10),
-        rr: 14 + Math.floor(Math.random() * 4),
-        temp: 98.0 + Math.random() * 1.5,
-        spo2: 97 + Math.floor(Math.random() * 3)
-      };
-      
-      // Only modify 1-2 parameters to be critical
-      switch (criticalType) {
-        case 0: // Heart rate critical
-          baseVitals.hr = Math.random() > 0.5 ? 45 + Math.floor(Math.random() * 10) : 125 + Math.floor(Math.random() * 10);
-          break;
-        case 1: // Blood pressure critical
-          baseVitals.bps = Math.random() > 0.5 ? 70 + Math.floor(Math.random() * 8) : 165 + Math.floor(Math.random() * 10);
-          break;
-        case 2: // Oxygen critical
-          baseVitals.spo2 = 85 + Math.floor(Math.random() * 4); // 85-88%
-          break;
+      if (avoidCriticalRiskScores) {
+        // Create patients with some concerning values but not enough to trigger critical risk scores
+        return {
+          hr: 62 + Math.floor(Math.random() * 6), // 62-67 (slightly low but not critical)
+          bps: 85 + Math.floor(Math.random() * 10), // 85-95 (low-normal, won't trigger severe risk scores)
+          bpd: 70 + Math.floor(Math.random() * 10),
+          rr: 13 + Math.floor(Math.random() * 4), // 13-16 (normal range)
+          temp: 96.8 + Math.random() * 1.0, // 96.8-97.8 (slightly low but not critical)
+          spo2: 91 + Math.floor(Math.random() * 3) // 91-93% (concerning but less likely to trigger multiple risk scores)
+        };
+      } else {
+        // Create targeted critical conditions - only one parameter critical
+        const baseVitals = {
+          hr: 75 + Math.floor(Math.random() * 10), // Normal
+          bps: 115 + Math.floor(Math.random() * 15), // Normal
+          bpd: 75 + Math.floor(Math.random() * 10), // Normal
+          rr: 14 + Math.floor(Math.random() * 4), // Normal
+          temp: 98.0 + Math.random() * 1.5, // Normal
+          spo2: 96 + Math.floor(Math.random() * 3) // Normal
+        };
+        
+        // Only modify 1 parameter to be critical
+        const criticalType = Math.floor(Math.random() * 2);
+        switch (criticalType) {
+          case 0: // Heart rate critical but not extreme
+            baseVitals.hr = Math.random() > 0.5 ? 52 + Math.floor(Math.random() * 6) : 122 + Math.floor(Math.random() * 8);
+            break;
+          case 1: // Oxygen critical
+            baseVitals.spo2 = 86 + Math.floor(Math.random() * 3); // 86-88%
+            break;
+        }
+        
+        return baseVitals;
       }
-      
-      return baseVitals;
   }
 };
 
@@ -90,9 +100,9 @@ const mockPatients = [
   { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('warning') },
   { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('warning') },
   
-  // Critical patients (2)
-  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('critical') },
-  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') }
+  // Critical patients (2) - one with critical risk scores, one without
+  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('critical', false) },
+  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical', true) }
 ].map(patient => ({
   ...patient,
   chartData: generateAllVitalData(patient.vitals)
@@ -100,6 +110,7 @@ const mockPatients = [
 
 export const PatientOverview: React.FC = () => {
   const { loading } = useVitals('bed_15');
+  const navigate = useNavigate();
   const [selectedVitals, setSelectedVitals] = useState<Record<string, string>>({});
   
   // Initialize selected vitals to 'hr' for all patients
@@ -242,6 +253,7 @@ export const PatientOverview: React.FC = () => {
                     : 'border-4 border-transparent'
                   }
                 `}
+                onClick={() => navigate(`/patient/${patient.id}`)}
               >
                   {/* Patient Header */}
                   <div className="flex items-center justify-between mb-6">
