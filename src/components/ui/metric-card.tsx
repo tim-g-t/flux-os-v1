@@ -28,10 +28,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         isSelected && "ring-2 ring-blue-500 bg-[rgba(30,31,40,1)]",
         className
       )}
-      onClick={onClick ? () => {
-        console.log('MetricCard clicked:', label, onClick);
-        onClick();
-      } : undefined}
+      onClick={onClick}
     >
       <div className="h-[66px]">
         <div className="text-white text-5xl font-bold max-md:text-[40px]">

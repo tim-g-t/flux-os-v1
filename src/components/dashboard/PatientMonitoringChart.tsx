@@ -51,8 +51,6 @@ interface PatientMonitoringChartProps {
 
 export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
-  
-  console.log('PatientMonitoringChart - selectedMetrics:', selectedMetrics);
 
 
   const metricLabels = {
