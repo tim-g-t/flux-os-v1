@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useVitals } from '@/hooks/useVitals';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
@@ -12,6 +12,38 @@ interface PatientMonitoringChartProps {
 export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const { getFilteredData, loading } = useVitals('bed_15');
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
+          <p className="text-white font-medium mb-2">{`Time: ${label}`}</p>
+          {payload.map((entry: any, index: number) => {
+            const metricNames = {
+              heartRate: 'Heart Rate',
+              bloodPressure: 'Blood Pressure (Systolic)',
+              temperature: 'Temperature',
+              spo2: 'SpO2',
+              respiratoryRate: 'Respiratory Rate'
+            };
+            const units = {
+              heartRate: 'bpm',
+              bloodPressure: 'mmHg',
+              temperature: '°C',
+              spo2: '%',
+              respiratoryRate: 'rpm'
+            };
+            return (
+              <p key={index} style={{ color: entry.color }} className="text-sm">
+                {`${metricNames[entry.dataKey as keyof typeof metricNames]}: ${entry.value} ${units[entry.dataKey as keyof typeof units]}`}
+              </p>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
 
   const chartData = useMemo(() => {
     const data = getFilteredData(timeRange);
@@ -90,6 +122,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
           <AreaChart data={chartData}>
             <XAxis dataKey="time" />
             <YAxis domain={['dataMin - 5', 'dataMax + 5']} />
+            <Tooltip content={<CustomTooltip />} />
             
             {selectedMetrics.includes('heartRate') && (
               <Area type="monotone" dataKey="heartRate" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
