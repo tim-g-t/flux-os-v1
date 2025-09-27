@@ -110,12 +110,12 @@ export const PatientDetail: React.FC = () => {
   };
 
   return (
-    <div className="bg-black min-h-screen pl-[27px] pt-10 pr-16 max-md:pl-5">
+    <div className="bg-black min-h-screen pl-[27px] pt-10 pr-12 max-md:pl-5">
       <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
         <Sidebar activeView={activeView} onViewChange={handleViewChange} />
-        <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-16">
+        <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-6">
           <Header />
-          <div className="bg-[rgba(26,27,32,1)] border w-full mt-8 pt-6 px-6 pb-8 rounded-[32px_0px_0px_0px] border-[rgba(64,66,73,1)] border-solid max-md:max-w-full max-md:px-5">
+          <div className="bg-[rgba(26,27,32,1)] border w-full mt-8 pt-6 px-6 pb-8 rounded-[32px] border-[rgba(64,66,73,1)] border-solid max-md:max-w-full max-md:px-5">
             <div className="max-md:max-w-full max-md:mr-[9px]">
               <div className="gap-5 flex items-stretch max-md:flex-col">
                 <PatientCard

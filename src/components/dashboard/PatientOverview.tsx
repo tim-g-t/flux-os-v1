@@ -178,9 +178,9 @@ export const PatientOverview: React.FC = () => {
   
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-black">
+      <div className="flex flex-col h-full">
         <Header />
-        <div className="p-8">
+        <div className="p-6">
           <div className="text-white text-xl font-medium">Loading patient overview...</div>
         </div>
       </div>
@@ -188,9 +188,9 @@ export const PatientOverview: React.FC = () => {
   }
   
   return (
-    <div className="flex flex-col h-full bg-black">
+    <div className="flex flex-col h-full">
       <Header />
-      <div className="pt-6 px-6 pr-16 mt-8 space-y-6">
+      <div className="pt-6 px-6 mt-8 ">
         {/* Patient Grid with Dark Background Card */}
         <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl pt-6 px-6 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
