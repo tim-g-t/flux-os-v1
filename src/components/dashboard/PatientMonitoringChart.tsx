@@ -15,18 +15,49 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
 
   const chartData = useMemo(() => {
     const data = getFilteredData(timeRange);
-    return data.map((item) => ({
-      time: new Date(item.timestamp).toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      }),
-      heartRate: item.vital.hr,
-      bloodPressure: item.vital.bps,
-      temperature: item.vital.temp,
-      spo2: item.vital.spo2,
-      respiratoryRate: item.vital.rr
-    }));
+    return data.map((item) => {
+      const date = new Date(item.timestamp);
+      let timeLabel;
+      
+      switch (timeRange) {
+        case '1h':
+        case '4h':
+          timeLabel = date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          });
+          break;
+        case '12h':
+        case '24h':
+          timeLabel = date.toLocaleTimeString('en-US', { 
+            hour: '2-digit',
+            hour12: false 
+          });
+          break;
+        case '1w':
+          timeLabel = date.toLocaleDateString('en-US', { 
+            month: 'short',
+            day: 'numeric'
+          });
+          break;
+        default:
+          timeLabel = date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          });
+      }
+      
+      return {
+        time: timeLabel,
+        heartRate: item.vital.hr,
+        bloodPressure: item.vital.bps,
+        temperature: item.vital.temp,
+        spo2: item.vital.spo2,
+        respiratoryRate: item.vital.rr
+      };
+    });
   }, [getFilteredData, timeRange]);
 
   if (loading) {
