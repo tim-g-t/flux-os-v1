@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Bell, Settings } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,11 +37,11 @@ export const Header: React.FC = () => {
           </div>
           <div className="flex gap-[40px_48px] grow shrink basis-auto">
             <div className="flex w-[122px]">
-              <button className="bg-[rgba(26,27,32,1)] flex items-center gap-2.5 w-[61px] h-[61px] p-5 rounded-[50px] hover:bg-[rgba(36,37,42,1)] transition-colors">
-                <div className="flex min-h-[21px] w-[21px]" />
+              <button className="bg-[rgba(26,27,32,1)] flex items-center justify-center w-[61px] h-[61px] p-5 rounded-[50px] hover:bg-[rgba(36,37,42,1)] transition-colors">
+                <Bell className="w-[21px] h-[21px] text-white" />
               </button>
-              <button className="bg-[rgba(26,27,32,1)] flex items-center gap-2.5 w-[61px] h-[61px] p-5 rounded-[50px] hover:bg-[rgba(36,37,42,1)] transition-colors">
-                <div className="flex min-h-[21px] w-[21px]" />
+              <button className="bg-[rgba(26,27,32,1)] flex items-center justify-center w-[61px] h-[61px] p-5 rounded-[50px] hover:bg-[rgba(36,37,42,1)] transition-colors">
+                <Settings className="w-[21px] h-[21px] text-white" />
               </button>
             </div>
             <div className="flex items-center gap-3 text-white w-[178px]">
