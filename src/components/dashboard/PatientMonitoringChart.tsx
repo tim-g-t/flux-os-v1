@@ -66,11 +66,10 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     
     if (allValues.length === 0) return [0, 100];
     
-    const min = Math.min(...allValues);
     const max = Math.max(...allValues);
-    const padding = (max - min) * 0.1; // 10% padding
+    const padding = max * 0.1; // 10% padding above max
     
-    return [Math.max(0, min - padding), max + padding];
+    return [0, max + padding]; // Always start from 0
   }, [selectedMetrics, chartData]);
 
   if (loading) {
