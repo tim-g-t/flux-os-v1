@@ -103,7 +103,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
   }
 
   return (
-    <div className="w-full bg-black rounded-lg p-4">
+    <div className="w-full mt-6 bg-black rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white text-xl">Vital Signs</h3>
         <div className="flex gap-2">
