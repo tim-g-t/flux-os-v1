@@ -4,7 +4,6 @@ import { Header } from './Header';
 import { PatientCard } from './PatientCard';
 import { VitalSigns } from './VitalSigns';
 import { RiskScores } from './RiskScores';
-import { PatientMonitoringChart } from './PatientMonitoringChart';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -37,7 +36,6 @@ export const Dashboard: React.FC = () => {
                 <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} />
               </div>
             </div>
-            <PatientMonitoringChart selectedMetrics={selectedMetrics} />
             <RiskScores />
           </div>
         </main>

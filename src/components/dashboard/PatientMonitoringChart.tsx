@@ -70,34 +70,31 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
   };
 
   return (
-    <div className="w-full max-w-full mt-6 rounded-lg p-0 overflow-visible">
+    <div className="w-full max-w-full mt-4 p-4 bg-[rgba(20,21,25,1)] rounded-3xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-white text-xl font-medium">Vital Signs</h3>
-        
-        <div className="flex items-center gap-6">
-          <div className="flex gap-2">
-            {(Object.keys(timeRangeLabels) as TimeRange[]).map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`w-12 h-12 rounded-full text-sm font-medium transition-colors ${
-                  timeRange === range
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-transparent border border-gray-600 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                {timeRangeLabels[range]}
-              </button>
-            ))}
-          </div>
+        <h3 className="text-white text-xl font-medium">Vital Signs Chart</h3>
+        <div className="flex gap-2">
+          {(['24h', '7d', '30d'] as TimeRange[]).map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
+                timeRange === range
+                  ? 'bg-white text-black'
+                  : 'text-white border border-white hover:bg-white hover:text-black'
+              }`}
+            >
+              {range}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-96 w-full">
+      <div className="h-80 w-full">
         <ChartContainer config={chartConfig}>
-          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 64 }}>
+          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
             <defs>
               <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
