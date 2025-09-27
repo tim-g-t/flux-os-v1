@@ -1,43 +1,49 @@
 import React, { useState } from 'react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 const chartData = [
-  { time: '00:00', heartRate: 72, bloodPressure: 120, temperature: 98.6, spo2: 98 },
-  { time: '02:00', heartRate: 68, bloodPressure: 118, temperature: 98.4, spo2: 97 },
-  { time: '04:00', heartRate: 75, bloodPressure: 125, temperature: 98.8, spo2: 98 },
-  { time: '06:00', heartRate: 80, bloodPressure: 130, temperature: 99.1, spo2: 96 },
-  { time: '08:00', heartRate: 85, bloodPressure: 135, temperature: 99.3, spo2: 95 },
-  { time: '10:00', heartRate: 78, bloodPressure: 128, temperature: 98.9, spo2: 97 },
-  { time: '12:00', heartRate: 82, bloodPressure: 132, temperature: 99.0, spo2: 96 },
-  { time: '14:00', heartRate: 88, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'Jan 1st', heartRate: 200, bloodPressure: 120, temperature: 98.6, spo2: 98 },
+  { time: 'Jan 15th', heartRate: 180, bloodPressure: 118, temperature: 98.4, spo2: 97 },
+  { time: 'Feb 1st', heartRate: 160, bloodPressure: 125, temperature: 98.8, spo2: 98 },
+  { time: 'Feb 15th', heartRate: 140, bloodPressure: 130, temperature: 99.1, spo2: 96 },
+  { time: 'Mar 1st', heartRate: 120, bloodPressure: 135, temperature: 99.3, spo2: 95 },
+  { time: 'Mar 15th', heartRate: 130, bloodPressure: 128, temperature: 98.9, spo2: 97 },
+  { time: 'Apr 1st', heartRate: 140, bloodPressure: 132, temperature: 99.0, spo2: 96 },
+  { time: 'Apr 15th', heartRate: 150, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'May 1st', heartRate: 160, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'May 15th', heartRate: 140, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'Jun 1st', heartRate: 100, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'Jun 15th', heartRate: 80, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'Jul 1st', heartRate: 70, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'Jul 15th', heartRate: 50, bloodPressure: 140, temperature: 99.5, spo2: 94 },
 ];
 
 const chartConfig = {
   heartRate: {
-    label: 'Heart Rate',
-    color: 'hsl(var(--chart-1))',
+    label: 'HR',
+    color: '#3B82F6',
   },
   bloodPressure: {
-    label: 'Blood Pressure',
-    color: 'hsl(var(--chart-2))',
+    label: 'BP',
+    color: '#EF4444',
   },
   temperature: {
-    label: 'Temperature',
-    color: 'hsl(var(--chart-3))',
+    label: 'Temp',
+    color: '#10B981',
   },
   spo2: {
     label: 'SpO2',
-    color: 'hsl(var(--chart-4))',
+    color: '#8B5CF6',
   },
 };
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2';
-type TimeRange = '6h' | '12h' | '24h' | '7d';
+type TimeRange = '1h' | '4h' | '12h' | '24h' | '1w';
 
 export const PatientMonitoringChart: React.FC = () => {
-  const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate', 'bloodPressure']);
-  const [timeRange, setTimeRange] = useState<TimeRange>('12h');
+  const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
+  const [timeRange, setTimeRange] = useState<TimeRange>('24h');
 
   const toggleMetric = (metric: MetricType) => {
     setSelectedMetrics(prev => 
@@ -48,129 +54,146 @@ export const PatientMonitoringChart: React.FC = () => {
   };
 
   const metricLabels = {
-    heartRate: 'Heart Rate',
-    bloodPressure: 'Blood Pressure',
-    temperature: 'Temperature',
+    heartRate: 'HR',
+    bloodPressure: 'BP',
+    temperature: 'Temp',
     spo2: 'SpO2'
   };
 
   const timeRangeLabels = {
-    '6h': '6 Hours',
-    '12h': '12 Hours', 
-    '24h': '24 Hours',
-    '7d': '7 Days'
+    '1h': '1h',
+    '4h': '4h', 
+    '12h': '12h',
+    '24h': '24h',
+    '1w': '1w'
   };
 
   return (
-    <div className="w-full max-w-full overflow-hidden mt-6">
-      {/* Header with selector boxes */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-4 px-2">
-        <h3 className="text-white text-xl font-medium">Patient Monitoring</h3>
+    <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
+      {/* Header with title and selectors */}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-white text-xl font-medium">Vital Signs</h3>
         
-        <div className="flex items-center gap-4 flex-wrap">
-          {/* Metric Selectors */}
-          <div className="flex items-center gap-2">
-            <span className="text-white text-sm">Metrics:</span>
-            <div className="flex gap-2">
-              {(Object.keys(metricLabels) as MetricType[]).map((metric) => (
-                <button
-                  key={metric}
-                  onClick={() => toggleMetric(metric)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                    selectedMetrics.includes(metric)
-                      ? 'bg-[rgba(1,119,251,1)] text-white'
-                      : 'bg-[rgba(64,66,73,1)] text-[rgba(203,204,209,1)] hover:bg-[rgba(84,86,93,1)]'
-                  }`}
-                >
-                  {metricLabels[metric]}
-                </button>
-              ))}
-            </div>
+        <div className="flex items-center gap-6">
+          {/* Time Range Selector - Circular buttons */}
+          <div className="flex gap-2">
+            {(Object.keys(timeRangeLabels) as TimeRange[]).map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`w-12 h-12 rounded-full text-sm font-medium transition-colors ${
+                  timeRange === range
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-transparent border border-gray-600 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {timeRangeLabels[range]}
+              </button>
+            ))}
           </div>
-
-          {/* Time Range Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-white text-sm">Range:</span>
-            <div className="flex gap-1">
-              {(Object.keys(timeRangeLabels) as TimeRange[]).map((range) => (
-                <button
-                  key={range}
-                  onClick={() => setTimeRange(range)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                    timeRange === range
-                      ? 'bg-[rgba(1,119,251,1)] text-white'
-                      : 'bg-[rgba(64,66,73,1)] text-[rgba(203,204,209,1)] hover:bg-[rgba(84,86,93,1)]'
-                  }`}
-                >
-                  {timeRangeLabels[range]}
-                </button>
-              ))}
-            </div>
+          
+          {/* Metric Legend - Checkboxes on right */}
+          <div className="flex flex-col gap-2">
+            {(Object.keys(metricLabels) as MetricType[]).map((metric) => (
+              <div key={metric} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedMetrics.includes(metric)}
+                  onChange={() => toggleMetric(metric)}
+                  className="w-4 h-4"
+                />
+                <span className="text-white text-sm font-medium">
+                  {metricLabels[metric]}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-64 w-full px-2">
+      <div className="h-80 w-full">
         <ChartContainer config={chartConfig}>
-          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <defs>
+              <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="colorBloodPressure" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="colorTemperature" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="colorSpo2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
             <XAxis 
               dataKey="time" 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: 'rgba(203,204,209,1)', fontSize: 12 }}
+              tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: 'rgba(203,204,209,1)', fontSize: 12 }}
+              tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
             />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip 
+              content={<ChartTooltipContent />}
+              contentStyle={{
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                border: '1px solid rgba(75, 85, 99, 1)',
+                borderRadius: '8px',
+                color: 'white'
+              }}
+            />
             
             {selectedMetrics.includes('heartRate') && (
-              <Line
+              <Area
                 type="monotone"
                 dataKey="heartRate"
-                stroke={chartConfig.heartRate.color}
+                stroke="#3B82F6"
                 strokeWidth={2}
-                dot={{ fill: chartConfig.heartRate.color, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: chartConfig.heartRate.color }}
+                fill="url(#colorHeartRate)"
               />
             )}
             
             {selectedMetrics.includes('bloodPressure') && (
-              <Line
+              <Area
                 type="monotone"
                 dataKey="bloodPressure"
-                stroke={chartConfig.bloodPressure.color}
+                stroke="#EF4444"
                 strokeWidth={2}
-                dot={{ fill: chartConfig.bloodPressure.color, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: chartConfig.bloodPressure.color }}
+                fill="url(#colorBloodPressure)"
               />
             )}
             
             {selectedMetrics.includes('temperature') && (
-              <Line
+              <Area
                 type="monotone"
                 dataKey="temperature"
-                stroke={chartConfig.temperature.color}
+                stroke="#10B981"
                 strokeWidth={2}
-                dot={{ fill: chartConfig.temperature.color, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: chartConfig.temperature.color }}
+                fill="url(#colorTemperature)"
               />
             )}
             
             {selectedMetrics.includes('spo2') && (
-              <Line
+              <Area
                 type="monotone"
                 dataKey="spo2"
-                stroke={chartConfig.spo2.color}
+                stroke="#8B5CF6"
                 strokeWidth={2}
-                dot={{ fill: chartConfig.spo2.color, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: chartConfig.spo2.color }}
+                fill="url(#colorSpo2)"
               />
             )}
-          </LineChart>
+          </AreaChart>
         </ChartContainer>
       </div>
     </div>
