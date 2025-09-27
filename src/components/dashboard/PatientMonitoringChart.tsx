@@ -133,6 +133,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               axisLine={false}
               tickLine={false}
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
+              allowDataOverflow={false}
             />
             
             <ChartTooltip 
