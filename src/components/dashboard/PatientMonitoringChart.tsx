@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
-const chartData = [
+const allChartData = [
   { time: 'Jan 1st', heartRate: 200, bloodPressure: 120, temperature: 98.6, spo2: 98, respiratoryRate: 16 },
   { time: 'Jan 15th', heartRate: 180, bloodPressure: 118, temperature: 98.4, spo2: 97, respiratoryRate: 17 },
   { time: 'Feb 1st', heartRate: 160, bloodPressure: 125, temperature: 98.8, spo2: 98, respiratoryRate: 18 },
@@ -18,6 +18,18 @@ const chartData = [
   { time: 'Jul 1st', heartRate: 70, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 19 },
   { time: 'Jul 15th', heartRate: 50, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 20 },
 ];
+
+const getFilteredData = (timeRange: TimeRange) => {
+  const dataPoints = {
+    '1h': 3,
+    '4h': 6,
+    '12h': 8,
+    '24h': 10,
+    '1w': 14
+  };
+  
+  return allChartData.slice(-dataPoints[timeRange]);
+};
 
 const chartConfig = {
   heartRate: {
@@ -51,6 +63,8 @@ interface PatientMonitoringChartProps {
 
 export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+
+  const chartData = getFilteredData(timeRange);
 
 
   const metricLabels = {
