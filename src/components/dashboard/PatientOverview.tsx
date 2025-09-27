@@ -171,194 +171,196 @@ export const PatientOverview: React.FC = () => {
           </div>
         </div>
       
-        {/* Patient Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
-          {mockPatients.map(patient => {
-            const riskScores = calculateRiskScores(patient.vitals);
-            const selectedVital = selectedVitals[patient.id] || 'hr';
-            const vitalOption = vitalOptions.find(opt => opt.key === selectedVital) || vitalOptions[0];
-            const { critical, warning } = getCriticalWarningVitals(patient.vitals);
-            
-            // Count individual patient risks for overall status
-            const patientRiskCounts = Object.values(riskScores).reduce((acc, score) => {
-              acc[score.risk] = (acc[score.risk] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
-            
-            const criticalCount = patientRiskCounts.critical || 0;
-            const warningCount = patientRiskCounts.warning || 0;
-            
-            // Determine overall patient status
-            const overallStatus = criticalCount > 0 ? 'critical' : warningCount > 0 ? 'warning' : 'normal';
-            
-            // Calculate mean blood pressure
-            const meanBP = Math.round((patient.vitals.bps + patient.vitals.bpd) / 2);
-            
-            // Get current vital data and latest value
-            const currentChartData = patient.chartData[selectedVital as keyof typeof patient.chartData];
-            const latestValue = currentChartData[currentChartData.length - 1]?.value || getVitalValue(patient.vitals, selectedVital);
-            
-            return (
-              <div 
-                key={patient.id} 
-                className={`
-                  bg-black rounded-3xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 cursor-pointer
-                  ${overallStatus === 'critical' 
-                    ? 'border-4 border-red-500' 
-                    : 'border-4 border-[rgba(64,66,73,1)] hover:border-[rgba(100,106,113,1)]'
-                  }
-                `}
-              >
-                {/* Patient Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <div className="text-white text-xl font-bold">{patient.name}</div>
-                    <div className="text-[rgba(217,217,217,1)] text-base">
-                      {patient.id.replace('bed_', 'Bed ')} • {patient.age}y {patient.gender}
-                    </div>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full ${
-                    overallStatus === 'critical' ? 'bg-red-500' :
-                    overallStatus === 'warning' ? 'bg-yellow-500' :
-                    'bg-green-500'
-                  }`}></div>
-                </div>
-                
-                {/* Vital Sign Selection */}
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {vitalOptions.map(option => (
-                      <button
-                        key={option.key}
-                        onClick={() => setSelectedVitals(prev => ({ ...prev, [patient.id]: option.key }))}
-                        className={`px-3 py-1 rounded-lg text-xs transition-all duration-200 ${
-                          selectedVital === option.key
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] hover:bg-[rgba(100,106,113,1)]'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Mini Chart with Latest Value */}
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="text-[rgba(217,217,217,1)] text-sm">{vitalOption.label} - Last 12h</div>
-                    <div className="text-right">
-                      <span className="text-white font-bold text-lg">{latestValue}</span>
-                      <span className="text-[rgba(128,128,128,1)] text-sm ml-1">{vitalOption.unit}</span>
-                    </div>
-                  </div>
-                  <MiniChart 
-                    data={currentChartData} 
-                    color={vitalOption.color}
-                    selectedVital={selectedVital}
-                  />
-                </div>
-                
-                {/* Vital Signs - Enhanced Display */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[rgba(217,217,217,1)] text-base">Heart Rate</span>
-                    <div className={`text-right px-2 py-1 rounded ${
-                      getVitalRisk(patient.vitals, 'hr') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
-                      getVitalRisk(patient.vitals, 'hr') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
-                      ''
-                    }`}>
-                      <span className={`font-bold text-lg ${
-                        getVitalRisk(patient.vitals, 'hr') === 'critical' ? 'text-red-400' :
-                        getVitalRisk(patient.vitals, 'hr') === 'warning' ? 'text-yellow-400' :
-                        'text-white'
-                      }`}>{patient.vitals.hr}</span>
-                      <span className="text-[rgba(128,128,128,1)] text-sm ml-1">bpm</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[rgba(217,217,217,1)] text-base">Blood Pressure</span>
-                    <div className={`text-right px-2 py-1 rounded ${
-                      getVitalRisk(patient.vitals, 'bp') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
-                      getVitalRisk(patient.vitals, 'bp') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
-                      ''
-                    }`}>
-                      <span className={`font-bold text-lg ${
-                        getVitalRisk(patient.vitals, 'bp') === 'critical' ? 'text-red-400' :
-                        getVitalRisk(patient.vitals, 'bp') === 'warning' ? 'text-yellow-400' :
-                        'text-white'
-                      }`}>{patient.vitals.bps}/{patient.vitals.bpd}</span>
-                      <span className="text-[rgba(128,128,128,1)] text-sm ml-1">mmHg</span>
-                      <div className="text-[rgba(128,128,128,1)] text-xs">Mean: {meanBP} mmHg</div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[rgba(217,217,217,1)] text-base">SpO2</span>
-                    <div className={`text-right px-2 py-1 rounded ${
-                      getVitalRisk(patient.vitals, 'spo2') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
-                      getVitalRisk(patient.vitals, 'spo2') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
-                      ''
-                    }`}>
-                      <span className={`font-bold text-lg ${
-                        getVitalRisk(patient.vitals, 'spo2') === 'critical' ? 'text-red-400' :
-                        getVitalRisk(patient.vitals, 'spo2') === 'warning' ? 'text-yellow-400' :
-                        'text-white'
-                      }`}>{patient.vitals.spo2}</span>
-                      <span className="text-[rgba(128,128,128,1)] text-sm ml-1">%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[rgba(217,217,217,1)] text-base">Temperature</span>
-                    <div className={`text-right px-2 py-1 rounded ${
-                      getVitalRisk(patient.vitals, 'temp') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
-                      getVitalRisk(patient.vitals, 'temp') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
-                      ''
-                    }`}>
-                      <span className={`font-bold text-lg ${
-                        getVitalRisk(patient.vitals, 'temp') === 'critical' ? 'text-red-400' :
-                        getVitalRisk(patient.vitals, 'temp') === 'warning' ? 'text-yellow-400' :
-                        'text-white'
-                      }`}>{patient.vitals.temp.toFixed(1)}</span>
-                      <span className="text-[rgba(128,128,128,1)] text-sm ml-1">°F</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[rgba(217,217,217,1)] text-base">Respiratory Rate</span>
-                    <div className={`text-right px-2 py-1 rounded ${
-                      getVitalRisk(patient.vitals, 'rr') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
-                      getVitalRisk(patient.vitals, 'rr') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
-                      ''
-                    }`}>
-                      <span className={`font-bold text-lg ${
-                        getVitalRisk(patient.vitals, 'rr') === 'critical' ? 'text-red-400' :
-                        getVitalRisk(patient.vitals, 'rr') === 'warning' ? 'text-yellow-400' :
-                        'text-white'
-                      }`}>{patient.vitals.rr}</span>
-                      <span className="text-[rgba(128,128,128,1)] text-sm ml-1">bpm</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Risk Summary - Show detailed critical information */}
-                {critical.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-[rgba(64,66,73,1)]">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                        <span className="text-red-400 font-bold text-base">Critical Values:</span>
+        {/* Patient Grid with Dark Background Card */}
+        <div className="bg-[rgba(20,21,25,1)] rounded-3xl p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+            {mockPatients.map(patient => {
+              const riskScores = calculateRiskScores(patient.vitals);
+              const selectedVital = selectedVitals[patient.id] || 'hr';
+              const vitalOption = vitalOptions.find(opt => opt.key === selectedVital) || vitalOptions[0];
+              const { critical, warning } = getCriticalWarningVitals(patient.vitals);
+              
+              // Count individual patient risks for overall status
+              const patientRiskCounts = Object.values(riskScores).reduce((acc, score) => {
+                acc[score.risk] = (acc[score.risk] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>);
+              
+              const criticalCount = patientRiskCounts.critical || 0;
+              const warningCount = patientRiskCounts.warning || 0;
+              
+              // Determine overall patient status
+              const overallStatus = criticalCount > 0 ? 'critical' : warningCount > 0 ? 'warning' : 'normal';
+              
+              // Calculate mean blood pressure
+              const meanBP = Math.round((patient.vitals.bps + patient.vitals.bpd) / 2);
+              
+              // Get current vital data and latest value
+              const currentChartData = patient.chartData[selectedVital as keyof typeof patient.chartData];
+              const latestValue = currentChartData[currentChartData.length - 1]?.value || getVitalValue(patient.vitals, selectedVital);
+              
+              return (
+                <div 
+                  key={patient.id} 
+                  className={`
+                    bg-black rounded-3xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 cursor-pointer
+                    ${overallStatus === 'critical' 
+                      ? 'border-4 border-red-500' 
+                      : 'border-4 border-[rgba(64,66,73,1)] hover:border-[rgba(100,106,113,1)]'
+                    }
+                  `}
+                >
+                  {/* Patient Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <div className="text-white text-xl font-bold">{patient.name}</div>
+                      <div className="text-[rgba(217,217,217,1)] text-base">
+                        {patient.id.replace('bed_', 'Bed ')} • {patient.age}y {patient.gender}
                       </div>
-                      {critical.map((item, index) => (
-                        <div key={index} className="ml-6 text-sm">
-                          <div className="text-red-300 font-semibold">{item.name}: {item.value}</div>
-                          <div className="text-[rgba(217,217,217,1)] text-xs">{item.reason}</div>
-                        </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full ${
+                      overallStatus === 'critical' ? 'bg-red-500' :
+                      overallStatus === 'warning' ? 'bg-yellow-500' :
+                      'bg-green-500'
+                    }`}></div>
+                  </div>
+                  
+                  {/* Vital Sign Selection */}
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {vitalOptions.map(option => (
+                        <button
+                          key={option.key}
+                          onClick={() => setSelectedVitals(prev => ({ ...prev, [patient.id]: option.key }))}
+                          className={`px-3 py-1 rounded-lg text-xs transition-all duration-200 ${
+                            selectedVital === option.key
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] hover:bg-[rgba(100,106,113,1)]'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                  
+                  {/* Mini Chart with Latest Value */}
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-[rgba(217,217,217,1)] text-sm">{vitalOption.label} - Last 12h</div>
+                      <div className="text-right">
+                        <span className="text-white font-bold text-lg">{latestValue}</span>
+                        <span className="text-[rgba(128,128,128,1)] text-sm ml-1">{vitalOption.unit}</span>
+                      </div>
+                    </div>
+                    <MiniChart 
+                      data={currentChartData} 
+                      color={vitalOption.color}
+                      selectedVital={selectedVital}
+                    />
+                  </div>
+                  
+                  {/* Vital Signs - Enhanced Display */}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[rgba(217,217,217,1)] text-base">Heart Rate</span>
+                      <div className={`text-right px-2 py-1 rounded ${
+                        getVitalRisk(patient.vitals, 'hr') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                        getVitalRisk(patient.vitals, 'hr') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                        ''
+                      }`}>
+                        <span className={`font-bold text-lg ${
+                          getVitalRisk(patient.vitals, 'hr') === 'critical' ? 'text-red-400' :
+                          getVitalRisk(patient.vitals, 'hr') === 'warning' ? 'text-yellow-400' :
+                          'text-white'
+                        }`}>{patient.vitals.hr}</span>
+                        <span className="text-[rgba(128,128,128,1)] text-sm ml-1">bpm</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[rgba(217,217,217,1)] text-base">Blood Pressure</span>
+                      <div className={`text-right px-2 py-1 rounded ${
+                        getVitalRisk(patient.vitals, 'bp') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                        getVitalRisk(patient.vitals, 'bp') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                        ''
+                      }`}>
+                        <span className={`font-bold text-lg ${
+                          getVitalRisk(patient.vitals, 'bp') === 'critical' ? 'text-red-400' :
+                          getVitalRisk(patient.vitals, 'bp') === 'warning' ? 'text-yellow-400' :
+                          'text-white'
+                        }`}>{patient.vitals.bps}/{patient.vitals.bpd}</span>
+                        <span className="text-[rgba(128,128,128,1)] text-sm ml-1">mmHg</span>
+                        <div className="text-[rgba(128,128,128,1)] text-xs">Mean: {meanBP} mmHg</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[rgba(217,217,217,1)] text-base">SpO2</span>
+                      <div className={`text-right px-2 py-1 rounded ${
+                        getVitalRisk(patient.vitals, 'spo2') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                        getVitalRisk(patient.vitals, 'spo2') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                        ''
+                      }`}>
+                        <span className={`font-bold text-lg ${
+                          getVitalRisk(patient.vitals, 'spo2') === 'critical' ? 'text-red-400' :
+                          getVitalRisk(patient.vitals, 'spo2') === 'warning' ? 'text-yellow-400' :
+                          'text-white'
+                        }`}>{patient.vitals.spo2}</span>
+                        <span className="text-[rgba(128,128,128,1)] text-sm ml-1">%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[rgba(217,217,217,1)] text-base">Temperature</span>
+                      <div className={`text-right px-2 py-1 rounded ${
+                        getVitalRisk(patient.vitals, 'temp') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                        getVitalRisk(patient.vitals, 'temp') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                        ''
+                      }`}>
+                        <span className={`font-bold text-lg ${
+                          getVitalRisk(patient.vitals, 'temp') === 'critical' ? 'text-red-400' :
+                          getVitalRisk(patient.vitals, 'temp') === 'warning' ? 'text-yellow-400' :
+                          'text-white'
+                        }`}>{patient.vitals.temp.toFixed(1)}</span>
+                        <span className="text-[rgba(128,128,128,1)] text-sm ml-1">°F</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[rgba(217,217,217,1)] text-base">Respiratory Rate</span>
+                      <div className={`text-right px-2 py-1 rounded ${
+                        getVitalRisk(patient.vitals, 'rr') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                        getVitalRisk(patient.vitals, 'rr') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                        ''
+                      }`}>
+                        <span className={`font-bold text-lg ${
+                          getVitalRisk(patient.vitals, 'rr') === 'critical' ? 'text-red-400' :
+                          getVitalRisk(patient.vitals, 'rr') === 'warning' ? 'text-yellow-400' :
+                          'text-white'
+                        }`}>{patient.vitals.rr}</span>
+                        <span className="text-[rgba(128,128,128,1)] text-sm ml-1">bpm</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Risk Summary - Show detailed critical information */}
+                  {critical.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-[rgba(64,66,73,1)]">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                          <span className="text-red-400 font-bold text-base">Critical Values:</span>
+                        </div>
+                        {critical.map((item, index) => (
+                          <div key={index} className="ml-6 text-sm">
+                            <div className="text-red-300 font-semibold">{item.name}: {item.value}</div>
+                            <div className="text-[rgba(217,217,217,1)] text-xs">{item.reason}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
