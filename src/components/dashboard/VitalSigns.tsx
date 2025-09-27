@@ -1,7 +1,7 @@
 import React from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 
-type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2';
+type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
 interface VitalSignsProps {
   selectedMetrics: MetricType[];
@@ -66,6 +66,15 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             className="pl-[15px] pr-[34px]"
             onClick={() => onMetricToggle('temperature')}
             isSelected={selectedMetrics.includes('temperature')}
+          />
+          <MetricCard
+            value="18"
+            change="+2.1 (0.3%)"
+            changeType="positive"
+            label="Respiratory Rate"
+            className="pl-4 pr-[34px]"
+            onClick={() => onMetricToggle('respiratoryRate')}
+            isSelected={selectedMetrics.includes('respiratoryRate')}
           />
         </div>
       </div>

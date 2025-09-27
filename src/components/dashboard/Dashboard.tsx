@@ -6,7 +6,7 @@ import { VitalSigns } from './VitalSigns';
 import { RiskScores } from './RiskScores';
 import { PatientMonitoringChart } from './PatientMonitoringChart';
 
-type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2';
+type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
 export const Dashboard: React.FC = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);

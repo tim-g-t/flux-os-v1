@@ -3,20 +3,20 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 const chartData = [
-  { time: 'Jan 1st', heartRate: 200, bloodPressure: 120, temperature: 98.6, spo2: 98 },
-  { time: 'Jan 15th', heartRate: 180, bloodPressure: 118, temperature: 98.4, spo2: 97 },
-  { time: 'Feb 1st', heartRate: 160, bloodPressure: 125, temperature: 98.8, spo2: 98 },
-  { time: 'Feb 15th', heartRate: 140, bloodPressure: 130, temperature: 99.1, spo2: 96 },
-  { time: 'Mar 1st', heartRate: 120, bloodPressure: 135, temperature: 99.3, spo2: 95 },
-  { time: 'Mar 15th', heartRate: 130, bloodPressure: 128, temperature: 98.9, spo2: 97 },
-  { time: 'Apr 1st', heartRate: 140, bloodPressure: 132, temperature: 99.0, spo2: 96 },
-  { time: 'Apr 15th', heartRate: 150, bloodPressure: 140, temperature: 99.5, spo2: 94 },
-  { time: 'May 1st', heartRate: 160, bloodPressure: 140, temperature: 99.5, spo2: 94 },
-  { time: 'May 15th', heartRate: 140, bloodPressure: 140, temperature: 99.5, spo2: 94 },
-  { time: 'Jun 1st', heartRate: 100, bloodPressure: 140, temperature: 99.5, spo2: 94 },
-  { time: 'Jun 15th', heartRate: 80, bloodPressure: 140, temperature: 99.5, spo2: 94 },
-  { time: 'Jul 1st', heartRate: 70, bloodPressure: 140, temperature: 99.5, spo2: 94 },
-  { time: 'Jul 15th', heartRate: 50, bloodPressure: 140, temperature: 99.5, spo2: 94 },
+  { time: 'Jan 1st', heartRate: 200, bloodPressure: 120, temperature: 98.6, spo2: 98, respiratoryRate: 16 },
+  { time: 'Jan 15th', heartRate: 180, bloodPressure: 118, temperature: 98.4, spo2: 97, respiratoryRate: 17 },
+  { time: 'Feb 1st', heartRate: 160, bloodPressure: 125, temperature: 98.8, spo2: 98, respiratoryRate: 18 },
+  { time: 'Feb 15th', heartRate: 140, bloodPressure: 130, temperature: 99.1, spo2: 96, respiratoryRate: 19 },
+  { time: 'Mar 1st', heartRate: 120, bloodPressure: 135, temperature: 99.3, spo2: 95, respiratoryRate: 20 },
+  { time: 'Mar 15th', heartRate: 130, bloodPressure: 128, temperature: 98.9, spo2: 97, respiratoryRate: 18 },
+  { time: 'Apr 1st', heartRate: 140, bloodPressure: 132, temperature: 99.0, spo2: 96, respiratoryRate: 17 },
+  { time: 'Apr 15th', heartRate: 150, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 16 },
+  { time: 'May 1st', heartRate: 160, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 15 },
+  { time: 'May 15th', heartRate: 140, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 16 },
+  { time: 'Jun 1st', heartRate: 100, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 17 },
+  { time: 'Jun 15th', heartRate: 80, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 18 },
+  { time: 'Jul 1st', heartRate: 70, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 19 },
+  { time: 'Jul 15th', heartRate: 50, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 20 },
 ];
 
 const chartConfig = {
@@ -36,9 +36,13 @@ const chartConfig = {
     label: 'SpO2',
     color: '#8B5CF6',
   },
+  respiratoryRate: {
+    label: 'RR',
+    color: '#F59E0B',
+  },
 };
 
-type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2';
+type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 type TimeRange = '1h' | '4h' | '12h' | '24h' | '1w';
 
 interface PatientMonitoringChartProps {
@@ -111,6 +115,10 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
                 <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
               </linearGradient>
+              <linearGradient id="colorRespiratoryRate" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
+              </linearGradient>
             </defs>
             <XAxis 
               dataKey="time" 
@@ -170,6 +178,16 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 stroke="#8B5CF6"
                 strokeWidth={2}
                 fill="url(#colorSpo2)"
+              />
+            )}
+            
+            {selectedMetrics.includes('respiratoryRate') && (
+              <Area
+                type="monotone"
+                dataKey="respiratoryRate"
+                stroke="#F59E0B"
+                strokeWidth={2}
+                fill="url(#colorRespiratoryRate)"
               />
             )}
           </AreaChart>
