@@ -136,8 +136,8 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
             {selectedMetrics.includes('bloodPressure') && (
               <>
                 <Line type="monotone" dataKey="bloodPressureSystolic" stroke="#EF4444" strokeWidth={3} dot={false} />
-                <Line type="monotone" dataKey="bloodPressureDiastolic" stroke="#DC2626" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="bloodPressureMean" stroke="#B91C1C" strokeWidth={2} strokeDasharray="8,4" dot={false} />
+                <Line type="monotone" dataKey="bloodPressureDiastolic" stroke="#F97316" strokeWidth={3} dot={false} />
+                <Line type="monotone" dataKey="bloodPressureMean" stroke="#8B5CF6" strokeWidth={2} strokeDasharray="8,4" dot={false} />
               </>
             )}
             {selectedMetrics.includes('temperature') && (
