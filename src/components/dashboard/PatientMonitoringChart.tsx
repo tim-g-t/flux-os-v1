@@ -1,35 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
-
-const allChartData = [
-  { time: 'Jan 1st', heartRate: 200, bloodPressure: 120, temperature: 98.6, spo2: 98, respiratoryRate: 16 },
-  { time: 'Jan 15th', heartRate: 180, bloodPressure: 118, temperature: 98.4, spo2: 97, respiratoryRate: 17 },
-  { time: 'Feb 1st', heartRate: 160, bloodPressure: 125, temperature: 98.8, spo2: 98, respiratoryRate: 18 },
-  { time: 'Feb 15th', heartRate: 140, bloodPressure: 130, temperature: 99.1, spo2: 96, respiratoryRate: 19 },
-  { time: 'Mar 1st', heartRate: 120, bloodPressure: 135, temperature: 99.3, spo2: 95, respiratoryRate: 20 },
-  { time: 'Mar 15th', heartRate: 130, bloodPressure: 128, temperature: 98.9, spo2: 97, respiratoryRate: 18 },
-  { time: 'Apr 1st', heartRate: 140, bloodPressure: 132, temperature: 99.0, spo2: 96, respiratoryRate: 17 },
-  { time: 'Apr 15th', heartRate: 150, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 16 },
-  { time: 'May 1st', heartRate: 160, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 15 },
-  { time: 'May 15th', heartRate: 140, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 16 },
-  { time: 'Jun 1st', heartRate: 100, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 17 },
-  { time: 'Jun 15th', heartRate: 80, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 18 },
-  { time: 'Jul 1st', heartRate: 70, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 19 },
-  { time: 'Jul 15th', heartRate: 50, bloodPressure: 140, temperature: 99.5, spo2: 94, respiratoryRate: 20 },
-];
-
-const getFilteredData = (timeRange: TimeRange) => {
-  const dataPoints = {
-    '1h': 3,
-    '4h': 6,
-    '12h': 8,
-    '24h': 10,
-    '1w': 14
-  };
-  
-  return allChartData.slice(-dataPoints[timeRange]);
-};
+import { useVitals } from '@/hooks/useVitals';
 
 const chartConfig = {
   heartRate: {
@@ -63,16 +35,32 @@ interface PatientMonitoringChartProps {
 
 export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+  const { getFilteredData, loading } = useVitals('bed_15');
 
-  const chartData = getFilteredData(timeRange);
+  const chartData = useMemo(() => {
+    const data = getFilteredData(timeRange);
+    return data.map((item, index) => ({
+      time: new Date(item.timestamp).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      }),
+      heartRate: item.vital.hr,
+      bloodPressure: item.vital.bps, // Using systolic for chart
+      temperature: item.vital.temp,
+      spo2: item.vital.spo2,
+      respiratoryRate: item.vital.rr
+    }));
+  }, [getFilteredData, timeRange]);
 
+  if (loading) {
+    return (
+      <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
+        <div className="text-white text-xl font-medium">Loading chart data...</div>
+      </div>
+    );
+  }
 
-  const metricLabels = {
-    heartRate: 'HR',
-    bloodPressure: 'BP',
-    temperature: 'Temp',
-    spo2: 'SpO2'
-  };
 
   const timeRangeLabels = {
     '1h': '1h',
