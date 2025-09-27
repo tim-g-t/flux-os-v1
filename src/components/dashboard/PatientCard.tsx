@@ -16,7 +16,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   backgroundImage
 }) => {
   return (
-    <article className="w-[22%] max-md:w-full max-md:ml-0">
+    <article className="w-[20%] max-md:w-full max-md:ml-0">
       <div className="flex flex-col relative aspect-[1.061] grow text-xl text-white font-medium rounded-3xl max-md:mt-10">
         <img
           src={backgroundImage}
