@@ -26,7 +26,7 @@ export const Dashboard: React.FC = () => {
           <Header />
           <div className="bg-[rgba(26,27,32,1)] border w-full mt-8 pt-6 px-6 rounded-[32px_0px_0px_0px] border-[rgba(64,66,73,1)] border-solid max-md:max-w-full max-md:px-5">
             <div className="max-md:max-w-full max-md:mr-[9px]">
-              <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
+              <div className="gap-5 flex items-stretch max-md:flex-col">
                 <PatientCard
                   bedNumber="Bed 15"
                   patientName="Simon A."
