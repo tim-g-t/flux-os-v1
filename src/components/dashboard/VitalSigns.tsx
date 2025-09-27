@@ -65,16 +65,26 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
         </div>
         <div className="flex items-stretch gap-[21px] flex-wrap mt-4 max-md:max-w-full">
           <MetricCard
-            value={latestVitals.hr.toString()}
+            value={
+              <span>
+                {latestVitals.hr}
+                <span className="text-gray-500 text-[0.5em] ml-1">bpm</span>
+              </span>
+            }
             change={hrChange.value}
             changeType={hrChange.type as 'positive' | 'negative'}
-            label="Pulse"
+            label="Heart Rate"
             className="pl-4 pr-[34px]"
             onClick={() => onMetricToggle('heartRate')}
             isSelected={selectedMetrics.includes('heartRate')}
           />
           <MetricCard
-            value={`${latestVitals.bpd}/${latestVitals.bps}`}
+            value={
+              <span>
+                {latestVitals.bpd}/{latestVitals.bps}
+                <span className="text-gray-500 text-[0.5em] ml-1">mmHg</span>
+              </span>
+            }
             change={bpChange.value}
             changeType={bpChange.type as 'positive' | 'negative'}
             label="Blood Pressure"
@@ -82,7 +92,12 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             isSelected={selectedMetrics.includes('bloodPressure')}
           />
           <MetricCard
-            value={latestVitals.spo2.toString()}
+            value={
+              <span>
+                {latestVitals.spo2}
+                <span className="text-gray-500 text-[0.5em] ml-1">%</span>
+              </span>
+            }
             change={spo2Change.value}
             changeType={spo2Change.type as 'positive' | 'negative'}
             label="SpO2"
@@ -91,7 +106,12 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             isSelected={selectedMetrics.includes('spo2')}
           />
           <MetricCard
-            value={latestVitals.temp.toString()}
+            value={
+              <span>
+                {latestVitals.temp}
+                <span className="text-gray-500 text-[0.5em] ml-1">°F</span>
+              </span>
+            }
             change={tempChange.value}
             changeType={tempChange.type as 'positive' | 'negative'}
             label="Temp"
@@ -100,7 +120,12 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             isSelected={selectedMetrics.includes('temperature')}
           />
           <MetricCard
-            value={latestVitals.rr.toString()}
+            value={
+              <span>
+                {latestVitals.rr}
+                <span className="text-gray-500 text-[0.5em] ml-1">bpm</span>
+              </span>
+            }
             change={rrChange.value}
             changeType={rrChange.type as 'positive' | 'negative'}
             label="Respiratory Rate"
