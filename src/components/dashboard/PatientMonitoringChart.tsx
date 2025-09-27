@@ -97,9 +97,9 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       </div>
 
       {/* Chart */}
-      <div className="h-80 w-full">
+      <div className="h-96 w-full">
         <ChartContainer config={chartConfig}>
-          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
             <defs>
               <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
