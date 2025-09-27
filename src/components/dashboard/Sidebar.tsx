@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 
-export const Sidebar: React.FC = () => {
-  const [activeMenu, setActiveMenu] = useState('Patient Detail');
+interface SidebarProps {
+  activeView: string;
+  onViewChange: (view: string) => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
   return (
     <nav className="w-[17%] max-md:w-full max-md:ml-0">
       <div className="flex flex-col items-stretch mt-3 max-md:mt-10">
@@ -28,9 +32,9 @@ export const Sidebar: React.FC = () => {
         
         {/* Dashboard */}
         <button 
-          onClick={() => setActiveMenu('Dashboard')}
+          onClick={() => onViewChange('Dashboard')}
           className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
-            activeMenu === 'Dashboard' 
+            activeView === 'Dashboard' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white hover:text-white'
           }`}
@@ -41,9 +45,9 @@ export const Sidebar: React.FC = () => {
         
         {/* Patient Detail */}
         <button 
-          onClick={() => setActiveMenu('Patient Detail')}
+          onClick={() => onViewChange('Patient Detail')}
           className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[132px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-colors hover:bg-[rgba(36,37,42,1)] ${
-            activeMenu === 'Patient Detail' 
+            activeView === 'Patient Detail' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white font-normal'
           }`}
@@ -54,9 +58,9 @@ export const Sidebar: React.FC = () => {
         
         {/* Analytics */}
         <button 
-          onClick={() => setActiveMenu('Analytics')}
+          onClick={() => onViewChange('Analytics')}
           className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
-            activeMenu === 'Analytics' 
+            activeView === 'Analytics' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white hover:text-white'
           }`}
@@ -67,9 +71,9 @@ export const Sidebar: React.FC = () => {
         
         {/* Reports */}
         <button 
-          onClick={() => setActiveMenu('Reports')}
+          onClick={() => onViewChange('Reports')}
           className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
-            activeMenu === 'Reports' 
+            activeView === 'Reports' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white hover:text-white'
           }`}
@@ -83,9 +87,9 @@ export const Sidebar: React.FC = () => {
         
         {/* Help & Support */}
         <button 
-          onClick={() => setActiveMenu('Help & Support')}
+          onClick={() => onViewChange('Help & Support')}
           className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-8 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
-            activeMenu === 'Help & Support' 
+            activeView === 'Help & Support' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white hover:text-white'
           }`}

@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
-  value: string;
+  value: React.ReactNode;
   change: string;
   changeType: 'positive' | 'negative';
   label: string;
