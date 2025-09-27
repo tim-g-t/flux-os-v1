@@ -28,6 +28,12 @@ class VitalsService {
       if (response.ok) {
         this.data = await response.json();
         this.lastReadingCount = this.data.readings.length;
+        
+        // If file is empty or has no recent data, generate demo data
+        if (this.data.readings.length === 0 || this.hasOnlyOldData()) {
+          console.log('No recent data found, generating demo data');
+          this.data = this.generateDemoData();
+        }
       } else {
         // Generate demo data if file doesn't exist
         this.data = this.generateDemoData();
@@ -87,13 +93,16 @@ class VitalsService {
     const readings: VitalTimestamp[] = [];
     const beds = ['bed_15', 'bed_16', 'bed_17', 'bed_18', 'bed_19', 'bed_20', 'bed_21', 'bed_22', 'bed_23', 'bed_24', 'bed_25', 'bed_26'];
     
-    // Generate 7 days of historical data (1 reading per second = 604,800 readings per week)
-    const startTime = new Date();
-    startTime.setDate(startTime.getDate() - 7);
+    // Generate last 24 hours of data (every 30 seconds for demo)
+    const now = new Date();
+    const startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
     
-    // Generate every 10 seconds for demo (much more manageable)
-    for (let i = 0; i < 60480; i++) { // 7 days * 24 hours * 60 minutes * 6 (every 10 seconds)
-      const timestamp = new Date(startTime.getTime() + i * 10000);
+    // Generate every 30 seconds for last 24 hours = 2,880 readings
+    const intervalMs = 30 * 1000; // 30 seconds
+    const totalReadings = Math.floor((24 * 60 * 60 * 1000) / intervalMs);
+    
+    for (let i = 0; i < totalReadings; i++) {
+      const timestamp = new Date(startTime.getTime() + i * intervalMs);
       const reading: VitalTimestamp = {
         timestamp: timestamp.toISOString()
       };
@@ -160,6 +169,17 @@ class VitalsService {
     this.data.readings.push(reading);
     this.lastReadingCount = this.data.readings.length;
     this.notifyListeners();
+  }
+
+  private hasOnlyOldData(): boolean {
+    if (this.data.readings.length === 0) return true;
+    
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    // Check if the most recent reading is older than 1 day
+    const mostRecent = this.data.readings[this.data.readings.length - 1];
+    return new Date(mostRecent.timestamp) < oneDayAgo;
   }
 
   getData(): VitalsData {
