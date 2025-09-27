@@ -1,37 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { useVitals } from '@/hooks/useVitals';
 
-const chartConfig = {
-  heartRate: {
-    label: 'HR',
-    color: '#3B82F6',
-  },
-  bloodPressure: {
-    label: 'BP',
-    color: '#EF4444',
-  },
-  temperature: {
-    label: 'Temp',
-    color: '#10B981',
-  },
-  spo2: {
-    label: 'SpO2',
-    color: '#8B5CF6',
-  },
-  respiratoryRate: {
-    label: 'RR',
-    color: '#F59E0B',
-  },
-};
-
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 type TimeRange = '1h' | '4h' | '12h' | '24h' | '1w';
-
-// Define metric groups for dual Y-axis
-const leftAxisMetrics: MetricType[] = ['heartRate', 'bloodPressure'];
-const rightAxisMetrics: MetricType[] = ['respiratoryRate', 'temperature', 'spo2'];
 
 interface PatientMonitoringChartProps {
   selectedMetrics: MetricType[];
@@ -43,254 +15,66 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
 
   const chartData = useMemo(() => {
     const data = getFilteredData(timeRange);
-    return data.map((item, index) => ({
+    return data.map((item) => ({
       time: new Date(item.timestamp).toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit',
         hour12: false 
       }),
       heartRate: item.vital.hr,
-      bloodPressure: item.vital.bps, // Using systolic for chart
+      bloodPressure: item.vital.bps,
       temperature: item.vital.temp,
       spo2: item.vital.spo2,
       respiratoryRate: item.vital.rr
     }));
   }, [getFilteredData, timeRange]);
 
-  // Calculate axis domains and determine which axes to show
-  const { leftAxisDomain, rightAxisDomain, hasLeftMetrics, hasRightMetrics } = useMemo(() => {
-    if (selectedMetrics.length === 0 || chartData.length === 0) {
-      return { 
-        leftAxisDomain: [0, 200], 
-        rightAxisDomain: [0, 100], 
-        hasLeftMetrics: false, 
-        hasRightMetrics: false 
-      };
-    }
-    
-    const selectedLeftMetrics = selectedMetrics.filter(metric => leftAxisMetrics.includes(metric));
-    const selectedRightMetrics = selectedMetrics.filter(metric => rightAxisMetrics.includes(metric));
-    
-    // Calculate left axis domain (HR, BP)
-    let leftDomain: [number, number] = [0, 200];
-    if (selectedLeftMetrics.length > 0) {
-      let leftValues: number[] = [];
-      selectedLeftMetrics.forEach(metric => {
-        const values = chartData.map(item => item[metric]).filter(val => val != null);
-        leftValues = [...leftValues, ...values];
-      });
-      
-      if (leftValues.length > 0) {
-        const max = Math.max(...leftValues);
-        const padding = max * 0.1;
-        leftDomain = [0, max + padding];
-      }
-    }
-    
-    // Calculate right axis domain (RR, Temp, SpO2)
-    let rightDomain: [number, number] = [0, 100];
-    if (selectedRightMetrics.length > 0) {
-      let rightValues: number[] = [];
-      selectedRightMetrics.forEach(metric => {
-        const values = chartData.map(item => item[metric]).filter(val => val != null);
-        rightValues = [...rightValues, ...values];
-      });
-      
-      if (rightValues.length > 0) {
-        const min = Math.min(...rightValues);
-        const max = Math.max(...rightValues);
-        const padding = (max - min) * 0.1;
-        rightDomain = [Math.max(0, min - padding), max + padding];
-      }
-    }
-    
-    return { 
-      leftAxisDomain: leftDomain, 
-      rightAxisDomain: rightDomain,
-      hasLeftMetrics: selectedLeftMetrics.length > 0,
-      hasRightMetrics: selectedRightMetrics.length > 0
-    };
-  }, [selectedMetrics, chartData]);
-
   if (loading) {
-    return (
-      <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
-        <div className="text-white text-xl font-medium">Loading chart data...</div>
-      </div>
-    );
+    return <div className="text-white">Loading...</div>;
   }
 
-
-  const timeRangeLabels = {
-    '1h': '1h',
-    '4h': '4h', 
-    '12h': '12h',
-    '24h': '24h',
-    '1w': '1w'
-  };
-
   return (
-    <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
-      {/* Header with title and selectors */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-white text-xl font-medium">Vital Signs</h3>
-        
-        <div className="flex items-center gap-6">
-          {/* Time Range Selector - Circular buttons */}
-          <div className="flex gap-2">
-            {(Object.keys(timeRangeLabels) as TimeRange[]).map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`w-12 h-12 rounded-full text-sm font-medium transition-colors ${
-                  timeRange === range
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-transparent border border-gray-600 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                {timeRangeLabels[range]}
-              </button>
-            ))}
-          </div>
+    <div className="w-full mt-6 bg-black rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-white text-xl">Vital Signs</h3>
+        <div className="flex gap-2">
+          {['1h', '4h', '12h', '24h', '1w'].map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range as TimeRange)}
+              className={`w-12 h-12 rounded-full text-sm ${
+                timeRange === range ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-300'
+              }`}
+            >
+              {range}
+            </button>
+          ))}
         </div>
       </div>
-
-      {/* Chart */}
-      <div className="h-96 w-full">
-        <ChartContainer config={chartConfig}>
-          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-            <defs>
-              <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="colorBloodPressure" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="colorTemperature" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="colorSpo2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="colorRespiratoryRate" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
-              </linearGradient>
-            </defs>
-            <XAxis 
-              dataKey="time" 
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
-            />
-            
-            {/* Only render left YAxis if we have left metrics selected */}
-            {hasLeftMetrics && (
-              <YAxis 
-                yAxisId="left"
-                domain={leftAxisDomain}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
-              />
-            )}
-            
-            {/* Only render right YAxis if we have right metrics selected */}
-            {hasRightMetrics && (
-              <YAxis 
-                yAxisId="right"
-                orientation="right"
-                domain={rightAxisDomain}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
-              />
-            )}
-            
-            {/* Fallback single YAxis when no specific metrics selected */}
-            {!hasLeftMetrics && !hasRightMetrics && selectedMetrics.length > 0 && (
-              <YAxis 
-                domain={[0, 100]}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
-              />
-            )}
-            <ChartTooltip 
-              content={<ChartTooltipContent />}
-              contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                border: '1px solid rgba(75, 85, 99, 1)',
-                borderRadius: '8px',
-                color: 'white'
-              }}
-            />
+      
+      <div className="h-80 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData}>
+            <XAxis dataKey="time" />
+            <YAxis domain={[0, 200]} />
             
             {selectedMetrics.includes('heartRate') && (
-              <Area
-                type="monotone"
-                dataKey="heartRate"
-                stroke="#3B82F6"
-                strokeWidth={2}
-                fill="url(#colorHeartRate)"
-                fillOpacity={0.2}
-                {...(hasLeftMetrics ? { yAxisId: "left" } : {})}
-              />
+              <Area type="monotone" dataKey="heartRate" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
             )}
-            
             {selectedMetrics.includes('bloodPressure') && (
-              <Area
-                type="monotone"
-                dataKey="bloodPressure"
-                stroke="#EF4444"
-                strokeWidth={2}
-                fill="url(#colorBloodPressure)"
-                fillOpacity={0.2}
-                {...(hasLeftMetrics ? { yAxisId: "left" } : {})}
-              />
+              <Area type="monotone" dataKey="bloodPressure" stroke="#EF4444" fill="#EF4444" fillOpacity={0.3} />
             )}
-            
             {selectedMetrics.includes('temperature') && (
-              <Area
-                type="monotone"
-                dataKey="temperature"
-                stroke="#10B981"
-                strokeWidth={2}
-                fill="url(#colorTemperature)"
-                fillOpacity={0.2}
-                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
-              />
+              <Area type="monotone" dataKey="temperature" stroke="#10B981" fill="#10B981" fillOpacity={0.3} />
             )}
-            
             {selectedMetrics.includes('spo2') && (
-              <Area
-                type="monotone"
-                dataKey="spo2"
-                stroke="#8B5CF6"
-                strokeWidth={2}
-                fill="url(#colorSpo2)"
-                fillOpacity={0.2}
-                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
-              />
+              <Area type="monotone" dataKey="spo2" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} />
             )}
-            
             {selectedMetrics.includes('respiratoryRate') && (
-              <Area
-                type="monotone"
-                dataKey="respiratoryRate"
-                stroke="#F59E0B"
-                strokeWidth={2}
-                fill="url(#colorRespiratoryRate)"
-                fillOpacity={0.2}
-                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
-              />
+              <Area type="monotone" dataKey="respiratoryRate" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.3} />
             )}
           </AreaChart>
-        </ChartContainer>
+        </ResponsiveContainer>
       </div>
     </div>
   );
