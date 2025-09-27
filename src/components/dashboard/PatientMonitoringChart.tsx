@@ -57,17 +57,22 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     }));
   }, [getFilteredData, timeRange]);
 
-  // Calculate separate Y-axis domains for left and right axes
-  const { leftAxisDomain, rightAxisDomain } = useMemo(() => {
+  // Calculate axis domains and determine which axes to show
+  const { leftAxisDomain, rightAxisDomain, hasLeftMetrics, hasRightMetrics } = useMemo(() => {
     if (selectedMetrics.length === 0 || chartData.length === 0) {
-      return { leftAxisDomain: [0, 200], rightAxisDomain: [0, 100] };
+      return { 
+        leftAxisDomain: [0, 200], 
+        rightAxisDomain: [0, 100], 
+        hasLeftMetrics: false, 
+        hasRightMetrics: false 
+      };
     }
     
     const selectedLeftMetrics = selectedMetrics.filter(metric => leftAxisMetrics.includes(metric));
     const selectedRightMetrics = selectedMetrics.filter(metric => rightAxisMetrics.includes(metric));
     
     // Calculate left axis domain (HR, BP)
-    let leftDomain: [number, number] = [0, 200]; // Default for high-range metrics
+    let leftDomain: [number, number] = [0, 200];
     if (selectedLeftMetrics.length > 0) {
       let leftValues: number[] = [];
       selectedLeftMetrics.forEach(metric => {
@@ -83,7 +88,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     }
     
     // Calculate right axis domain (RR, Temp, SpO2)
-    let rightDomain: [number, number] = [0, 100]; // Default for low-range metrics
+    let rightDomain: [number, number] = [0, 100];
     if (selectedRightMetrics.length > 0) {
       let rightValues: number[] = [];
       selectedRightMetrics.forEach(metric => {
@@ -99,7 +104,12 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       }
     }
     
-    return { leftAxisDomain: leftDomain, rightAxisDomain: rightDomain };
+    return { 
+      leftAxisDomain: leftDomain, 
+      rightAxisDomain: rightDomain,
+      hasLeftMetrics: selectedLeftMetrics.length > 0,
+      hasRightMetrics: selectedRightMetrics.length > 0
+    };
   }, [selectedMetrics, chartData]);
 
   if (loading) {
@@ -177,21 +187,39 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               tickLine={false}
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
             />
-            <YAxis 
-              yAxisId="left"
-              domain={leftAxisDomain}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
-            />
-            <YAxis 
-              yAxisId="right"
-              orientation="right"
-              domain={rightAxisDomain}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
-            />
+            
+            {/* Only render left YAxis if we have left metrics selected */}
+            {hasLeftMetrics && (
+              <YAxis 
+                yAxisId="left"
+                domain={leftAxisDomain}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
+              />
+            )}
+            
+            {/* Only render right YAxis if we have right metrics selected */}
+            {hasRightMetrics && (
+              <YAxis 
+                yAxisId="right"
+                orientation="right"
+                domain={rightAxisDomain}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
+              />
+            )}
+            
+            {/* Fallback single YAxis when no specific metrics selected */}
+            {!hasLeftMetrics && !hasRightMetrics && selectedMetrics.length > 0 && (
+              <YAxis 
+                domain={[0, 100]}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
+              />
+            )}
             <ChartTooltip 
               content={<ChartTooltipContent />}
               contentStyle={{
@@ -210,7 +238,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorHeartRate)"
                 fillOpacity={0.2}
-                yAxisId="left"
+                {...(hasLeftMetrics ? { yAxisId: "left" } : {})}
               />
             )}
             
@@ -222,7 +250,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorBloodPressure)"
                 fillOpacity={0.2}
-                yAxisId="left"
+                {...(hasLeftMetrics ? { yAxisId: "left" } : {})}
               />
             )}
             
@@ -234,7 +262,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorTemperature)"
                 fillOpacity={0.2}
-                yAxisId="right"
+                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
               />
             )}
             
@@ -246,7 +274,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorSpo2)"
                 fillOpacity={0.2}
-                yAxisId="right"
+                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
               />
             )}
             
@@ -258,7 +286,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorRespiratoryRate)"
                 fillOpacity={0.2}
-                yAxisId="right"
+                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
               />
             )}
           </AreaChart>
