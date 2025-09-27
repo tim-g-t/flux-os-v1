@@ -38,6 +38,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
   const { getFilteredData, loading } = useVitals('bed_15');
 
   const chartData = useMemo(() => {
+    if (loading) return [];
     const data = getFilteredData(timeRange);
     return data.map((item, index) => ({
       time: new Date(item.timestamp).toLocaleTimeString('en-US', { 
@@ -51,16 +52,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       spo2: item.vital.spo2,
       respiratoryRate: item.vital.rr
     }));
-  }, [getFilteredData, timeRange]);
-
-  if (loading) {
-    return (
-      <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
-        <div className="text-white text-xl font-medium">Loading chart data...</div>
-      </div>
-    );
-  }
-
+  }, [getFilteredData, timeRange, loading]);
 
   const getYAxisDomain = useMemo(() => {
     // Determine appropriate Y-axis range based on selected metrics
@@ -99,6 +91,14 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     '24h': '24h',
     '1w': '1w'
   };
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
+        <div className="text-white text-xl font-medium">Loading chart data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
