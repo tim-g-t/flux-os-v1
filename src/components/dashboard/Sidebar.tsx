@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export const Sidebar: React.FC = () => {
+  const [activeMenu, setActiveMenu] = useState('Patient Detail');
   return (
     <nav className="w-[17%] max-md:w-full max-md:ml-0">
       <div className="flex flex-col items-stretch mt-3 max-md:mt-10">
@@ -24,49 +25,74 @@ export const Sidebar: React.FC = () => {
         <div className="text-[rgba(217,217,217,1)] text-xs font-normal ml-[23px] mt-10 max-md:ml-2.5">
           Main Menu
         </div>
-        <div className="rounded bg-[rgba(1,119,251,1)] flex flex-col text-lg text-white font-semibold whitespace-nowrap justify-center mt-6 pl-6 pr-[132px] py-[18px] max-md:mr-0.5 max-md:px-5">
-          <div className="flex items-center gap-4">
-            <div className="self-stretch flex w-[21px] shrink-0 h-5 my-auto" />
-            <div className="self-stretch flex gap-2.5 my-auto">
-              <div>Dashboard</div>
-            </div>
-          </div>
-        </div>
-        <div className="flex w-[158px] max-w-full flex-col text-lg text-white font-normal ml-[23px] mt-6 max-md:ml-2.5">
-          <div className="flex items-center gap-4 whitespace-nowrap">
-            <div className="self-stretch flex w-[21px] shrink-0 h-5 my-auto" />
-            <div className="self-stretch flex gap-2.5 my-auto">
-              <div>Patients</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 whitespace-nowrap mt-6">
-            <div className="self-stretch flex w-[21px] shrink-0 h-5 my-auto" />
-            <div className="self-stretch flex gap-2.5 my-auto">
-              <div>Analysis</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 whitespace-nowrap mt-6">
-            <div className="self-stretch flex w-[21px] shrink-0 h-5 my-auto" />
-            <div className="self-stretch my-auto">
-              Report
-            </div>
-          </div>
-          <div className="text-[rgba(217,217,217,1)] text-xs mt-[72px] max-md:mt-10">
-            Support
-          </div>
-          <div className="self-stretch flex flex-col items-stretch mt-6">
-            <div className="flex items-center gap-4 whitespace-nowrap">
-              <div className="self-stretch flex w-[21px] shrink-0 h-5 my-auto" />
-              <div className="self-stretch my-auto">
-                Community
-              </div>
-            </div>
-            <div className="flex gap-4 mt-6">
-              <div className="flex w-[21px] shrink-0 h-[21px]" />
-              <div>Help & Support</div>
-            </div>
-          </div>
-        </div>
+        
+        {/* Dashboard */}
+        <button 
+          onClick={() => setActiveMenu('Dashboard')}
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+            activeMenu === 'Dashboard' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white hover:text-white'
+          }`}
+        >
+          <div className="flex w-[21px] shrink-0 h-5 my-auto" />
+          <div className="my-auto">Dashboard</div>
+        </button>
+        
+        {/* Patient Detail */}
+        <button 
+          onClick={() => setActiveMenu('Patient Detail')}
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[132px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-colors hover:bg-[rgba(36,37,42,1)] ${
+            activeMenu === 'Patient Detail' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white font-normal'
+          }`}
+        >
+          <div className="flex w-[21px] shrink-0 h-5 my-auto" />
+          <div className="my-auto">Patient Detail</div>
+        </button>
+        
+        {/* Analytics */}
+        <button 
+          onClick={() => setActiveMenu('Analytics')}
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+            activeMenu === 'Analytics' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white hover:text-white'
+          }`}
+        >
+          <div className="flex w-[21px] shrink-0 h-5 my-auto" />
+          <div className="my-auto">Analytics</div>
+        </button>
+        
+        {/* Reports */}
+        <button 
+          onClick={() => setActiveMenu('Reports')}
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+            activeMenu === 'Reports' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white hover:text-white'
+          }`}
+        >
+          <div className="flex w-[21px] shrink-0 h-5 my-auto" />
+          <div className="my-auto">Reports</div>
+        </button>
+        
+        {/* Separator */}
+        <div className="border w-[276px] shrink-0 max-w-full h-0 mt-8 border-[rgba(64,66,73,1)] border-solid max-md:mr-2" />
+        
+        {/* Help & Support */}
+        <button 
+          onClick={() => setActiveMenu('Help & Support')}
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-8 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+            activeMenu === 'Help & Support' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white hover:text-white'
+          }`}
+        >
+          <div className="flex w-[21px] shrink-0 h-5 my-auto" />
+          <div className="my-auto">Help & Support</div>
+        </button>
       </div>
     </nav>
   );

@@ -43,7 +43,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
   
   return (
     <section className="w-[82%] ml-5 max-md:w-full max-md:ml-0">
-      <div className="bg-black w-full mx-auto px-8 py-5 rounded-3xl max-md:max-w-full max-md:mt-10 max-md:px-5">
+      <div className="bg-black border border-[rgba(64,66,73,1)] w-full mx-auto px-8 py-5 rounded-[32px] max-md:max-w-full max-md:mt-10 max-md:px-5">
         <div className="flex w-full items-stretch gap-[40px_100px] flex-wrap max-md:max-w-full">
           <h2 className="text-white text-xl font-medium my-auto">
             Current Vital Signs
