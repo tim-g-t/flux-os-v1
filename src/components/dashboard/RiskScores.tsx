@@ -154,34 +154,6 @@ export const RiskScores: React.FC = () => {
       </div>
       <div className="w-[1270px] shrink-0 max-w-full h-0 mt-[7px] border-[rgba(67,69,75,1)]" />
       
-      {/* ROX Index - Respiratory failure predictor */}
-      <div className={`border flex items-center text-base font-normal mt-2.5 px-2.5 py-[8px] rounded-[30px] max-md:px-0 ${getRiskColor(riskScores.roxIndex.risk)}`}>
-        <div className="w-[200px] flex items-center gap-1.5 max-md:w-[160px]">
-          <div className="w-4 h-4 bg-green-500 rounded-full shrink-0"></div>
-          <div>ROX Index - Respiratory failure predictor</div>
-        </div>
-        <div className="w-[100px] flex items-center max-md:w-[80px]">
-          {riskScores.roxIndex.value}
-        </div>
-        <div className="w-[100px] flex items-center max-md:w-[80px]">
-          {riskScores.roxIndex.risk === 'normal' ? '+0.0%' : riskScores.roxIndex.risk === 'warning' ? '+3.1%' : '+8.7%'}
-        </div>
-        <div className="w-[200px] flex items-center max-md:w-[160px]">
-          {riskScores.roxIndex.description}
-        </div>
-        <div className="w-[150px] flex items-center max-md:w-[120px]">
-          Normal: &gt;4.88
-        </div>
-        <div className="w-[120px] flex items-center justify-center max-md:w-[100px]">
-          <img
-            src="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/88dd884878c7d9e236192813b06f58b853f6d0f3?placeholderIfAbsent=true"
-            alt="ROX Index trend chart"
-            className="aspect-[1.74] object-contain w-20"
-          />
-        </div>
-      </div>
-      <div className="w-[1270px] shrink-0 max-w-full h-0 mt-[7px] border-[rgba(67,69,75,1)]" />
-      
       {/* qSOFA - Sepsis screening requirement */}
       <div className={`border flex items-center text-base font-normal mt-2.5 px-2.5 py-[8px] rounded-[30px] max-md:px-0 ${getRiskColor(riskScores.qsofa.risk)}`}>
         <div className="w-[200px] flex items-center gap-1.5 max-md:w-[160px]">

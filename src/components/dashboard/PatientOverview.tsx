@@ -67,19 +67,21 @@ const generateAllVitalData = (vitals: VitalReading) => ({
 });
 
 const mockPatients = [
-  // Normal patients (5) - truly normal, no risk scores
+  // Normal patients (4) - truly normal, no risk scores
   { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateSpecificVitals('normal') },
   { id: 'bed_03', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateSpecificVitals('normal') },
   { id: 'bed_07', name: 'David L.', age: 38, gender: 'Male', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('normal') },
   { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('normal') },
   
-  // Warning patients (2) - concerning but not critical
-  { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('warning') },
-  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('warning') },
+  // Warning patient (1) - Sarah K with one warning
+  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('warning') },
   
-  // Critical patient (1) - only one truly critical case
-  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') }
+  // Critical patient (1) - Anna T with multiple critical issues
+  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') },
+  
+  // Additional normal patients to fill out the grid
+  { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('normal') }
 ].map(patient => ({
   ...patient,
   chartData: generateAllVitalData(patient.vitals)
@@ -124,24 +126,24 @@ export const PatientOverview: React.FC = () => {
   const getVitalRisk = (vitals: VitalReading, vital: string): 'normal' | 'warning' | 'critical' => {
     switch (vital) {
       case 'hr':
-        if (vitals.hr < 60 || vitals.hr > 120) return 'critical';
-        if (vitals.hr < 70 || vitals.hr > 100) return 'warning';
+        if (vitals.hr < 50 || vitals.hr > 140) return 'critical';
+        if (vitals.hr < 60 || vitals.hr > 120) return 'warning';
         return 'normal';
       case 'bp':
-        if (vitals.bps < 80 || vitals.bps > 160) return 'critical';
-        if (vitals.bps < 90 || vitals.bps > 140) return 'warning';
+        if (vitals.bps < 70 || vitals.bps > 180) return 'critical';
+        if (vitals.bps < 80 || vitals.bps > 160) return 'warning';
         return 'normal';
       case 'spo2':
-        if (vitals.spo2 < 90) return 'critical';
-        if (vitals.spo2 < 95) return 'warning';
+        if (vitals.spo2 < 85) return 'critical';
+        if (vitals.spo2 < 90) return 'warning';
         return 'normal';
       case 'temp':
-        if (vitals.temp < 96.0 || vitals.temp > 101.0) return 'critical';
-        if (vitals.temp < 97.0 || vitals.temp > 100.0) return 'warning';
+        if (vitals.temp < 95.0 || vitals.temp > 102.0) return 'critical';
+        if (vitals.temp < 96.0 || vitals.temp > 101.0) return 'warning';
         return 'normal';
       case 'rr':
-        if (vitals.rr < 10 || vitals.rr > 25) return 'critical';
-        if (vitals.rr < 12 || vitals.rr > 20) return 'warning';
+        if (vitals.rr < 8 || vitals.rr > 30) return 'critical';
+        if (vitals.rr < 10 || vitals.rr > 25) return 'warning';
         return 'normal';
       default:
         return 'normal';
@@ -160,7 +162,6 @@ export const PatientOverview: React.FC = () => {
           case 'shockIndex': displayName = 'Shock Index'; break;
           case 'pewsScore': displayName = 'PEWS Score'; break;
           case 'map': displayName = 'MAP'; break;
-          case 'roxIndex': displayName = 'ROX Index'; break;
           case 'qsofa': displayName = 'qSOFA'; break;
           case 'pulsePressure': displayName = 'Pulse Pressure'; break;
         }
@@ -189,9 +190,9 @@ export const PatientOverview: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-black">
       <Header />
-      <div className="pt-6 px-6 mt-8 space-y-6">
+      <div className="pt-6 px-6 pr-16 mt-8 space-y-6">
         {/* Patient Grid with Dark Background Card */}
-        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl pt-6 px-6">
+        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl pt-6 px-6 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
           {mockPatients.map(patient => {
             const riskScores = calculateRiskScores(patient.vitals);
@@ -227,7 +228,7 @@ export const PatientOverview: React.FC = () => {
                     ? 'border-4 border-red-500' 
                     : overallStatus === 'warning'
                     ? 'border-4 border-yellow-500'
-                    : 'border-4 border-transparent'
+                    : 'border-0'
                   }
                 `}
                 onClick={() => navigate(`/patient/${patient.id}`)}
@@ -253,7 +254,10 @@ export const PatientOverview: React.FC = () => {
                       {vitalOptions.map(option => (
                         <button
                           key={option.key}
-                          onClick={() => setSelectedVitals(prev => ({ ...prev, [patient.id]: option.key }))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedVitals(prev => ({ ...prev, [patient.id]: option.key }));
+                          }}
                           className={`px-3 py-1 rounded-lg text-xs transition-all duration-200 ${
                             selectedVital === option.key
                               ? 'bg-blue-600 text-white'

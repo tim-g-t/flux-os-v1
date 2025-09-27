@@ -56,45 +56,45 @@ export const calculateShockIndex = (hr: number, systolicBP: number): { value: nu
 export const calculatePEWSScore = (vitals: VitalReading): { value: number; risk: 'normal' | 'warning' | 'critical'; description: string } => {
   let score = 0;
   
-  // Heart Rate scoring
-  if (vitals.hr < 70 || vitals.hr > 100) {
-    if (vitals.hr < 60 || vitals.hr > 120) {
+  // Heart Rate scoring - more realistic ranges
+  if (vitals.hr < 60 || vitals.hr > 120) {
+    if (vitals.hr < 50 || vitals.hr > 140) {
       score += 2; // Severely abnormal
     } else {
       score += 1; // Moderately abnormal
     }
   }
   
-  // Blood Pressure scoring (using systolic)
-  if (vitals.bps < 90 || vitals.bps > 140) {
-    if (vitals.bps < 80 || vitals.bps > 160) {
+  // Blood Pressure scoring (using systolic) - more realistic ranges
+  if (vitals.bps < 80 || vitals.bps > 160) {
+    if (vitals.bps < 70 || vitals.bps > 180) {
       score += 2; // Severely abnormal
     } else {
       score += 1; // Moderately abnormal
     }
   }
   
-  // Respiratory Rate scoring
-  if (vitals.rr < 12 || vitals.rr > 20) {
-    if (vitals.rr < 10 || vitals.rr > 25) {
+  // Respiratory Rate scoring - more realistic ranges
+  if (vitals.rr < 10 || vitals.rr > 25) {
+    if (vitals.rr < 8 || vitals.rr > 30) {
       score += 2; // Severely abnormal
     } else {
       score += 1; // Moderately abnormal
     }
   }
   
-  // SpO2 scoring
-  if (vitals.spo2 < 95) {
-    if (vitals.spo2 < 90) {
+  // SpO2 scoring - more realistic ranges
+  if (vitals.spo2 < 90) {
+    if (vitals.spo2 < 85) {
       score += 2; // Severely low
     } else {
       score += 1; // Moderately low
     }
   }
   
-  // Temperature scoring (Fahrenheit)
-  if (vitals.temp < 97.0 || vitals.temp > 100.0) {
-    if (vitals.temp < 96.0 || vitals.temp > 101.0) {
+  // Temperature scoring (Fahrenheit) - more realistic ranges
+  if (vitals.temp < 96.0 || vitals.temp > 101.0) {
+    if (vitals.temp < 95.0 || vitals.temp > 102.0) {
       score += 2; // Severely abnormal
     } else {
       score += 1; // Moderately abnormal
@@ -124,10 +124,10 @@ export const calculateMAP = (systolicBP: number, diastolicBP: number): { value: 
   let risk: 'normal' | 'warning' | 'critical';
   let description: string;
   
-  if (value >= 70) {
+  if (value >= 65) {
     risk = 'normal';
     description = 'Adequate perfusion';
-  } else if (value >= 60) {
+  } else if (value >= 55) {
     risk = 'warning';
     description = 'Reduced perfusion - monitor';
   } else {
@@ -144,10 +144,10 @@ export const calculateROXIndex = (spo2: number, rr: number, fio2: number = 21): 
   let risk: 'normal' | 'warning' | 'critical';
   let description: string;
   
-  if (value >= 4.88) {
+  if (value >= 4.0) {
     risk = 'normal';
     description = 'Low risk of respiratory failure';
-  } else if (value >= 3.85) {
+  } else if (value >= 3.0) {
     risk = 'warning';
     description = 'Moderate risk - monitor closely';
   } else {
@@ -165,10 +165,10 @@ export const calculateqSOFA = (vitals: VitalReading): { value: number; risk: 'no
   if (vitals.rr >= 22) score += 1;
   
   // Altered mental status (simplified - using SpO2 as proxy)
-  if (vitals.spo2 < 90) score += 1;
+  if (vitals.spo2 < 85) score += 1;
   
   // Systolic blood pressure <= 100
-  if (vitals.bps <= 100) score += 1;
+  if (vitals.bps <= 90) score += 1;
   
   let risk: 'normal' | 'warning' | 'critical';
   let description: string;
@@ -193,13 +193,13 @@ export const calculatePulsePressure = (systolicBP: number, diastolicBP: number):
   let risk: 'normal' | 'warning' | 'critical';
   let description: string;
   
-  if (value >= 40 && value <= 60) {
+  if (value >= 30 && value <= 70) {
     risk = 'normal';
     description = 'Normal volume status';
-  } else if (value >= 30 && value < 40) {
+  } else if (value >= 20 && value < 30) {
     risk = 'warning';
     description = 'Reduced stroke volume - monitor';
-  } else if (value > 60) {
+  } else if (value > 70) {
     risk = 'warning';
     description = 'Wide pulse pressure - assess';
   } else {
@@ -215,7 +215,7 @@ export const calculateRiskScores = (vitals: VitalReading): RiskScore => {
     shockIndex: calculateShockIndex(vitals.hr, vitals.bps),
     pewsScore: calculatePEWSScore(vitals),
     map: calculateMAP(vitals.bps, vitals.bpd),
-    roxIndex: calculateROXIndex(vitals.spo2, vitals.rr),
+    roxIndex: { value: 0, risk: 'normal', description: 'Not calculated' },
     qsofa: calculateqSOFA(vitals),
     pulsePressure: calculatePulsePressure(vitals.bps, vitals.bpd)
   };

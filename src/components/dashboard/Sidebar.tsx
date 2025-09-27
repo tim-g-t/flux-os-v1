@@ -7,8 +7,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
   return (
-    <nav className="w-[17%] max-md:w-full max-md:ml-0">
-      <div className="flex flex-col items-stretch mt-3 max-md:mt-10">
+    <nav className="w-[17%] max-md:w-full max-md:ml-0 sticky top-0 h-screen overflow-y-auto">
+      <div className="flex flex-col items-stretch mt-3 max-md:mt-10 pb-8">
         <div className="flex flex-col items-stretch pl-[23px] max-md:pl-5">
           <div className="text-white text-[25px] font-bold ml-[41px] max-md:ml-2.5">
             Flux
@@ -33,9 +33,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
         {/* Dashboard */}
         <button 
           onClick={() => onViewChange('Dashboard')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-all duration-200 hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
             activeView === 'Dashboard' 
-              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold scale-105' 
               : 'text-white hover:text-white'
           }`}
         >
@@ -46,9 +46,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
         {/* Patient Detail */}
         <button 
           onClick={() => onViewChange('Patient Detail')}
-          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[132px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-colors hover:bg-[rgba(36,37,42,1)] ${
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[132px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 hover:bg-[rgba(36,37,42,1)] ${
             activeView === 'Patient Detail' 
-              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold scale-105' 
               : 'text-white font-normal'
           }`}
         >

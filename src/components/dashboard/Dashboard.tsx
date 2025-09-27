@@ -11,7 +11,7 @@ type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'resp
 
 export const Dashboard: React.FC = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
-  const [activeView, setActiveView] = useState<string>('Patient Detail');
+  const [activeView, setActiveView] = useState<string>('Dashboard');
 
   const toggleMetric = (metric: MetricType) => {
     setSelectedMetrics(prev => 
@@ -20,11 +20,16 @@ export const Dashboard: React.FC = () => {
         : [...prev, metric]
     );
   };
+
+  const handleViewChange = (view: string) => {
+    setActiveView(view);
+  };
+
   return (
     <div className="bg-black min-h-screen pl-[27px] pt-10 max-md:pl-5">
       <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
-        <Sidebar activeView={activeView} onViewChange={setActiveView} />
-        <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0">
+        <Sidebar activeView={activeView} onViewChange={handleViewChange} />
+        <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16">
           {activeView === 'Dashboard' ? (
             <PatientOverview />
           ) : (
