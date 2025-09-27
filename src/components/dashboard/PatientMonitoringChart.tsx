@@ -70,15 +70,15 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
   };
 
   return (
-    <div className="w-full max-w-full mt-4 p-4 bg-[rgba(20,21,25,1)] rounded-3xl overflow-hidden">
+    <div className="bg-black w-full p-6 rounded-3xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-white text-xl font-medium">Vital Signs Chart</h3>
         <div className="flex gap-2">
-          {(['24h', '7d', '30d'] as TimeRange[]).map((range) => (
+          {(['24h', '1w'] as const).map((range) => (
             <button
               key={range}
-              onClick={() => setTimeRange(range)}
+              onClick={() => setTimeRange(range as TimeRange)}
               className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
                 timeRange === range
                   ? 'bg-white text-black'
@@ -92,9 +92,12 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       </div>
 
       {/* Chart */}
-      <div className="h-80 w-full">
+      <div className="h-96 w-full">
         <ChartContainer config={chartConfig}>
-          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+          <AreaChart 
+            data={chartData} 
+            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          >
             <defs>
               <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
@@ -126,7 +129,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
             />
             
             <YAxis 
-              domain={[0, 200]}
+              domain={[0, 'dataMax + 10']} 
               axisLine={false}
               tickLine={false}
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}

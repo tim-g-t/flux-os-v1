@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 import { useVitals } from '@/hooks/useVitals';
-import { PatientMonitoringChart } from './PatientMonitoringChart';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -109,10 +108,6 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             onClick={() => onMetricToggle('respiratoryRate')}
             isSelected={selectedMetrics.includes('respiratoryRate')}
           />
-        </div>
-        {/* Chart Section */}
-        <div className="mt-6">
-          <PatientMonitoringChart selectedMetrics={selectedMetrics} />
         </div>
       </div>
     </section>
