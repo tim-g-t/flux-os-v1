@@ -42,8 +42,10 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
             <button
               key={range}
               onClick={() => setTimeRange(range as TimeRange)}
-              className={`w-12 h-12 rounded-full text-sm ${
-                timeRange === range ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-300'
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeRange === range 
+                  ? 'bg-blue-600 text-white shadow-md' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
               {range}
@@ -56,7 +58,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <XAxis dataKey="time" />
-            <YAxis domain={[0, 200]} />
+            <YAxis domain={['dataMin - 5', 'dataMax + 5']} />
             
             {selectedMetrics.includes('heartRate') && (
               <Area type="monotone" dataKey="heartRate" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
