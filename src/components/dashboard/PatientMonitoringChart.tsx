@@ -21,14 +21,18 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
           {payload.map((entry: any, index: number) => {
             const metricNames = {
               heartRate: 'Heart Rate',
-              bloodPressure: 'Blood Pressure (Systolic)',
+              bloodPressureSystolic: 'Systolic BP',
+              bloodPressureDiastolic: 'Diastolic BP',
+              bloodPressureMean: 'Mean BP',
               temperature: 'Temperature',
               spo2: 'SpO2',
               respiratoryRate: 'Respiratory Rate'
             };
             const units = {
               heartRate: 'bpm',
-              bloodPressure: 'mmHg',
+              bloodPressureSystolic: 'mmHg',
+              bloodPressureDiastolic: 'mmHg',
+              bloodPressureMean: 'mmHg',
               temperature: '°C',
               spo2: '%',
               respiratoryRate: 'rpm'
@@ -84,7 +88,9 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       return {
         time: timeLabel,
         heartRate: item.vital.hr,
-        bloodPressure: item.vital.bps,
+        bloodPressureSystolic: item.vital.bps,
+        bloodPressureDiastolic: item.vital.bpd,
+        bloodPressureMean: Math.round((item.vital.bps + 2 * item.vital.bpd) / 3),
         temperature: item.vital.temp,
         spo2: item.vital.spo2,
         respiratoryRate: item.vital.rr
@@ -128,7 +134,11 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               <Area type="monotone" dataKey="heartRate" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
             )}
             {selectedMetrics.includes('bloodPressure') && (
-              <Area type="monotone" dataKey="bloodPressure" stroke="#EF4444" fill="#EF4444" fillOpacity={0.3} />
+              <>
+                <Area type="monotone" dataKey="bloodPressureSystolic" stroke="#EF4444" fill="#EF4444" fillOpacity={0.4} strokeWidth={2} />
+                <Area type="monotone" dataKey="bloodPressureDiastolic" stroke="#DC2626" fill="#DC2626" fillOpacity={0.3} strokeWidth={2} />
+                <Area type="monotone" dataKey="bloodPressureMean" stroke="#B91C1C" fill="#B91C1C" fillOpacity={0.2} strokeWidth={2} strokeDasharray="5,5" />
+              </>
             )}
             {selectedMetrics.includes('temperature') && (
               <Area type="monotone" dataKey="temperature" stroke="#10B981" fill="#10B981" fillOpacity={0.3} />
