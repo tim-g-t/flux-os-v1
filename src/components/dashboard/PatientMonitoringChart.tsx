@@ -57,11 +57,20 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     }));
   }, [getFilteredData, timeRange]);
 
+  // Medical minimum values for appropriate scaling
+  const medicalMinimums = {
+    heartRate: 40,
+    bloodPressure: 40,
+    temperature: 94,
+    spo2: 80,
+    respiratoryRate: 8
+  };
+
   // Calculate axis domains and determine which axes to show
   const { leftAxisDomain, rightAxisDomain, hasLeftMetrics, hasRightMetrics } = useMemo(() => {
     if (selectedMetrics.length === 0 || chartData.length === 0) {
       return { 
-        leftAxisDomain: [0, 200], 
+        leftAxisDomain: [40, 200], 
         rightAxisDomain: [0, 100], 
         hasLeftMetrics: false, 
         hasRightMetrics: false 
@@ -71,8 +80,8 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     const selectedLeftMetrics = selectedMetrics.filter(metric => leftAxisMetrics.includes(metric));
     const selectedRightMetrics = selectedMetrics.filter(metric => rightAxisMetrics.includes(metric));
     
-    // Calculate left axis domain (HR, BP)
-    let leftDomain: [number, number] = [0, 200];
+    // Calculate left axis domain (HR, BP) - use medical minimum of 40
+    let leftDomain: [number, number] = [40, 200];
     if (selectedLeftMetrics.length > 0) {
       let leftValues: number[] = [];
       selectedLeftMetrics.forEach(metric => {
@@ -83,24 +92,32 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       if (leftValues.length > 0) {
         const max = Math.max(...leftValues);
         const padding = max * 0.1;
-        leftDomain = [0, max + padding];
+        leftDomain = [40, max + padding]; // Start from 40 for HR/BP
       }
     }
     
-    // Calculate right axis domain (RR, Temp, SpO2)
+    // Calculate right axis domain (RR, Temp, SpO2) - use appropriate medical minimums
     let rightDomain: [number, number] = [0, 100];
     if (selectedRightMetrics.length > 0) {
       let rightValues: number[] = [];
+      let appropriateMin = 0;
+      
       selectedRightMetrics.forEach(metric => {
         const values = chartData.map(item => item[metric]).filter(val => val != null);
         rightValues = [...rightValues, ...values];
+        
+        // Set appropriate minimum based on metric type
+        if (metric === 'temperature') appropriateMin = Math.max(appropriateMin, medicalMinimums.temperature);
+        if (metric === 'spo2') appropriateMin = Math.max(appropriateMin, medicalMinimums.spo2);
+        if (metric === 'respiratoryRate') appropriateMin = Math.max(appropriateMin, medicalMinimums.respiratoryRate);
       });
       
       if (rightValues.length > 0) {
         const min = Math.min(...rightValues);
         const max = Math.max(...rightValues);
         const padding = (max - min) * 0.1;
-        rightDomain = [Math.max(0, min - padding), max + padding];
+        const calculatedMin = Math.min(min - padding, appropriateMin);
+        rightDomain = [Math.max(appropriateMin, calculatedMin), max + padding];
       }
     }
     
@@ -238,7 +255,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorHeartRate)"
                 fillOpacity={0.2}
-                {...(hasLeftMetrics ? { yAxisId: "left" } : {})}
+                yAxisId="left"
               />
             )}
             
@@ -250,7 +267,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorBloodPressure)"
                 fillOpacity={0.2}
-                {...(hasLeftMetrics ? { yAxisId: "left" } : {})}
+                yAxisId="left"
               />
             )}
             
@@ -262,7 +279,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorTemperature)"
                 fillOpacity={0.2}
-                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
+                yAxisId="right"
               />
             )}
             
@@ -274,7 +291,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorSpo2)"
                 fillOpacity={0.2}
-                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
+                yAxisId="right"
               />
             )}
             
@@ -286,7 +303,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 strokeWidth={2}
                 fill="url(#colorRespiratoryRate)"
                 fillOpacity={0.2}
-                {...(hasRightMetrics ? { yAxisId: "right" } : {})}
+                yAxisId="right"
               />
             )}
           </AreaChart>
