@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis } from 'recharts';
 import { useVitals } from '@/hooks/useVitals';
 
 const chartConfig = {
@@ -9,7 +9,7 @@ const chartConfig = {
     color: '#3B82F6',
   },
   bloodPressure: {
-    label: 'BP',
+    label: 'BP', 
     color: '#EF4444',
   },
   temperature: {
@@ -29,8 +29,6 @@ const chartConfig = {
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 type TimeRange = '1h' | '4h' | '12h' | '24h' | '1w';
 
-// SIMPLE: Single Y-axis for all metrics
-
 interface PatientMonitoringChartProps {
   selectedMetrics: MetricType[];
 }
@@ -41,14 +39,14 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
 
   const chartData = useMemo(() => {
     const data = getFilteredData(timeRange);
-    return data.map((item, index) => ({
+    return data.map((item) => ({
       time: new Date(item.timestamp).toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit',
         hour12: false 
       }),
       heartRate: item.vital.hr,
-      bloodPressure: item.vital.bps, // Using systolic for chart
+      bloodPressure: item.vital.bps,
       temperature: item.vital.temp,
       spo2: item.vital.spo2,
       respiratoryRate: item.vital.rr
@@ -63,7 +61,6 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     );
   }
 
-
   const timeRangeLabels = {
     '1h': '1h',
     '4h': '4h', 
@@ -74,12 +71,11 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
 
   return (
     <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
-      {/* Header with title and selectors */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-white text-xl font-medium">Vital Signs</h3>
         
         <div className="flex items-center gap-6">
-          {/* Time Range Selector - Circular buttons */}
           <div className="flex gap-2">
             {(Object.keys(timeRangeLabels) as TimeRange[]).map((range) => (
               <button
@@ -124,6 +120,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
                 <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
               </linearGradient>
             </defs>
+            
             <XAxis 
               dataKey="time" 
               axisLine={false}
@@ -131,7 +128,6 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
             />
             
-            {/* SIMPLE: Single Y-axis for all metrics */}
             <YAxis 
               domain={[0, 200]}
               axisLine={false}
@@ -149,7 +145,6 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               }}
             />
             
-            {/* SIMPLE: Direct Area components */}
             {selectedMetrics.includes('heartRate') && (
               <Area
                 type="monotone"
