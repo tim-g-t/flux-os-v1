@@ -116,24 +116,34 @@ export const PatientOverview: React.FC = () => {
   };
 
   // Function to get critical and warning vital names for display
-  const getCriticalWarningVitals = (vitals: VitalReading): { critical: string[], warning: string[] } => {
-    const critical: string[] = [];
+  const getCriticalWarningVitals = (vitals: VitalReading): { critical: Array<{name: string, value: string, reason: string}>, warning: string[] } => {
+    const critical: Array<{name: string, value: string, reason: string}> = [];
     const warning: string[] = [];
     
-    if (getVitalRisk(vitals, 'hr') === 'critical') critical.push('HR');
-    else if (getVitalRisk(vitals, 'hr') === 'warning') warning.push('HR');
+    if (getVitalRisk(vitals, 'hr') === 'critical') {
+      const reason = vitals.hr < 60 ? `too low (< 60)` : `too high (> 120)`;
+      critical.push({name: 'HR', value: `${vitals.hr} bpm`, reason});
+    } else if (getVitalRisk(vitals, 'hr') === 'warning') warning.push('HR');
     
-    if (getVitalRisk(vitals, 'bp') === 'critical') critical.push('BP');
-    else if (getVitalRisk(vitals, 'bp') === 'warning') warning.push('BP');
+    if (getVitalRisk(vitals, 'bp') === 'critical') {
+      const reason = vitals.bps < 80 ? `systolic too low (< 80)` : `systolic too high (> 160)`;
+      critical.push({name: 'BP', value: `${vitals.bps}/${vitals.bpd} mmHg`, reason});
+    } else if (getVitalRisk(vitals, 'bp') === 'warning') warning.push('BP');
     
-    if (getVitalRisk(vitals, 'spo2') === 'critical') critical.push('SpO2');
-    else if (getVitalRisk(vitals, 'spo2') === 'warning') warning.push('SpO2');
+    if (getVitalRisk(vitals, 'spo2') === 'critical') {
+      const reason = `dangerously low (< 90%)`;
+      critical.push({name: 'SpO2', value: `${vitals.spo2}%`, reason});
+    } else if (getVitalRisk(vitals, 'spo2') === 'warning') warning.push('SpO2');
     
-    if (getVitalRisk(vitals, 'temp') === 'critical') critical.push('Temp');
-    else if (getVitalRisk(vitals, 'temp') === 'warning') warning.push('Temp');
+    if (getVitalRisk(vitals, 'temp') === 'critical') {
+      const reason = vitals.temp < 96.0 ? `hypothermia (< 96°F)` : `hyperthermia (> 101°F)`;
+      critical.push({name: 'Temp', value: `${vitals.temp.toFixed(1)}°F`, reason});
+    } else if (getVitalRisk(vitals, 'temp') === 'warning') warning.push('Temp');
     
-    if (getVitalRisk(vitals, 'rr') === 'critical') critical.push('RR');
-    else if (getVitalRisk(vitals, 'rr') === 'warning') warning.push('RR');
+    if (getVitalRisk(vitals, 'rr') === 'critical') {
+      const reason = vitals.rr < 10 ? `bradypnea (< 10)` : `tachypnea (> 25)`;
+      critical.push({name: 'RR', value: `${vitals.rr} bpm`, reason});
+    } else if (getVitalRisk(vitals, 'rr') === 'warning') warning.push('RR');
     
     return { critical, warning };
   };
@@ -329,12 +339,20 @@ export const PatientOverview: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Risk Summary - Show only what is critical */}
+                {/* Risk Summary - Show detailed critical information */}
                 {critical.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-[rgba(64,66,73,1)]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                      <span className="text-red-400 font-bold text-base">Critical: {critical.join(', ')}</span>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                        <span className="text-red-400 font-bold text-base">Critical Values:</span>
+                      </div>
+                      {critical.map((item, index) => (
+                        <div key={index} className="ml-6 text-sm">
+                          <div className="text-red-300 font-semibold">{item.name}: {item.value}</div>
+                          <div className="text-[rgba(217,217,217,1)] text-xs">{item.reason}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
