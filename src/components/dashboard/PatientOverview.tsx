@@ -143,37 +143,31 @@ export const PatientOverview: React.FC = () => {
     }
   };
 
-  // Function to get critical and warning vital names for display
-  const getCriticalWarningVitals = (vitals: VitalReading): { critical: Array<{name: string, value: string, reason: string}>, warning: string[] } => {
-    const critical: Array<{name: string, value: string, reason: string}> = [];
-    const warning: string[] = [];
+  // Function to get critical risk scores for display
+  const getCriticalRiskScores = (vitals: VitalReading): Array<{name: string, value: string, description: string}> => {
+    const riskScores = calculateRiskScores(vitals);
+    const critical: Array<{name: string, value: string, description: string}> = [];
     
-    if (getVitalRisk(vitals, 'hr') === 'critical') {
-      const reason = vitals.hr < 60 ? `too low (< 60)` : `too high (> 120)`;
-      critical.push({name: 'HR', value: `${vitals.hr} bpm`, reason});
-    } else if (getVitalRisk(vitals, 'hr') === 'warning') warning.push('HR');
+    Object.entries(riskScores).forEach(([key, score]) => {
+      if (score.risk === 'critical') {
+        let displayName = '';
+        switch (key) {
+          case 'shockIndex': displayName = 'Shock Index'; break;
+          case 'pewsScore': displayName = 'PEWS Score'; break;
+          case 'map': displayName = 'MAP'; break;
+          case 'roxIndex': displayName = 'ROX Index'; break;
+          case 'qsofa': displayName = 'qSOFA'; break;
+          case 'pulsePressure': displayName = 'Pulse Pressure'; break;
+        }
+        critical.push({
+          name: displayName,
+          value: score.value.toString(),
+          description: score.description
+        });
+      }
+    });
     
-    if (getVitalRisk(vitals, 'bp') === 'critical') {
-      const reason = vitals.bps < 80 ? `systolic too low (< 80)` : `systolic too high (> 160)`;
-      critical.push({name: 'BP', value: `${vitals.bps}/${vitals.bpd} mmHg`, reason});
-    } else if (getVitalRisk(vitals, 'bp') === 'warning') warning.push('BP');
-    
-    if (getVitalRisk(vitals, 'spo2') === 'critical') {
-      const reason = `dangerously low (< 90%)`;
-      critical.push({name: 'SpO2', value: `${vitals.spo2}%`, reason});
-    } else if (getVitalRisk(vitals, 'spo2') === 'warning') warning.push('SpO2');
-    
-    if (getVitalRisk(vitals, 'temp') === 'critical') {
-      const reason = vitals.temp < 96.0 ? `hypothermia (< 96°F)` : `hyperthermia (> 101°F)`;
-      critical.push({name: 'Temp', value: `${vitals.temp.toFixed(1)}°F`, reason});
-    } else if (getVitalRisk(vitals, 'temp') === 'warning') warning.push('Temp');
-    
-    if (getVitalRisk(vitals, 'rr') === 'critical') {
-      const reason = vitals.rr < 10 ? `bradypnea (< 10)` : `tachypnea (> 25)`;
-      critical.push({name: 'RR', value: `${vitals.rr} bpm`, reason});
-    } else if (getVitalRisk(vitals, 'rr') === 'warning') warning.push('RR');
-    
-    return { critical, warning };
+    return critical;
   };
   
   if (loading) {
@@ -194,42 +188,44 @@ export const PatientOverview: React.FC = () => {
         {/* Patient Grid with Dark Background Card */}
         <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl pt-6 px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
-            {mockPatients.map(patient => {
-              const riskScores = calculateRiskScores(patient.vitals);
-              const selectedVital = selectedVitals[patient.id] || 'hr';
-              const vitalOption = vitalOptions.find(opt => opt.key === selectedVital) || vitalOptions[0];
-              const { critical, warning } = getCriticalWarningVitals(patient.vitals);
-              
-              // Count individual patient risks for overall status
-              const patientRiskCounts = Object.values(riskScores).reduce((acc, score) => {
-                acc[score.risk] = (acc[score.risk] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>);
-              
-              const criticalCount = patientRiskCounts.critical || 0;
-              const warningCount = patientRiskCounts.warning || 0;
-              
-              // Determine overall patient status
-              const overallStatus = criticalCount > 0 ? 'critical' : warningCount > 0 ? 'warning' : 'normal';
-              
-              // Calculate mean blood pressure
-              const meanBP = Math.round((patient.vitals.bps + patient.vitals.bpd) / 2);
-              
-              // Get current vital data and latest value
-              const currentChartData = patient.chartData[selectedVital as keyof typeof patient.chartData];
-              const latestValue = currentChartData[currentChartData.length - 1]?.value || getVitalValue(patient.vitals, selectedVital);
-              
-              return (
-                <div 
-                  key={patient.id} 
-                  className={`
-                    bg-black rounded-3xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 cursor-pointer
-                    ${overallStatus === 'critical' 
-                      ? 'border-4 border-red-500' 
-                      : 'border-4 border-[rgba(64,66,73,1)] hover:border-[rgba(100,106,113,1)]'
-                    }
-                  `}
-                >
+          {mockPatients.map(patient => {
+            const riskScores = calculateRiskScores(patient.vitals);
+            const selectedVital = selectedVitals[patient.id] || 'hr';
+            const vitalOption = vitalOptions.find(opt => opt.key === selectedVital) || vitalOptions[0];
+            const criticalRiskScores = getCriticalRiskScores(patient.vitals);
+            
+            // Count individual patient risks for overall status
+            const patientRiskCounts = Object.values(riskScores).reduce((acc, score) => {
+              acc[score.risk] = (acc[score.risk] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            
+            const criticalCount = patientRiskCounts.critical || 0;
+            const warningCount = patientRiskCounts.warning || 0;
+            
+            // Determine overall patient status
+            const overallStatus = criticalCount > 0 ? 'critical' : warningCount > 0 ? 'warning' : 'normal';
+            
+            // Calculate mean blood pressure
+            const meanBP = Math.round((patient.vitals.bps + patient.vitals.bpd) / 2);
+            
+            // Get current vital data and latest value
+            const currentChartData = patient.chartData[selectedVital as keyof typeof patient.chartData];
+            const latestValue = currentChartData[currentChartData.length - 1]?.value || getVitalValue(patient.vitals, selectedVital);
+            
+            return (
+              <div 
+                key={patient.id} 
+                className={`
+                  bg-black rounded-3xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 cursor-pointer
+                  ${overallStatus === 'critical' 
+                    ? 'border-4 border-red-500' 
+                    : overallStatus === 'warning'
+                    ? 'border-4 border-yellow-500'
+                    : 'border-4 border-transparent'
+                  }
+                `}
+              >
                   {/* Patient Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -360,23 +356,23 @@ export const PatientOverview: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Risk Summary - Show detailed critical information */}
-                  {critical.length > 0 && (
+                  {/* Risk Summary - Show critical risk scores for critical patients, otherwise show vital signs */}
+                  {overallStatus === 'critical' && criticalRiskScores.length > 0 ? (
                     <div className="mt-6 pt-6 border-t border-[rgba(64,66,73,1)]">
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                          <span className="text-red-400 font-bold text-base">Critical Values:</span>
+                          <span className="text-red-400 font-bold text-base">Critical Risk Scores:</span>
                         </div>
-                        {critical.map((item, index) => (
+                        {criticalRiskScores.map((item, index) => (
                           <div key={index} className="ml-6 text-sm">
                             <div className="text-red-300 font-semibold">{item.name}: {item.value}</div>
-                            <div className="text-[rgba(217,217,217,1)] text-xs">{item.reason}</div>
+                            <div className="text-[rgba(217,217,217,1)] text-xs">{item.description}</div>
                           </div>
                         ))}
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               );
             })}
