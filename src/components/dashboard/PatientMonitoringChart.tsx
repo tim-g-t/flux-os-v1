@@ -53,6 +53,26 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     }));
   }, [getFilteredData, timeRange]);
 
+  // Calculate Y-axis domain based on selected metrics
+  const yAxisDomain = useMemo(() => {
+    if (selectedMetrics.length === 0 || chartData.length === 0) return [0, 100];
+    
+    let allValues: number[] = [];
+    
+    selectedMetrics.forEach(metric => {
+      const values = chartData.map(item => item[metric]).filter(val => val != null);
+      allValues = [...allValues, ...values];
+    });
+    
+    if (allValues.length === 0) return [0, 100];
+    
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
+    const padding = (max - min) * 0.1; // 10% padding
+    
+    return [Math.max(0, min - padding), max + padding];
+  }, [selectedMetrics, chartData]);
+
   if (loading) {
     return (
       <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
@@ -129,6 +149,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
             />
             <YAxis 
+              domain={yAxisDomain}
               axisLine={false}
               tickLine={false}
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
