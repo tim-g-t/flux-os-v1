@@ -85,6 +85,34 @@ export const PatientOverview: React.FC = () => {
       default: return 0;
     }
   };
+
+  // Function to get individual vital risk level
+  const getVitalRisk = (vitals: VitalReading, vital: string): 'normal' | 'warning' | 'critical' => {
+    switch (vital) {
+      case 'hr':
+        if (vitals.hr < 60 || vitals.hr > 120) return 'critical';
+        if (vitals.hr < 70 || vitals.hr > 100) return 'warning';
+        return 'normal';
+      case 'bp':
+        if (vitals.bps < 80 || vitals.bps > 160) return 'critical';
+        if (vitals.bps < 90 || vitals.bps > 140) return 'warning';
+        return 'normal';
+      case 'spo2':
+        if (vitals.spo2 < 90) return 'critical';
+        if (vitals.spo2 < 95) return 'warning';
+        return 'normal';
+      case 'temp':
+        if (vitals.temp < 96.0 || vitals.temp > 101.0) return 'critical';
+        if (vitals.temp < 97.0 || vitals.temp > 100.0) return 'warning';
+        return 'normal';
+      case 'rr':
+        if (vitals.rr < 10 || vitals.rr > 25) return 'critical';
+        if (vitals.rr < 12 || vitals.rr > 20) return 'warning';
+        return 'normal';
+      default:
+        return 'normal';
+    }
+  };
   
   if (loading) {
     return (
@@ -253,37 +281,77 @@ export const PatientOverview: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-[rgba(217,217,217,1)] text-base">Heart Rate</span>
-                  <div className="text-right">
-                    <span className="text-white font-bold text-lg">{patient.vitals.hr}</span>
+                  <div className={`text-right px-2 py-1 rounded ${
+                    getVitalRisk(patient.vitals, 'hr') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                    getVitalRisk(patient.vitals, 'hr') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                    ''
+                  }`}>
+                    <span className={`font-bold text-lg ${
+                      getVitalRisk(patient.vitals, 'hr') === 'critical' ? 'text-red-400' :
+                      getVitalRisk(patient.vitals, 'hr') === 'warning' ? 'text-yellow-400' :
+                      'text-white'
+                    }`}>{patient.vitals.hr}</span>
                     <span className="text-[rgba(128,128,128,1)] text-sm ml-1">bpm</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[rgba(217,217,217,1)] text-base">Blood Pressure</span>
-                  <div className="text-right">
-                    <span className="text-white font-bold text-lg">{patient.vitals.bps}/{patient.vitals.bpd}</span>
+                  <div className={`text-right px-2 py-1 rounded ${
+                    getVitalRisk(patient.vitals, 'bp') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                    getVitalRisk(patient.vitals, 'bp') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                    ''
+                  }`}>
+                    <span className={`font-bold text-lg ${
+                      getVitalRisk(patient.vitals, 'bp') === 'critical' ? 'text-red-400' :
+                      getVitalRisk(patient.vitals, 'bp') === 'warning' ? 'text-yellow-400' :
+                      'text-white'
+                    }`}>{patient.vitals.bps}/{patient.vitals.bpd}</span>
                     <span className="text-[rgba(128,128,128,1)] text-sm ml-1">mmHg</span>
                     <div className="text-[rgba(128,128,128,1)] text-xs">Mean: {meanBP} mmHg</div>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[rgba(217,217,217,1)] text-base">SpO2</span>
-                  <div className="text-right">
-                    <span className="text-white font-bold text-lg">{patient.vitals.spo2}</span>
+                  <div className={`text-right px-2 py-1 rounded ${
+                    getVitalRisk(patient.vitals, 'spo2') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                    getVitalRisk(patient.vitals, 'spo2') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                    ''
+                  }`}>
+                    <span className={`font-bold text-lg ${
+                      getVitalRisk(patient.vitals, 'spo2') === 'critical' ? 'text-red-400' :
+                      getVitalRisk(patient.vitals, 'spo2') === 'warning' ? 'text-yellow-400' :
+                      'text-white'
+                    }`}>{patient.vitals.spo2}</span>
                     <span className="text-[rgba(128,128,128,1)] text-sm ml-1">%</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[rgba(217,217,217,1)] text-base">Temperature</span>
-                  <div className="text-right">
-                    <span className="text-white font-bold text-lg">{patient.vitals.temp.toFixed(1)}</span>
+                  <div className={`text-right px-2 py-1 rounded ${
+                    getVitalRisk(patient.vitals, 'temp') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                    getVitalRisk(patient.vitals, 'temp') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                    ''
+                  }`}>
+                    <span className={`font-bold text-lg ${
+                      getVitalRisk(patient.vitals, 'temp') === 'critical' ? 'text-red-400' :
+                      getVitalRisk(patient.vitals, 'temp') === 'warning' ? 'text-yellow-400' :
+                      'text-white'
+                    }`}>{patient.vitals.temp.toFixed(1)}</span>
                     <span className="text-[rgba(128,128,128,1)] text-sm ml-1">°F</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[rgba(217,217,217,1)] text-base">Respiratory Rate</span>
-                  <div className="text-right">
-                    <span className="text-white font-bold text-lg">{patient.vitals.rr}</span>
+                  <div className={`text-right px-2 py-1 rounded ${
+                    getVitalRisk(patient.vitals, 'rr') === 'critical' ? 'bg-red-900/30 border border-red-500/50' :
+                    getVitalRisk(patient.vitals, 'rr') === 'warning' ? 'bg-yellow-900/30 border border-yellow-500/50' :
+                    ''
+                  }`}>
+                    <span className={`font-bold text-lg ${
+                      getVitalRisk(patient.vitals, 'rr') === 'critical' ? 'text-red-400' :
+                      getVitalRisk(patient.vitals, 'rr') === 'warning' ? 'text-yellow-400' :
+                      'text-white'
+                    }`}>{patient.vitals.rr}</span>
                     <span className="text-[rgba(128,128,128,1)] text-sm ml-1">bpm</span>
                   </div>
                 </div>
