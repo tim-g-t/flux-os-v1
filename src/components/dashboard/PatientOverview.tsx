@@ -329,22 +329,12 @@ export const PatientOverview: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Risk Summary - Show what is critical/warning, not counts */}
-                {(critical.length > 0 || warning.length > 0) && (
+                {/* Risk Summary - Show only what is critical */}
+                {critical.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-[rgba(64,66,73,1)]">
-                    <div className="space-y-2">
-                      {critical.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          <span className="text-red-400 font-medium text-sm">Critical: {critical.join(', ')}</span>
-                        </div>
-                      )}
-                      {warning.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                          <span className="text-yellow-400 font-medium text-sm">Warning: {warning.join(', ')}</span>
-                        </div>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                      <span className="text-red-400 font-bold text-base">Critical: {critical.join(', ')}</span>
                     </div>
                   </div>
                 )}
