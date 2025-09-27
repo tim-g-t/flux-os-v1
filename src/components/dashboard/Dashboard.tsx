@@ -37,7 +37,9 @@ export const Dashboard: React.FC = () => {
                 <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} />
               </div>
             </div>
-            <PatientMonitoringChart selectedMetrics={selectedMetrics} />
+            <div className="mt-6">
+              <PatientMonitoringChart selectedMetrics={selectedMetrics} />
+            </div>
             <RiskScores />
           </div>
         </main>
