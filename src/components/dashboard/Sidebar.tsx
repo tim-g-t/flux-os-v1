@@ -8,12 +8,14 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
   return (
     <nav className="w-[17%] max-md:w-full max-md:ml-0 sticky top-0 h-screen overflow-y-auto">
-      <div className="flex flex-col items-stretch mt-3 max-md:mt-10 pb-8">
+      <div className="flex flex-col items-stretch pb-8">
         <div className="flex flex-col items-stretch pl-[23px] max-md:pl-5">
-          <div className="text-white text-[25px] font-bold ml-[41px] max-md:ml-2.5">
-            Flux
+          <div className="flex items-center h-[97px] max-md:h-[80px]">
+            <div className="text-white text-[40px] font-bold ml-[41px] max-md:ml-2.5">
+              Flux
+            </div>
           </div>
-          <div className="mt-[72px] max-md:mt-10">
+          <div className="mt-6 max-md:mt-10">
             <div className="text-white text-[32px] font-medium">
               <span style={{fontWeight: 400, color: 'rgba(133,160,189,1)'}}>
                 Welcome,
@@ -59,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
         {/* Analytics */}
         <button 
           onClick={() => onViewChange('Analytics')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
             activeView === 'Analytics' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white hover:text-white'
@@ -72,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
         {/* Reports */}
         <button 
           onClick={() => onViewChange('Reports')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
             activeView === 'Reports' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white hover:text-white'
@@ -85,10 +87,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
         {/* Separator */}
         <div className="border w-[276px] shrink-0 max-w-full h-0 mt-8 border-[rgba(64,66,73,1)] border-solid max-md:mr-2" />
         
+        {/* Settings */}
+        <button 
+          onClick={() => onViewChange('Settings')}
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-8 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+            activeView === 'Settings' 
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white hover:text-white'
+          }`}
+        >
+          <div className="flex w-[21px] shrink-0 h-5 my-auto" />
+          <div className="my-auto">Settings</div>
+        </button>
+        
         {/* Help & Support */}
         <button 
           onClick={() => onViewChange('Help & Support')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-8 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
             activeView === 'Help & Support' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
               : 'text-white hover:text-white'

@@ -69,25 +69,29 @@ const generateAllVitalData = (vitals: VitalReading) => ({
 const mockPatients = [
   // Normal patients (4) - truly normal, no risk scores
   { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_03', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_07', name: 'David L.', age: 38, gender: 'Male', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_15', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_02', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_03', name: 'David L.', age: 38, gender: 'Male', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_04', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('normal') },
   
   // Warning patient (1) - Sarah K with one warning
-  { id: 'bed_12', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('warning') },
+  { id: 'bed_05', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('warning') },
   
   // Critical patient (1) - Anna T with multiple critical issues
-  { id: 'bed_25', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') },
+  { id: 'bed_06', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') },
   
   // Additional normal patients to fill out the grid
-  { id: 'bed_18', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_22', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('normal') }
+  { id: 'bed_07', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('normal') },
+  { id: 'bed_08', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('normal') }
 ].map(patient => ({
   ...patient,
   chartData: generateAllVitalData(patient.vitals)
 }));
 
-export const PatientOverview: React.FC = () => {
+interface PatientOverviewProps {
+  onPatientSelect?: (patientId: string) => void;
+}
+
+export const PatientOverview: React.FC<PatientOverviewProps> = ({ onPatientSelect }) => {
   const { loading } = useVitals('bed_15');
   const navigate = useNavigate();
   const [selectedVitals, setSelectedVitals] = useState<Record<string, string>>({});
@@ -231,7 +235,12 @@ export const PatientOverview: React.FC = () => {
                     : 'border-0'
                   }
                 `}
-                onClick={() => navigate(`/patient/${patient.id}`)}
+                onClick={() => {
+                  if (onPatientSelect) {
+                    onPatientSelect(patient.id);
+                  }
+                  navigate(`/patient/${patient.id}`);
+                }}
               >
                   {/* Patient Header */}
                   <div className="flex items-center justify-between mb-6">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { PatientCard } from './PatientCard';
@@ -10,8 +11,10 @@ import { PatientOverview } from './PatientOverview';
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Dashboard');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('bed_01'); // Default to first patient
 
   const toggleMetric = (metric: MetricType) => {
     setSelectedMetrics(prev => 
@@ -23,6 +26,16 @@ export const Dashboard: React.FC = () => {
 
   const handleViewChange = (view: string) => {
     setActiveView(view);
+    // If Patient Detail is selected, navigate to the selected patient's detail page
+    if (view === 'Patient Detail') {
+      console.log('Navigating to patient detail for:', selectedPatientId);
+      navigate(`/patient/${selectedPatientId}`);
+    }
+  };
+
+  const handlePatientSelect = (patientId: string) => {
+    console.log('Patient selected:', patientId);
+    setSelectedPatientId(patientId);
   };
 
   return (
@@ -32,7 +45,7 @@ export const Dashboard: React.FC = () => {
         <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-6">
           {activeView === 'Dashboard' ? (
             <div className="w-full">
-              <PatientOverview />
+              <PatientOverview onPatientSelect={handlePatientSelect} />
             </div>
           ) : (
             <>
