@@ -41,17 +41,13 @@ const chartConfig = {
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2';
 type TimeRange = '1h' | '4h' | '12h' | '24h' | '1w';
 
-export const PatientMonitoringChart: React.FC = () => {
-  const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
+interface PatientMonitoringChartProps {
+  selectedMetrics: MetricType[];
+}
+
+export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
 
-  const toggleMetric = (metric: MetricType) => {
-    setSelectedMetrics(prev => 
-      prev.includes(metric) 
-        ? prev.filter(m => m !== metric)
-        : [...prev, metric]
-    );
-  };
 
   const metricLabels = {
     heartRate: 'HR',
@@ -89,23 +85,6 @@ export const PatientMonitoringChart: React.FC = () => {
               >
                 {timeRangeLabels[range]}
               </button>
-            ))}
-          </div>
-          
-          {/* Metric Legend - Checkboxes on right */}
-          <div className="flex flex-col gap-2">
-            {(Object.keys(metricLabels) as MetricType[]).map((metric) => (
-              <div key={metric} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectedMetrics.includes(metric)}
-                  onChange={() => toggleMetric(metric)}
-                  className="w-4 h-4"
-                />
-                <span className="text-white text-sm font-medium">
-                  {metricLabels[metric]}
-                </span>
-              </div>
             ))}
           </div>
         </div>

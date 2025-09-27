@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { PatientCard } from './PatientCard';
@@ -6,7 +6,18 @@ import { VitalSigns } from './VitalSigns';
 import { RiskScores } from './RiskScores';
 import { PatientMonitoringChart } from './PatientMonitoringChart';
 
+type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2';
+
 export const Dashboard: React.FC = () => {
+  const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
+
+  const toggleMetric = (metric: MetricType) => {
+    setSelectedMetrics(prev => 
+      prev.includes(metric) 
+        ? prev.filter(m => m !== metric)
+        : [...prev, metric]
+    );
+  };
   return (
     <div className="bg-black overflow-hidden pl-[27px] pt-10 max-md:pl-5">
       <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
@@ -23,10 +34,10 @@ export const Dashboard: React.FC = () => {
                   duration="142h"
                   backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
                 />
-                <VitalSigns />
+                <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} />
               </div>
             </div>
-            <PatientMonitoringChart />
+            <PatientMonitoringChart selectedMetrics={selectedMetrics} />
             <RiskScores />
           </div>
         </main>

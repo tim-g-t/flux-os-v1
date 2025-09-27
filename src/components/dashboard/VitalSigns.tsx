@@ -1,7 +1,14 @@
 import React from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 
-export const VitalSigns: React.FC = () => {
+type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2';
+
+interface VitalSignsProps {
+  selectedMetrics: MetricType[];
+  onMetricToggle: (metric: MetricType) => void;
+}
+
+export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetricToggle }) => {
   return (
     <section className="w-[78%] ml-5 max-md:w-full max-md:ml-0">
       <div className="bg-black w-full mx-auto px-8 py-5 rounded-3xl max-md:max-w-full max-md:mt-10 max-md:px-5">
@@ -31,26 +38,25 @@ export const VitalSigns: React.FC = () => {
             changeType="positive"
             label="Pulse"
             className="pl-4 pr-[34px]"
+            onClick={() => onMetricToggle('heartRate')}
+            isSelected={selectedMetrics.includes('heartRate')}
           />
           <MetricCard
-            value="93"
+            value="93/117"
             change="-12.31 (0.7%)"
             changeType="negative"
             label="Blood Pressure"
+            onClick={() => onMetricToggle('bloodPressure')}
+            isSelected={selectedMetrics.includes('bloodPressure')}
           />
           <MetricCard
-            value="117"
-            change="+12.31 (0.7%)"
-            changeType="positive"
-            label="Blood Pressure"
-            className="px-[15px]"
-          />
-          <MetricCard
-            value="11.3"
+            value="98"
             change="+12.31 (0.7%)"
             changeType="negative"
             label="SpO2"
             className="pl-4 pr-[34px]"
+            onClick={() => onMetricToggle('spo2')}
+            isSelected={selectedMetrics.includes('spo2')}
           />
           <MetricCard
             value="98.3"
@@ -58,6 +64,8 @@ export const VitalSigns: React.FC = () => {
             changeType="positive"
             label="Temp"
             className="pl-[15px] pr-[34px]"
+            onClick={() => onMetricToggle('temperature')}
+            isSelected={selectedMetrics.includes('temperature')}
           />
         </div>
       </div>

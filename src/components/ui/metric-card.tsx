@@ -7,6 +7,8 @@ interface MetricCardProps {
   changeType: 'positive' | 'negative';
   label: string;
   className?: string;
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -14,10 +16,20 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   change,
   changeType,
   label,
-  className
+  className,
+  onClick,
+  isSelected = false
 }) => {
   return (
-    <div className={cn("bg-[rgba(20,21,25,1)] flex flex-col flex-1 pt-4 pb-1.5 px-4 rounded-3xl", className)}>
+    <div 
+      className={cn(
+        "bg-[rgba(20,21,25,1)] flex flex-col flex-1 pt-4 pb-1.5 px-4 rounded-3xl transition-all duration-200",
+        onClick && "cursor-pointer hover:bg-[rgba(30,31,35,1)]",
+        isSelected && "ring-2 ring-blue-500 bg-[rgba(30,31,40,1)]",
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="h-[66px]">
         <div className="text-white text-5xl font-bold max-md:text-[40px]">
           {value}
