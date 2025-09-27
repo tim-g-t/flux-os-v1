@@ -38,7 +38,6 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
   const { getFilteredData, loading } = useVitals('bed_15');
 
   const chartData = useMemo(() => {
-    if (loading) return [];
     const data = getFilteredData(timeRange);
     return data.map((item, index) => ({
       time: new Date(item.timestamp).toLocaleTimeString('en-US', { 
@@ -52,45 +51,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       spo2: item.vital.spo2,
       respiratoryRate: item.vital.rr
     }));
-  }, [getFilteredData, timeRange, loading]);
-
-  const getYAxisDomain = useMemo(() => {
-    // Determine appropriate Y-axis range based on selected metrics
-    if (selectedMetrics.length === 1) {
-      const metric = selectedMetrics[0];
-      switch (metric) {
-        case 'heartRate':
-          return [30, 200];
-        case 'bloodPressure':
-          return [60, 200];
-        case 'temperature':
-          return [95, 105];
-        case 'spo2':
-          return [85, 100];
-        case 'respiratoryRate':
-          return [8, 40];
-        default:
-          return [0, 200];
-      }
-    } else if (selectedMetrics.includes('temperature') && selectedMetrics.length === 2 && selectedMetrics.includes('spo2')) {
-      // Special case for temp + SpO2 - both have small ranges
-      return [80, 105];
-    } else if (selectedMetrics.includes('temperature') || selectedMetrics.includes('spo2')) {
-      // If temp or SpO2 mixed with others, use wider range
-      return [0, 200];
-    } else {
-      // Default for HR, BP, RR combinations
-      return [0, 200];
-    }
-  }, [selectedMetrics]);
-
-  const timeRangeLabels = {
-    '1h': '1h',
-    '4h': '4h', 
-    '12h': '12h',
-    '24h': '24h',
-    '1w': '1w'
-  };
+  }, [getFilteredData, timeRange]);
 
   if (loading) {
     return (
@@ -99,6 +60,15 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       </div>
     );
   }
+
+
+  const timeRangeLabels = {
+    '1h': '1h',
+    '4h': '4h', 
+    '12h': '12h',
+    '24h': '24h',
+    '1w': '1w'
+  };
 
   return (
     <div className="w-full max-w-full overflow-hidden mt-6 bg-black rounded-lg p-4">
@@ -159,7 +129,6 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
             />
             <YAxis 
-              domain={getYAxisDomain}
               axisLine={false}
               tickLine={false}
               tick={{ fill: 'rgba(156, 163, 175, 1)', fontSize: 12 }}
