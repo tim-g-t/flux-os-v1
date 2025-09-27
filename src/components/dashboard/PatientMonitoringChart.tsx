@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { ComposedChart, Area, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useVitals } from '@/hooks/useVitals';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
@@ -125,7 +125,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData}>
+          <ComposedChart data={chartData}>
             <XAxis dataKey="time" />
             <YAxis domain={['dataMin - 5', 'dataMax + 5']} />
             <Tooltip content={<CustomTooltip />} />
@@ -135,9 +135,9 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
             )}
             {selectedMetrics.includes('bloodPressure') && (
               <>
-                <Area type="monotone" dataKey="bloodPressureSystolic" stroke="#EF4444" fill="#EF4444" fillOpacity={0.4} strokeWidth={2} />
-                <Area type="monotone" dataKey="bloodPressureDiastolic" stroke="#DC2626" fill="#DC2626" fillOpacity={0.3} strokeWidth={2} />
-                <Area type="monotone" dataKey="bloodPressureMean" stroke="#B91C1C" fill="#B91C1C" fillOpacity={0.2} strokeWidth={2} strokeDasharray="5,5" />
+                <Line type="monotone" dataKey="bloodPressureSystolic" stroke="#EF4444" strokeWidth={3} dot={false} />
+                <Line type="monotone" dataKey="bloodPressureDiastolic" stroke="#DC2626" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="bloodPressureMean" stroke="#B91C1C" strokeWidth={2} strokeDasharray="8,4" dot={false} />
               </>
             )}
             {selectedMetrics.includes('temperature') && (
@@ -149,7 +149,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
             {selectedMetrics.includes('respiratoryRate') && (
               <Area type="monotone" dataKey="respiratoryRate" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.3} />
             )}
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>
