@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 interface MiniChartProps {
   data: Array<{ time: string; value: number }>;
@@ -25,13 +25,31 @@ export const MiniChart: React.FC<MiniChartProps> = ({ data, color, selectedVital
             tick={{ fontSize: 10, fill: '#9CA3AF' }}
             width={25}
           />
+          <Tooltip 
+            content={({ active, payload, label }) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-lg px-3 py-2 shadow-lg">
+                    <p className="text-white text-sm font-medium">
+                      {`${selectedVital}: ${payload[0].value}`}
+                    </p>
+                    <p className="text-[rgba(203,204,209,1)] text-xs">
+                      {label}
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            }}
+            cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '3 3' }}
+          />
           <Line 
             type="monotone" 
             dataKey="value" 
             stroke={color} 
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 3, fill: color }}
+            activeDot={{ r: 4, fill: color, stroke: color, strokeWidth: 2 }}
           />
         </LineChart>
       </ResponsiveContainer>
