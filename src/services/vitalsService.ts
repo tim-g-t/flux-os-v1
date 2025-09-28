@@ -350,7 +350,7 @@ class VitalsService {
 
   private generateDemoData(): VitalsData {
     const readings: VitalTimestamp[] = [];
-    const beds = ['bed_15', 'bed_16', 'bed_17', 'bed_18', 'bed_19', 'bed_20', 'bed_21', 'bed_22', 'bed_23', 'bed_24', 'bed_25', 'bed_26'];
+    const beds = ['bed_01', 'bed_02', 'bed_03', 'bed_04', 'bed_05', 'bed_06', 'bed_07', 'bed_08'];
     
     // Generate last 24 hours of data (every 30 seconds for demo)
     const now = new Date();
@@ -415,7 +415,7 @@ class VitalsService {
   }
 
   private appendDemoReading(): void {
-    const beds = ['bed_15', 'bed_16', 'bed_17', 'bed_18', 'bed_19', 'bed_20', 'bed_21', 'bed_22', 'bed_23', 'bed_24', 'bed_25', 'bed_26'];
+    const beds = ['bed_01', 'bed_02', 'bed_03', 'bed_04', 'bed_05', 'bed_06', 'bed_07', 'bed_08'];
     const timestamp = new Date().toISOString();
     const index = this.data.readings.length;
     
