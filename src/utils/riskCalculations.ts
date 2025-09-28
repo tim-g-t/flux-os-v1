@@ -107,13 +107,13 @@ export const calculateShockIndex = (hr: number, systolicBP: number): { value: nu
   
   if (value <= 0.7) {
     risk = 'normal';
-    description = 'Normal range';
+    description = 'SI ≤0.7';
   } else if (value <= 0.9) {
     risk = 'warning';
-    description = 'Elevated - monitor closely';
+    description = 'SI 0.7-0.9';
   } else {
     risk = 'critical';
-    description = 'Critical - immediate attention needed';
+    description = 'SI >0.9';
   }
   
   return { value, risk, description };
@@ -172,13 +172,13 @@ export const calculatePEWSScore = (vitals: VitalReading): { value: number; risk:
   
   if (score === 0) {
     risk = 'normal';
-    description = 'All vitals within normal limits';
+    description = 'Score: 0';
   } else if (score <= 2) {
     risk = 'warning';
-    description = 'Mild deviation from normal - monitor';
+    description = 'Score: 1-2';
   } else {
     risk = 'critical';
-    description = 'Significant deviation - urgent review needed';
+    description = 'Score: >2';
   }
   
   return { value: score, risk, description };
@@ -192,13 +192,13 @@ export const calculateMAP = (systolicBP: number, diastolicBP: number): { value: 
   
   if (value >= 65) {
     risk = 'normal';
-    description = 'Adequate perfusion';
+    description = 'MAP ≥65';
   } else if (value >= 55) {
     risk = 'warning';
-    description = 'Reduced perfusion - monitor';
+    description = 'MAP 55-65';
   } else {
     risk = 'critical';
-    description = 'Poor perfusion - urgent intervention';
+    description = 'MAP <55';
   }
   
   return { value, risk, description };
@@ -212,13 +212,13 @@ export const calculateROXIndex = (spo2: number, rr: number, fio2: number = 21): 
   
   if (value >= 4.0) {
     risk = 'normal';
-    description = 'Low risk of respiratory failure';
+    description = 'ROX ≥4.0';
   } else if (value >= 3.0) {
     risk = 'warning';
-    description = 'Moderate risk - monitor closely';
+    description = 'ROX 3.0-4.0';
   } else {
     risk = 'critical';
-    description = 'High risk of respiratory failure';
+    description = 'ROX <3.0';
   }
   
   return { value, risk, description };
@@ -241,13 +241,13 @@ export const calculateqSOFA = (vitals: VitalReading): { value: number; risk: 'no
   
   if (score === 0) {
     risk = 'normal';
-    description = 'No sepsis risk factors';
+    description = 'qSOFA: 0';
   } else if (score === 1) {
     risk = 'warning';
-    description = 'Possible sepsis - monitor';
+    description = 'qSOFA: 1';
   } else {
     risk = 'critical';
-    description = 'High sepsis risk - immediate assessment';
+    description = 'qSOFA: ≥2';
   }
   
   return { value: score, risk, description };
@@ -261,16 +261,16 @@ export const calculatePulsePressure = (systolicBP: number, diastolicBP: number):
   
   if (value >= 30 && value <= 70) {
     risk = 'normal';
-    description = 'Normal volume status';
+    description = 'PP: 30-70';
   } else if (value >= 20 && value < 30) {
     risk = 'warning';
-    description = 'Reduced stroke volume - monitor';
+    description = 'PP: 20-30';
   } else if (value > 70) {
     risk = 'warning';
-    description = 'Wide pulse pressure - assess';
+    description = 'PP: >70';
   } else {
     risk = 'critical';
-    description = 'Narrow pulse pressure - hypovolemia risk';
+    description = 'PP: <20';
   }
   
   return { value, risk, description };
@@ -281,7 +281,7 @@ export const calculateRiskScores = (vitals: VitalReading): RiskScore => {
     shockIndex: calculateShockIndex(vitals.hr, vitals.bps),
     pewsScore: calculatePEWSScore(vitals),
     map: calculateMAP(vitals.bps, vitals.bpd),
-    roxIndex: { value: 0, risk: 'normal', description: 'Not calculated' },
+    roxIndex: { value: 0, risk: 'normal', description: 'N/A' },
     qsofa: calculateqSOFA(vitals),
     pulsePressure: calculatePulsePressure(vitals.bps, vitals.bpd)
   };

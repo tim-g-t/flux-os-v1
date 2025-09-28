@@ -5,7 +5,6 @@ export interface ClinicalScore {
   value: number;
   risk: 'low' | 'medium' | 'high' | 'critical';
   description: string;
-  recommendation?: string;
 }
 
 // NEWS2 Score - National Early Warning Score 2
@@ -63,34 +62,28 @@ export const calculateNEWS2 = (vitals: VitalReading): ClinicalScore => {
     score += 1;
   }
 
-  // Determine risk level and recommendations
+  // Determine risk level
   let risk: 'low' | 'medium' | 'high' | 'critical';
   let description: string;
-  let recommendation: string;
 
   if (score === 0) {
     risk = 'low';
-    description = 'No acute deterioration risk';
-    recommendation = 'Continue routine monitoring';
+    description = 'Score: 0';
   } else if (score <= 4) {
     risk = 'low';
-    description = 'Low clinical risk';
-    recommendation = 'Ward-based response';
+    description = 'Score: 1-4';
   } else if (score === 5 || score === 6) {
     risk = 'medium';
-    description = 'Medium clinical risk';
-    recommendation = 'Urgent ward review - increase monitoring frequency';
+    description = 'Score: 5-6';
   } else if (score >= 7) {
     risk = 'critical';
-    description = 'High clinical risk';
-    recommendation = 'Emergency response team activation required';
+    description = 'Score: ≥7';
   } else {
     risk = 'medium';
-    description = 'Moderate clinical risk';
-    recommendation = 'Clinical review within 1 hour';
+    description = 'Score: Medium';
   }
 
-  return { value: score, risk, description, recommendation };
+  return { value: score, risk, description };
 };
 
 // Modified Shock Index (MSI) - Better for ICU patients
@@ -100,27 +93,22 @@ export const calculateModifiedShockIndex = (vitals: VitalReading): ClinicalScore
 
   let risk: 'low' | 'medium' | 'high' | 'critical';
   let description: string;
-  let recommendation: string;
 
   if (value <= 0.7) {
     risk = 'low';
-    description = 'Normal perfusion status';
-    recommendation = 'Continue monitoring';
+    description = 'MSI ≤0.7';
   } else if (value <= 1.3) {
     risk = 'medium';
-    description = 'Mild hypoperfusion risk';
-    recommendation = 'Increase monitoring frequency';
+    description = 'MSI 0.7-1.3';
   } else if (value <= 1.7) {
     risk = 'high';
-    description = 'Significant hypoperfusion';
-    recommendation = 'Consider fluid resuscitation';
+    description = 'MSI 1.3-1.7';
   } else {
     risk = 'critical';
-    description = 'Severe shock state';
-    recommendation = 'Immediate intervention required';
+    description = 'MSI >1.7';
   }
 
-  return { value, risk, description, recommendation };
+  return { value, risk, description };
 };
 
 // Respiratory Deterioration Index
@@ -149,27 +137,22 @@ export const calculateRespiratoryIndex = (vitals: VitalReading): ClinicalScore =
 
   let risk: 'low' | 'medium' | 'high' | 'critical';
   let description: string;
-  let recommendation: string;
 
   if (score === 0 && roxSimplified > 10) {
     risk = 'low';
-    description = 'Stable respiratory function';
-    recommendation = 'Continue current management';
+    description = 'Index: Low';
   } else if (score <= 2 && roxSimplified > 5) {
     risk = 'medium';
-    description = 'Mild respiratory compromise';
-    recommendation = 'Increase O2 monitoring';
+    description = 'Index: Moderate';
   } else if (score <= 4 || roxSimplified <= 5) {
     risk = 'high';
-    description = 'Respiratory decompensation risk';
-    recommendation = 'Consider O2 therapy escalation';
+    description = 'Index: High';
   } else {
     risk = 'critical';
-    description = 'Respiratory failure imminent';
-    recommendation = 'Prepare for intubation';
+    description = 'Index: Critical';
   }
 
-  return { value: score, risk, description, recommendation };
+  return { value: score, risk, description };
 };
 
 // Calculate System Instability Score
@@ -181,8 +164,7 @@ export const calculateSystemInstability = (
     return {
       value: 0,
       risk: 'low',
-      description: 'Insufficient data',
-      recommendation: 'Awaiting more readings'
+      description: 'Insufficient data'
     };
   }
 
@@ -209,27 +191,22 @@ export const calculateSystemInstability = (
 
   let risk: 'low' | 'medium' | 'high' | 'critical';
   let description: string;
-  let recommendation: string;
 
   if (value < 5) {
     risk = 'low';
-    description = 'Stable vital signs';
-    recommendation = 'Patient stable';
+    description = 'CV <5%';
   } else if (value < 10) {
     risk = 'medium';
-    description = 'Moderate variability';
-    recommendation = 'Monitor for trends';
+    description = 'CV 5-10%';
   } else if (value < 15) {
     risk = 'high';
-    description = 'High instability';
-    recommendation = 'Increase monitoring frequency';
+    description = 'CV 10-15%';
   } else {
     risk = 'critical';
-    description = 'Severe instability';
-    recommendation = 'Continuous monitoring required';
+    description = 'CV >15%';
   }
 
-  return { value, risk, description, recommendation };
+  return { value, risk, description };
 };
 
 // Time-based risk trajectory

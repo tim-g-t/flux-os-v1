@@ -6,145 +6,250 @@ import {
   calculateRespiratoryIndex,
   calculateSystemInstability,
   calculateRiskTrajectory,
-  estimateTimeToEvent,
-  ClinicalScore,
-  RiskTrajectory
+  ClinicalScore
 } from '@/utils/clinicalScores';
 import { calculateShockIndex, calculateqSOFA, calculateMAP, calculatePulsePressure } from '@/utils/riskCalculations';
-import { VitalReading } from '@/services/vitalsService';
 
-interface ScoreCardProps {
-  title: string;
-  score: ClinicalScore | { value: number; risk: string; description: string };
-  subtitle?: string;
-  trend?: 'up' | 'down' | 'stable';
-  lastUpdate?: string;
-  critical?: boolean;
+interface SparklineProps {
+  data: number[];
+  color: string;
+  width?: number;
+  height?: number;
 }
 
-const ScoreCard: React.FC<ScoreCardProps> = ({ title, score, subtitle, trend, lastUpdate, critical }) => {
-  const getRiskColor = (risk: string) => {
-    if (risk === 'critical' || risk === 'high') return 'bg-red-500';
-    if (risk === 'warning' || risk === 'medium') return 'bg-yellow-500';
-    return 'bg-green-500';
+const Sparkline: React.FC<SparklineProps> = ({ data, color, width = 100, height = 30 }) => {
+  if (data.length < 2) return null;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  const points = data.map((value, index) => {
+    const x = (index / (data.length - 1)) * width;
+    const y = height - ((value - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg width={width} height={height} className="opacity-60">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+      />
+    </svg>
+  );
+};
+
+interface ScoreCardProps {
+  name: string;
+  value: number | string;
+  sparklineData: number[];
+  status: 'normal' | 'warning' | 'critical';
+  onClick: () => void;
+}
+
+const ScoreCard: React.FC<ScoreCardProps> = ({ name, value, sparklineData, status, onClick }) => {
+  const getStatusColor = () => {
+    switch (status) {
+      case 'critical': return '#ef4444';
+      case 'warning': return '#f59e0b';
+      default: return '#10b981';
+    }
   };
 
-  const getTrendIcon = () => {
-    if (!trend) return null;
-    if (trend === 'up') return '↑';
-    if (trend === 'down') return '↓';
-    return '→';
+  const getBorderColor = () => {
+    switch (status) {
+      case 'critical': return 'border-red-500/20';
+      case 'warning': return 'border-yellow-500/20';
+      default: return 'border-[rgba(64,66,73,1)]';
+    }
   };
 
   return (
-    <div className={`bg-black border rounded-2xl p-4 transition-all ${
-      critical ? 'border-red-500 animate-pulse' : 'border-[rgba(64,66,73,1)]'
-    }`}>
+    <div
+      onClick={onClick}
+      className={`bg-black border ${getBorderColor()} rounded-xl p-4 cursor-pointer
+                  hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10
+                  transition-all duration-300 group`}
+    >
       <div className="flex justify-between items-start mb-3">
-        <div className="flex-1">
-          <h3 className="text-white font-semibold text-base">{title}</h3>
-          {subtitle && <p className="text-[rgba(128,128,128,1)] text-xs mt-1">{subtitle}</p>}
-        </div>
-        <div className={`w-3 h-3 rounded-full ${getRiskColor(score.risk)}`}></div>
+        <h3 className="text-[rgba(217,217,217,1)] text-sm font-medium group-hover:text-white transition-colors">
+          {name}
+        </h3>
+        <div
+          className="w-2 h-2 rounded-full opacity-50"
+          style={{ backgroundColor: getStatusColor() }}
+        />
       </div>
 
-      <div className="flex items-baseline gap-2">
-        <span className="text-white text-3xl font-bold">{score.value}</span>
-        {trend && (
-          <span className={`text-xl ${trend === 'up' ? 'text-red-400' : trend === 'down' ? 'text-green-400' : 'text-gray-400'}`}>
-            {getTrendIcon()}
-          </span>
-        )}
-      </div>
-
-      <p className="text-[rgba(217,217,217,1)] text-sm mt-2">{score.description}</p>
-
-      {(score as ClinicalScore).recommendation && (
-        <div className="mt-3 p-2 bg-[rgba(26,27,32,1)] rounded-lg">
-          <p className="text-yellow-400 text-xs font-medium">Action Required:</p>
-          <p className="text-[rgba(217,217,217,1)] text-xs mt-1">{(score as ClinicalScore).recommendation}</p>
+      <div className="flex items-end justify-between">
+        <span className="text-white text-2xl font-bold">{value}</span>
+        <div className="ml-4">
+          <Sparkline
+            data={sparklineData}
+            color={getStatusColor()}
+            width={80}
+            height={25}
+          />
         </div>
-      )}
-
-      {lastUpdate && (
-        <p className="text-[rgba(128,128,128,1)] text-xs mt-2">Updated: {lastUpdate}</p>
-      )}
+      </div>
     </div>
   );
 };
 
-interface RiskTrajectoryChartProps {
-  trajectory: RiskTrajectory[];
+interface ScoreDetailModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  scoreName: string;
+  currentValue: number | string;
+  historicalData: Array<{ time: string; value: number }>;
+  status: 'normal' | 'warning' | 'critical';
 }
 
-const RiskTrajectoryChart: React.FC<RiskTrajectoryChartProps> = ({ trajectory }) => {
-  if (trajectory.length === 0) {
-    return (
-      <div className="bg-black border border-[rgba(64,66,73,1)] rounded-2xl p-6">
-        <h3 className="text-white font-semibold text-lg mb-4">Risk Trajectory</h3>
-        <p className="text-[rgba(217,217,217,1)]">Insufficient data for trajectory analysis</p>
-      </div>
-    );
-  }
+const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
+  isOpen,
+  onClose,
+  scoreName,
+  currentValue,
+  historicalData,
+  status
+}) => {
+  if (!isOpen) return null;
 
-  const maxRisk = Math.max(...trajectory.map(t => t.combinedRisk));
-  const timeLabels = ['6h', '5h', '4h', '3h', '2h', '1h', '30m', 'Now'];
-  const recentTrajectory = trajectory.slice(-8);
+  const getStatusColor = () => {
+    switch (status) {
+      case 'critical': return '#ef4444';
+      case 'warning': return '#f59e0b';
+      default: return '#10b981';
+    }
+  };
+
+  const maxValue = Math.max(...historicalData.map(d => d.value));
+  const minValue = Math.min(...historicalData.map(d => d.value));
+  const avgValue = historicalData.reduce((sum, d) => sum + d.value, 0) / historicalData.length;
 
   return (
-    <div className="bg-black border border-[rgba(64,66,73,1)] rounded-2xl p-6">
-      <h3 className="text-white font-semibold text-lg mb-4">Risk Trajectory</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative h-48">
-        {/* Risk zones */}
-        <div className="absolute inset-0 flex flex-col">
-          <div className="flex-1 bg-red-900/20 border-b border-red-500/30"></div>
-          <div className="flex-1 bg-yellow-900/20 border-b border-yellow-500/30"></div>
-          <div className="flex-1 bg-green-900/20"></div>
+      <div className="relative bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[rgba(217,217,217,1)] hover:text-white transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <h2 className="text-white text-2xl font-bold mb-6">{scoreName}</h2>
+
+        {/* Current Value Display */}
+        <div className="bg-black rounded-xl p-6 mb-6">
+          <div className="flex items-baseline gap-4">
+            <span className="text-5xl font-bold text-white">{currentValue}</span>
+            <span className="text-[rgba(217,217,217,1)]">Current</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mt-4">
+            <div>
+              <p className="text-[rgba(128,128,128,1)] text-sm">24h Min</p>
+              <p className="text-white font-semibold">{minValue.toFixed(1)}</p>
+            </div>
+            <div>
+              <p className="text-[rgba(128,128,128,1)] text-sm">24h Avg</p>
+              <p className="text-white font-semibold">{avgValue.toFixed(1)}</p>
+            </div>
+            <div>
+              <p className="text-[rgba(128,128,128,1)] text-sm">24h Max</p>
+              <p className="text-white font-semibold">{maxValue.toFixed(1)}</p>
+            </div>
+          </div>
         </div>
 
         {/* Chart */}
-        <div className="relative h-full flex items-end justify-between px-2">
-          {recentTrajectory.map((point, index) => {
-            const height = (point.combinedRisk / (maxRisk || 10)) * 100;
-            const color = point.trend === 'critical' ? 'bg-red-500' :
-                         point.trend === 'deteriorating' ? 'bg-yellow-500' :
-                         point.trend === 'improving' ? 'bg-green-500' : 'bg-blue-500';
+        <div className="bg-black rounded-xl p-6 mb-6">
+          <h3 className="text-white font-semibold mb-4">24 Hour Trend</h3>
+          <div className="h-64 relative">
+            <svg className="w-full h-full">
+              {/* Grid lines */}
+              {[0, 25, 50, 75, 100].map(percent => (
+                <line
+                  key={percent}
+                  x1="0"
+                  y1={`${percent}%`}
+                  x2="100%"
+                  y2={`${percent}%`}
+                  stroke="rgba(64,66,73,0.3)"
+                  strokeWidth="1"
+                />
+              ))}
 
-            return (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div
-                  className={`w-full mx-0.5 ${color} rounded-t transition-all duration-300`}
-                  style={{ height: `${height}%` }}
-                ></div>
-                <span className="text-[rgba(128,128,128,1)] text-xs mt-2">
-                  {timeLabels[index] || `${index}h`}
-                </span>
-              </div>
-            );
-          })}
+              {/* Data line */}
+              <polyline
+                points={historicalData.map((d, i) => {
+                  const x = (i / (historicalData.length - 1)) * 100;
+                  const y = 100 - ((d.value - minValue) / (maxValue - minValue || 1)) * 100;
+                  return `${x}%,${y}%`;
+                }).join(' ')}
+                fill="none"
+                stroke={getStatusColor()}
+                strokeWidth="2"
+              />
+
+              {/* Data points */}
+              {historicalData.map((d, i) => {
+                const x = (i / (historicalData.length - 1)) * 100;
+                const y = 100 - ((d.value - minValue) / (maxValue - minValue || 1)) * 100;
+                return (
+                  <circle
+                    key={i}
+                    cx={`${x}%`}
+                    cy={`${y}%`}
+                    r="3"
+                    fill={getStatusColor()}
+                    opacity="0.8"
+                  />
+                );
+              })}
+            </svg>
+          </div>
         </div>
 
-        {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-[rgba(128,128,128,1)]">
-          <span>High</span>
-          <span>Med</span>
-          <span>Low</span>
+        {/* Data Table */}
+        <div className="bg-black rounded-xl p-6">
+          <h3 className="text-white font-semibold mb-4">Recent Values</h3>
+          <div className="max-h-48 overflow-y-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-[rgba(128,128,128,1)] text-sm">
+                  <th className="text-left pb-2">Time</th>
+                  <th className="text-right pb-2">Value</th>
+                  <th className="text-right pb-2">Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historicalData.slice(-10).reverse().map((d, i, arr) => {
+                  const prevValue = i < arr.length - 1 ? arr[i + 1].value : d.value;
+                  const change = d.value - prevValue;
+                  return (
+                    <tr key={i} className="border-t border-[rgba(64,66,73,0.3)]">
+                      <td className="py-2 text-[rgba(217,217,217,1)] text-sm">{d.time}</td>
+                      <td className="text-right text-white font-medium">{d.value.toFixed(1)}</td>
+                      <td className={`text-right text-sm ${
+                        change > 0 ? 'text-red-400' : change < 0 ? 'text-green-400' : 'text-gray-400'
+                      }`}>
+                        {change > 0 ? '+' : ''}{change.toFixed(1)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-
-      <div className="flex justify-between mt-4 text-sm">
-        <span className="text-[rgba(217,217,217,1)]">
-          Current Trend:
-          <span className={`ml-2 font-semibold ${
-            recentTrajectory[recentTrajectory.length - 1]?.trend === 'critical' ? 'text-red-400' :
-            recentTrajectory[recentTrajectory.length - 1]?.trend === 'deteriorating' ? 'text-yellow-400' :
-            recentTrajectory[recentTrajectory.length - 1]?.trend === 'improving' ? 'text-green-400' :
-            'text-blue-400'
-          }`}>
-            {recentTrajectory[recentTrajectory.length - 1]?.trend || 'stable'}
-          </span>
-        </span>
       </div>
     </div>
   );
@@ -152,38 +257,20 @@ const RiskTrajectoryChart: React.FC<RiskTrajectoryChartProps> = ({ trajectory })
 
 export const ClinicalRiskDashboard: React.FC = () => {
   const { getLatestVitals, getFilteredData, loading } = useVitals('bed_15');
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedScore, setSelectedScore] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const { scores, trajectory, timeToEvent, historicalVitals } = useMemo(() => {
+  const { scores, historicalScores } = useMemo(() => {
     const latestVitals = getLatestVitals();
     if (!latestVitals) {
-      return { scores: null, trajectory: [], timeToEvent: null, historicalVitals: [] };
+      return { scores: null, historicalScores: {} };
     }
 
-    // Get historical data for trajectory
-    const filteredData = getFilteredData('6h');
+    // Get historical data
+    const filteredData = getFilteredData('24h');
     const historicalVitals = filteredData.map(d => d.vital);
 
-    // Convert to API format for trajectory calculation
-    const apiFormatVitals = filteredData.map(d => ({
-      time: d.timestamp,
-      Pulse: d.vital.hr,
-      BloodPressure: {
-        Systolic: d.vital.bps,
-        Diastolic: d.vital.bpd,
-        Mean: Math.round((d.vital.bps + 2 * d.vital.bpd) / 3)
-      },
-      RespirationRate: d.vital.rr,
-      SpO2: d.vital.spo2,
-      Temp: d.vital.temp
-    }));
-
-    // Calculate all scores
+    // Calculate all current scores
     const news2 = calculateNEWS2(latestVitals);
     const msi = calculateModifiedShockIndex(latestVitals);
     const respiratory = calculateRespiratoryIndex(latestVitals);
@@ -193,222 +280,131 @@ export const ClinicalRiskDashboard: React.FC = () => {
     const pulsePressure = calculatePulsePressure(latestVitals.bps, latestVitals.bpd);
     const instability = calculateSystemInstability(latestVitals, historicalVitals);
 
-    // Calculate trajectory
-    const trajectory = calculateRiskTrajectory(apiFormatVitals);
-    const timeToEvent = estimateTimeToEvent(trajectory);
+    // Calculate historical scores for sparklines and details
+    const historicalScores: any = {
+      NEWS2: [],
+      MSI: [],
+      'Respiratory Index': [],
+      'Shock Index': [],
+      qSOFA: [],
+      MAP: [],
+      'Pulse Pressure': [],
+      'System Stability': []
+    };
+
+    filteredData.forEach(d => {
+      const time = new Date(d.timestamp).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      historicalScores.NEWS2.push({
+        time,
+        value: calculateNEWS2(d.vital).value
+      });
+      historicalScores.MSI.push({
+        time,
+        value: calculateModifiedShockIndex(d.vital).value
+      });
+      historicalScores['Respiratory Index'].push({
+        time,
+        value: calculateRespiratoryIndex(d.vital).value
+      });
+      historicalScores['Shock Index'].push({
+        time,
+        value: calculateShockIndex(d.vital.hr, d.vital.bps).value
+      });
+      historicalScores.qSOFA.push({
+        time,
+        value: calculateqSOFA(d.vital).value
+      });
+      historicalScores.MAP.push({
+        time,
+        value: calculateMAP(d.vital.bps, d.vital.bpd).value
+      });
+      historicalScores['Pulse Pressure'].push({
+        time,
+        value: calculatePulsePressure(d.vital.bps, d.vital.bpd).value
+      });
+    });
+
+    // Add system stability
+    if (historicalVitals.length > 0) {
+      historicalScores['System Stability'].push({
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        value: instability.value
+      });
+    }
 
     return {
       scores: {
-        news2,
-        msi,
-        respiratory,
-        shockIndex,
-        qsofa,
-        map,
-        pulsePressure,
-        instability
+        NEWS2: news2,
+        MSI: msi,
+        'Respiratory Index': respiratory,
+        'Shock Index': shockIndex,
+        qSOFA: qsofa,
+        MAP: map,
+        'Pulse Pressure': pulsePressure,
+        'System Stability': instability
       },
-      trajectory,
-      timeToEvent,
-      historicalVitals
+      historicalScores
     };
   }, [getLatestVitals, getFilteredData]);
 
   if (loading || !scores) {
     return (
       <section className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-6 mt-6">
-        <div className="text-white text-xl font-medium">Loading clinical risk assessment...</div>
+        <div className="text-[rgba(217,217,217,1)] text-base">Loading risk scores...</div>
       </section>
     );
   }
 
-  // Determine if any scores are critical
-  const hasCritical = Object.values(scores).some(s =>
-    s.risk === 'critical' || s.risk === 'high'
-  );
+  const getStatus = (risk: string): 'normal' | 'warning' | 'critical' => {
+    if (risk === 'critical' || risk === 'high') return 'critical';
+    if (risk === 'warning' || risk === 'medium') return 'warning';
+    return 'normal';
+  };
+
+  const handleScoreClick = (scoreName: string) => {
+    setSelectedScore(scoreName);
+    setModalOpen(true);
+  };
 
   return (
-    <section className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-6 mt-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-white text-xl font-bold">Clinical Risk Assessment</h2>
-          <p className="text-[rgba(217,217,217,1)] text-sm mt-1">
-            Real-time clinical scoring and deterioration detection
-          </p>
+    <>
+      <section className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-6 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Object.entries(scores).map(([name, score]) => {
+            const sparklineData = historicalScores[name]?.map((d: any) => d.value) || [];
+            return (
+              <ScoreCard
+                key={name}
+                name={name}
+                value={typeof score.value === 'number' ? score.value.toFixed(1) : score.value}
+                sparklineData={sparklineData.slice(-20)} // Last 20 points for sparkline
+                status={getStatus(score.risk)}
+                onClick={() => handleScoreClick(name)}
+              />
+            );
+          })}
         </div>
-        <div className="text-right">
-          <p className="text-[rgba(217,217,217,1)] text-sm">Last Updated</p>
-          <p className="text-white font-medium">{currentTime.toLocaleTimeString()}</p>
-        </div>
-      </div>
+      </section>
 
-      {/* Critical Alert Banner */}
-      {hasCritical && (
-        <div className="bg-red-900/30 border border-red-500 rounded-xl p-4 mb-6 animate-pulse">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
-            <div>
-              <p className="text-red-400 font-bold text-lg">CRITICAL RISK DETECTED</p>
-              <p className="text-[rgba(217,217,217,1)] text-sm">Immediate clinical review required</p>
-            </div>
-          </div>
-          {timeToEvent && (
-            <p className="text-yellow-400 text-sm mt-2">
-              Estimated time to critical event: {timeToEvent.hours} hours
-              (Confidence: {timeToEvent.confidence})
-            </p>
-          )}
-        </div>
+      {selectedScore && (
+        <ScoreDetailModal
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedScore(null);
+          }}
+          scoreName={selectedScore}
+          currentValue={typeof scores[selectedScore as keyof typeof scores].value === 'number'
+            ? scores[selectedScore as keyof typeof scores].value.toFixed(1)
+            : scores[selectedScore as keyof typeof scores].value}
+          historicalData={historicalScores[selectedScore] || []}
+          status={getStatus(scores[selectedScore as keyof typeof scores].risk)}
+        />
       )}
-
-      {/* Primary Clinical Scores */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <ScoreCard
-          title="NEWS2 Score"
-          score={scores.news2}
-          subtitle="National Early Warning Score"
-          critical={scores.news2.risk === 'critical'}
-          lastUpdate={currentTime.toLocaleTimeString()}
-        />
-        <ScoreCard
-          title="Modified Shock Index"
-          score={scores.msi}
-          subtitle="ICU-adjusted shock detection"
-          critical={scores.msi.risk === 'critical'}
-          lastUpdate={currentTime.toLocaleTimeString()}
-        />
-        <ScoreCard
-          title="Respiratory Risk"
-          score={scores.respiratory}
-          subtitle="Respiratory failure prediction"
-          critical={scores.respiratory.risk === 'critical'}
-          lastUpdate={currentTime.toLocaleTimeString()}
-        />
-        <ScoreCard
-          title="System Instability"
-          score={scores.instability}
-          subtitle="Multi-parameter variance"
-          critical={scores.instability.risk === 'critical'}
-          lastUpdate={currentTime.toLocaleTimeString()}
-        />
-      </div>
-
-      {/* Risk Trajectory Visualization */}
-      <div className="mb-6">
-        <RiskTrajectoryChart trajectory={trajectory} />
-      </div>
-
-      {/* Secondary Scores Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-3">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-[rgba(217,217,217,1)] text-sm">Shock Index</span>
-            <div className={`w-2 h-2 rounded-full ${
-              scores.shockIndex.risk === 'critical' ? 'bg-red-500' :
-              scores.shockIndex.risk === 'warning' ? 'bg-yellow-500' : 'bg-green-500'
-            }`}></div>
-          </div>
-          <p className="text-white text-xl font-bold">{scores.shockIndex.value}</p>
-          <p className="text-[rgba(128,128,128,1)] text-xs mt-1">Normal: 0.5-0.7</p>
-        </div>
-
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-3">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-[rgba(217,217,217,1)] text-sm">qSOFA</span>
-            <div className={`w-2 h-2 rounded-full ${
-              scores.qsofa.risk === 'critical' ? 'bg-red-500' :
-              scores.qsofa.risk === 'warning' ? 'bg-yellow-500' : 'bg-green-500'
-            }`}></div>
-          </div>
-          <p className="text-white text-xl font-bold">{scores.qsofa.value}</p>
-          <p className="text-[rgba(128,128,128,1)] text-xs mt-1">Sepsis screening</p>
-        </div>
-
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-3">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-[rgba(217,217,217,1)] text-sm">MAP</span>
-            <div className={`w-2 h-2 rounded-full ${
-              scores.map.risk === 'critical' ? 'bg-red-500' :
-              scores.map.risk === 'warning' ? 'bg-yellow-500' : 'bg-green-500'
-            }`}></div>
-          </div>
-          <p className="text-white text-xl font-bold">{scores.map.value}</p>
-          <p className="text-[rgba(128,128,128,1)] text-xs mt-1">Perfusion pressure</p>
-        </div>
-
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-3">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-[rgba(217,217,217,1)] text-sm">Pulse Pressure</span>
-            <div className={`w-2 h-2 rounded-full ${
-              scores.pulsePressure.risk === 'critical' ? 'bg-red-500' :
-              scores.pulsePressure.risk === 'warning' ? 'bg-yellow-500' : 'bg-green-500'
-            }`}></div>
-          </div>
-          <p className="text-white text-xl font-bold">{scores.pulsePressure.value}</p>
-          <p className="text-[rgba(128,128,128,1)] text-xs mt-1">Volume status</p>
-        </div>
-      </div>
-
-      {/* Clinical Decision Support */}
-      <div className="bg-black border border-[rgba(64,66,73,1)] rounded-2xl p-4">
-        <h3 className="text-white font-semibold text-base mb-3">Clinical Decision Support</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Critical Alerts */}
-          <div>
-            <p className="text-red-400 font-medium text-sm mb-2">Critical Priorities</p>
-            {Object.entries(scores)
-              .filter(([_, score]) => score.risk === 'critical' || score.risk === 'high')
-              .map(([key, score]) => (
-                <div key={key} className="mb-1">
-                  <p className="text-[rgba(217,217,217,1)] text-xs">
-                    • {key.toUpperCase()}: {(score as ClinicalScore).recommendation || score.description}
-                  </p>
-                </div>
-              ))}
-            {Object.values(scores).every(s => s.risk !== 'critical' && s.risk !== 'high') && (
-              <p className="text-[rgba(128,128,128,1)] text-xs">No critical alerts</p>
-            )}
-          </div>
-
-          {/* Warning Alerts */}
-          <div>
-            <p className="text-yellow-400 font-medium text-sm mb-2">Monitoring Required</p>
-            {Object.entries(scores)
-              .filter(([_, score]) => score.risk === 'warning' || score.risk === 'medium')
-              .map(([key, score]) => (
-                <div key={key} className="mb-1">
-                  <p className="text-[rgba(217,217,217,1)] text-xs">
-                    • {key.toUpperCase()}: {score.description}
-                  </p>
-                </div>
-              ))}
-            {Object.values(scores).every(s => s.risk !== 'warning' && s.risk !== 'medium') && (
-              <p className="text-[rgba(128,128,128,1)] text-xs">No warnings active</p>
-            )}
-          </div>
-
-          {/* Time Analysis */}
-          <div>
-            <p className="text-blue-400 font-medium text-sm mb-2">Temporal Analysis</p>
-            {timeToEvent ? (
-              <div>
-                <p className="text-[rgba(217,217,217,1)] text-xs">
-                  • Time to critical: {timeToEvent.hours}h ({timeToEvent.confidence} confidence)
-                </p>
-              </div>
-            ) : (
-              <p className="text-[rgba(128,128,128,1)] text-xs">• Patient stable or improving</p>
-            )}
-            <p className="text-[rgba(217,217,217,1)] text-xs mt-1">
-              • Data points analyzed: {historicalVitals.length}
-            </p>
-            <p className="text-[rgba(217,217,217,1)] text-xs">
-              • Monitoring duration: 6 hours
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
+    </>
   );
 };
