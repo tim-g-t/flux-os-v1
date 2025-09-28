@@ -4,7 +4,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar';
 import { Header } from '@/components/dashboard/Header';
 import { PatientCard } from '@/components/dashboard/PatientCard';
 import { VitalSigns } from '@/components/dashboard/VitalSigns';
-import { RiskScores } from '@/components/dashboard/RiskScores';
+import { ClinicalRiskDashboard } from '@/components/dashboard/ClinicalRiskDashboard';
 import { PatientMonitoringChart } from '@/components/dashboard/PatientMonitoringChart';
 import { VitalReading } from '@/services/vitalsService';
 
@@ -131,7 +131,7 @@ export const PatientDetail: React.FC = () => {
             <div className="mt-6">
               <PatientMonitoringChart selectedMetrics={selectedMetrics} />
             </div>
-            <RiskScores />
+            <ClinicalRiskDashboard />
           </div>
         </main>
       </div>
