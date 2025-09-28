@@ -224,7 +224,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
+        <div className="bg-[#1a1b23] border border-[#2a2d3a] rounded-lg p-3 shadow-lg">
           <p className="text-white font-medium mb-2">Time: {label}</p>
           {payload.map((entry: any, index: number) => {
             const isNormalized = axisMode === 'normalized';
@@ -250,9 +250,9 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden rounded-[32px]">
+      <DialogContent className="max-w-4xl p-0 bg-[#1a1b23] border-[#2a2d3a] overflow-hidden rounded-[24px]">
           {/* Header Section */}
-          <div className="px-6 py-4 border-b border-[rgba(64,66,73,0.5)]">
+          <div className="px-6 py-4 border-b border-[#2a2d3a]/50">
             <div className="flex items-center justify-between">
               <h2 className="text-white text-lg font-medium">
                 {config.name}
@@ -296,7 +296,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowVitalSelector(!showVitalSelector)}
-                  className="text-gray-300 text-sm px-4 py-2 border border-gray-600 rounded-full hover:border-white hover:text-white transition-colors"
+                  className="text-gray-300 text-sm px-4 py-2 border border-[#2a2d3a] rounded-full hover:border-gray-500 hover:text-white transition-colors"
                 >
                   {showVitalSelector ? '− Hide vitals' : '+ Add vitals...'}
                 </button>
@@ -318,7 +318,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                 </div>
                 <button
                   onClick={() => setAxisMode(axisMode === 'dual' ? 'normalized' : 'dual')}
-                  className="ml-2 text-gray-300 text-sm px-3 py-1.5 border border-gray-600 rounded-full hover:border-white hover:text-white transition-colors"
+                  className="ml-2 text-gray-300 text-sm px-3 py-1.5 border border-[#2a2d3a] rounded-full hover:border-gray-500 hover:text-white transition-colors"
                 >
                   {axisMode === 'dual' ? 'Dual axes' : 'Normalize'}
                 </button>
@@ -327,7 +327,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
             {/* Vital Selector Pills */}
             {showVitalSelector && (
-              <div className="flex gap-2 mt-3 pt-3 border-t border-[rgba(64,66,73,0.5)]">
+              <div className="flex gap-2 mt-3 pt-3 border-t border-[#2a2d3a]/50">
                 {Object.entries(VITAL_CONFIGS).map(([key, vital]) => (
                   <button
                     key={key}
@@ -335,7 +335,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                       selectedVitals.includes(key)
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        : 'bg-[#2a2d3a] text-gray-300 hover:bg-[#3a3d4a]'
                     }`}
                   >
                     {vital.label}
@@ -347,12 +347,12 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
           {/* Chart Section */}
           <div className="px-6 pb-4">
-            <div className="bg-gray-900/50 border border-[rgba(64,66,73,0.3)] rounded-lg p-4">
+            <div className="bg-[#2a2d3a]/30 border border-[#2a2d3a] rounded-lg p-4">
               <div className="h-80 w-full">
                 {processedData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={processedData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#404249" opacity={0.3} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3a" opacity={0.3} />
                       <XAxis dataKey="time" stroke="#9CA3AF" />
 
                       {axisMode === 'dual' ? (
@@ -534,7 +534,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                     <p className="text-lg">No data for this period</p>
                     <button
                       onClick={() => setTimeRange('1w')}
-                      className="mt-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                      className="mt-4 px-4 py-2 bg-[#2a2d3a] text-white rounded-lg hover:bg-[#3a3d4a]"
                     >
                       Adjust time range
                     </button>
@@ -547,11 +547,11 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
           {/* Recent Values Table */}
           <div className="px-6 pb-6">
             <h3 className="text-white text-sm font-medium mb-4">Recent Values</h3>
-            <div className="bg-gray-900/50 border border-[rgba(64,66,73,0.3)] rounded-lg overflow-hidden">
+            <div className="bg-[#2a2d3a]/30 border border-[#2a2d3a] rounded-lg overflow-hidden">
               <div className="max-h-64 overflow-y-auto">
                 <table className="w-full">
-                  <thead className="sticky top-0 bg-gray-900/80 backdrop-blur-sm">
-                    <tr className="border-b border-[rgba(64,66,73,0.3)]">
+                  <thead className="sticky top-0 bg-[#1a1b23]/90 backdrop-blur-sm">
+                    <tr className="border-b border-[#2a2d3a]">
                       <th className="text-left px-4 py-3 text-gray-500 text-sm font-medium">Time</th>
                       <th className="text-center px-4 py-3 text-gray-500 text-sm font-medium">Value</th>
                       <th className="text-right px-4 py-3 text-gray-500 text-sm font-medium">Status</th>
@@ -559,7 +559,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                   </thead>
                   <tbody>
                     {recentValues.map((value, index) => (
-                      <tr key={index} className="border-b border-[rgba(64,66,73,0.2)] last:border-0 hover:bg-[rgba(64,66,73,0.1)] transition-colors">
+                      <tr key={index} className="border-b border-[#2a2d3a]/50 last:border-0 hover:bg-[#2a2d3a]/20 transition-colors">
                         <td className="px-4 py-3 text-gray-300 text-sm">{value.time}</td>
                         <td className="text-center px-4 py-3">
                           <span className="text-white font-semibold text-sm">{value.value.toFixed(1)}</span>
