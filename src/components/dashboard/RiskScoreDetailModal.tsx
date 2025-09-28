@@ -250,7 +250,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden">
+      <DialogContent className="max-w-4xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden">
         <div className="bg-black border border-[rgba(64,66,73,1)] w-full mx-auto rounded-[32px]">
           {/* Header Section */}
           <div className="px-6 py-4 border-b border-[rgba(64,66,73,0.5)]">
@@ -394,7 +394,6 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                       strokeWidth={2}
                       strokeDasharray="8 4"
                       label={{ value: "Critical", position: "right", fill: "#EF4444" }}
-                      isAnimationActive={false}
                     />
 
                     {config.warningThreshold && (
@@ -408,7 +407,6 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                         strokeWidth={1}
                         strokeDasharray="8 4"
                         opacity={0.7}
-                        isAnimationActive={false}
                       />
                     )}
 

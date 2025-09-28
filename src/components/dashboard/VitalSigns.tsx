@@ -14,7 +14,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
   const { getLatestVitals, getFilteredData, loading } = useVitals('bed_15');
   
   const latestVitals = useMemo(() => getLatestVitals(), [getLatestVitals]);
-  const historicalData = useMemo(() => getFilteredData('bed_15', '24h'), [getFilteredData]);
+  const historicalData = useMemo(() => getFilteredData('24h'), [getFilteredData]);
   
   if (loading || !latestVitals) {
     return (

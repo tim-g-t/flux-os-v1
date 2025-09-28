@@ -408,32 +408,32 @@ export const ClinicalRiskDashboard: React.FC = () => {
           case 'Respiratory Index':
             const resp = calculateRespiratoryIndex(vital);
             scoreValue = resp.value;
-            risk = resp.risk;
+            risk = (resp.risk as any) === 'normal' ? 'low' : (resp.risk as any) === 'warning' ? 'medium' : (resp.risk as any) === 'critical' ? 'critical' : 'high';
             break;
           case 'Shock Index':
             const si = calculateShockIndex(vital.hr, vital.bps);
             scoreValue = si.value;
-            risk = si.risk;
+            risk = (si.risk as any) === 'normal' ? 'low' : (si.risk as any) === 'warning' ? 'medium' : (si.risk as any) === 'critical' ? 'critical' : 'high';
             break;
           case 'qSOFA':
             const qs = calculateqSOFA(vital);
             scoreValue = qs.value;
-            risk = qs.risk;
+            risk = (qs.risk as any) === 'normal' ? 'low' : (qs.risk as any) === 'warning' ? 'medium' : (qs.risk as any) === 'critical' ? 'critical' : 'high';
             break;
           case 'MAP':
             const mapVal = calculateMAP(vital.bps, vital.bpd);
             scoreValue = mapVal.value;
-            risk = mapVal.risk;
+            risk = (mapVal.risk as any) === 'normal' ? 'low' : (mapVal.risk as any) === 'warning' ? 'medium' : (mapVal.risk as any) === 'critical' ? 'critical' : 'high';
             break;
           case 'Pulse Pressure':
             const pp = calculatePulsePressure(vital.bps, vital.bpd);
             scoreValue = pp.value;
-            risk = pp.risk;
+            risk = (pp.risk as any) === 'normal' ? 'low' : (pp.risk as any) === 'warning' ? 'medium' : (pp.risk as any) === 'critical' ? 'critical' : 'high';
             break;
           case 'System Stability':
             const stability = calculateSystemInstability(vital, filteredData.slice(0, 10).map(fd => fd.vital));
             scoreValue = stability.value;
-            risk = stability.risk;
+            risk = (stability.risk as any) === 'normal' ? 'low' : (stability.risk as any) === 'warning' ? 'medium' : (stability.risk as any) === 'critical' ? 'critical' : 'high';
             break;
         }
 
