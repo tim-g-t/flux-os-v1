@@ -51,9 +51,12 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
   const [error, setError] = useState<string | null>(null);
   const [selectedVitals, setSelectedVitals] = useState<Record<string, string>>({});
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [displayPatients, setDisplayPatients] = useState<APIPatient[]>([]);
 
   useEffect(() => {
     let progressInterval: NodeJS.Timeout;
+    let simulationInterval: NodeJS.Timeout;
 
     const loadPatients = async () => {
       try {
@@ -70,6 +73,23 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
         const data = await patientApiService.fetchPatients();
         setPatients(data);
 
+        // Process data to start from 6 hours ago
+        const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+        const processedData = data.map(patient => {
+          // Filter vitals to only show those from 6 hours ago onwards
+          const recentVitals = patient.Vitals.filter(vital =>
+            new Date(vital.time) >= sixHoursAgo
+          );
+
+          // If we have vitals, start with just the first one (6 hours ago)
+          return {
+            ...patient,
+            Vitals: recentVitals.slice(0, 1) // Start with just the first vital
+          };
+        });
+
+        setDisplayPatients(processedData);
+
         // Initialize selected vitals for each patient
         const initialSelection: Record<string, string> = {};
         data.forEach(patient => {
@@ -79,6 +99,35 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
         setSelectedVitals(initialSelection);
 
         setLoadingProgress(100);
+
+        // Start simulation - add new vital every 5 seconds
+        simulationInterval = setInterval(() => {
+          setDisplayPatients(current => {
+            return current.map((patient, index) => {
+              const originalPatient = data[index];
+              if (!originalPatient) return patient;
+
+              // Find vitals from 6 hours ago
+              const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+              const availableVitals = originalPatient.Vitals.filter(vital =>
+                new Date(vital.time) >= sixHoursAgo
+              );
+
+              // Determine how many vitals we should show (one more than current)
+              const currentCount = patient.Vitals.length;
+              const nextCount = Math.min(currentCount + 1, availableVitals.length);
+
+              return {
+                ...patient,
+                Vitals: availableVitals.slice(0, nextCount)
+              };
+            });
+          });
+
+          // Update current time
+          setCurrentTime(new Date());
+        }, 5000); // Update every 5 seconds
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load patient data');
         console.error('Error loading patients:', err);
@@ -98,6 +147,7 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
     return () => {
       unsubscribe();
       if (progressInterval) clearInterval(progressInterval);
+      if (simulationInterval) clearInterval(simulationInterval);
     };
   }, []);
 
@@ -233,9 +283,14 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
       <Header />
       <div className="pt-6 px-6 mt-8">
         <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl pt-6 px-6 pb-8">
+          {/* Show current time for live simulation */}
+          <div className="text-right mb-4">
+            <span className="text-[rgba(217,217,217,1)] text-sm">Live Data - Current Time: </span>
+            <span className="text-white font-medium">{currentTime.toLocaleTimeString()}</span>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
-            {patients.slice(0, 12).map(patient => {
+            {displayPatients.slice(0, 12).map(patient => {
               const bedId = `bed_${patient.Identifier.toString().padStart(2, '0')}`;
               const latestVital = patient.Vitals[patient.Vitals.length - 1];
 
@@ -285,6 +340,9 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
                       <div className="text-white text-xl font-bold">{patient.Name}</div>
                       <div className="text-[rgba(217,217,217,1)] text-base">
                         {patient.Bed} • {patient.Age}y {patient.Gender}
+                      </div>
+                      <div className="text-[rgba(128,128,128,1)] text-xs mt-1">
+                        Last update: {new Date(latestVital.time).toLocaleTimeString()}
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full ${
