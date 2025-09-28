@@ -9,6 +9,7 @@ import {
   ClinicalScore
 } from '@/utils/clinicalScores';
 import { calculateShockIndex, calculateqSOFA, calculateMAP, calculatePulsePressure } from '@/utils/riskCalculations';
+import { RiskScoreDetailModal } from './RiskScoreDetailModal';
 
 interface SparklineProps {
   data: number[];
@@ -259,6 +260,8 @@ export const ClinicalRiskDashboard: React.FC = () => {
   const { getLatestVitals, getFilteredData, loading } = useVitals('bed_15');
   const [selectedScore, setSelectedScore] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalScoreType, setModalScoreType] = useState<'news2' | 'msi' | 'respiratory' | 'shockIndex' | 'qSOFA' | 'map' | 'pulsePressure' | 'stability'>('news2');
+  const [modalScoreData, setModalScoreData] = useState<any[]>([]);
 
   const { scores, historicalScores } = useMemo(() => {
     const latestVitals = getLatestVitals();
@@ -366,8 +369,94 @@ export const ClinicalRiskDashboard: React.FC = () => {
   };
 
   const handleScoreClick = (scoreName: string) => {
-    setSelectedScore(scoreName);
-    setModalOpen(true);
+    // Prepare data for the modal
+    const scoreTypeMap: Record<string, 'news2' | 'msi' | 'respiratory' | 'shockIndex' | 'qSOFA' | 'map' | 'pulsePressure' | 'stability'> = {
+      'NEWS2': 'news2',
+      'MSI': 'msi',
+      'Respiratory Index': 'respiratory',
+      'Shock Index': 'shockIndex',
+      'qSOFA': 'qSOFA',
+      'MAP': 'map',
+      'Pulse Pressure': 'pulsePressure',
+      'System Stability': 'stability'
+    };
+
+    const scoreType = scoreTypeMap[scoreName];
+    if (scoreType) {
+      setModalScoreType(scoreType);
+
+      // Prepare score data with vitals
+      const filteredData = getFilteredData('24h');
+      const scoreData = filteredData.map(d => {
+        const timestamp = new Date(d.timestamp);
+        const vital = d.vital;
+
+        let scoreValue = 0;
+        let risk: 'low' | 'medium' | 'high' | 'critical' = 'low';
+
+        switch (scoreName) {
+          case 'NEWS2':
+            const news2 = calculateNEWS2(vital);
+            scoreValue = news2.value;
+            risk = news2.risk;
+            break;
+          case 'MSI':
+            const msi = calculateModifiedShockIndex(vital);
+            scoreValue = msi.value;
+            risk = msi.risk;
+            break;
+          case 'Respiratory Index':
+            const resp = calculateRespiratoryIndex(vital);
+            scoreValue = resp.value;
+            risk = resp.risk;
+            break;
+          case 'Shock Index':
+            const si = calculateShockIndex(vital.hr, vital.bps);
+            scoreValue = si.value;
+            risk = si.risk;
+            break;
+          case 'qSOFA':
+            const qs = calculateqSOFA(vital);
+            scoreValue = qs.value;
+            risk = qs.risk;
+            break;
+          case 'MAP':
+            const mapVal = calculateMAP(vital.bps, vital.bpd);
+            scoreValue = mapVal.value;
+            risk = mapVal.risk;
+            break;
+          case 'Pulse Pressure':
+            const pp = calculatePulsePressure(vital.bps, vital.bpd);
+            scoreValue = pp.value;
+            risk = pp.risk;
+            break;
+          case 'System Stability':
+            const stability = calculateSystemInstability(vital, filteredData.slice(0, 10).map(fd => fd.vital));
+            scoreValue = stability.value;
+            risk = stability.risk;
+            break;
+        }
+
+        return {
+          time: timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          timestamp,
+          score: scoreValue,
+          risk,
+          hr: vital.hr,
+          bpSys: vital.bps,
+          bpDia: vital.bpd,
+          map: Math.round((vital.bps + 2 * vital.bpd) / 3),
+          spo2: vital.spo2,
+          temp: vital.temp,
+          rr: vital.rr,
+          isComputed: false
+        };
+      });
+
+      setModalScoreData(scoreData);
+      setSelectedScore(scoreName);
+      setModalOpen(true);
+    }
   };
 
   return (
@@ -391,18 +480,17 @@ export const ClinicalRiskDashboard: React.FC = () => {
       </section>
 
       {selectedScore && (
-        <ScoreDetailModal
+        <RiskScoreDetailModal
           isOpen={modalOpen}
           onClose={() => {
             setModalOpen(false);
             setSelectedScore(null);
           }}
-          scoreName={selectedScore}
-          currentValue={typeof scores[selectedScore as keyof typeof scores].value === 'number'
-            ? scores[selectedScore as keyof typeof scores].value.toFixed(1)
-            : scores[selectedScore as keyof typeof scores].value}
-          historicalData={historicalScores[selectedScore] || []}
-          status={getStatus(scores[selectedScore as keyof typeof scores].risk)}
+          scoreType={modalScoreType}
+          scoreData={modalScoreData}
+          patientName="Simon A."
+          currentValue={scores[selectedScore as keyof typeof scores].value}
+          currentRisk={scores[selectedScore as keyof typeof scores].risk as 'low' | 'medium' | 'high' | 'critical'}
         />
       )}
     </>
