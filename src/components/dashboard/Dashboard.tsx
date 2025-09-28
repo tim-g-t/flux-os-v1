@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { PatientCard } from './PatientCard';
 import { VitalSigns } from './VitalSigns';
-import { RiskScores } from './RiskScores';
+import { LiveRiskScores } from './LiveRiskScores';
 import { PatientMonitoringChart } from './PatientMonitoringChart';
 import { PatientOverview } from './PatientOverview';
 
@@ -60,13 +60,13 @@ export const Dashboard: React.FC = () => {
                       duration="142h"
                       backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
                     />
-                    <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} />
+                    <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} bedId={selectedPatientId} />
                   </div>
                 </div>
                 <div className="mt-6">
-                  <PatientMonitoringChart selectedMetrics={selectedMetrics} />
+                  <PatientMonitoringChart selectedMetrics={selectedMetrics} bedId={selectedPatientId} />
                 </div>
-                <RiskScores />
+                <LiveRiskScores bedId={selectedPatientId} />
               </div>
             </>
           )}
