@@ -16,59 +16,278 @@ export interface VitalsData {
   readings: VitalTimestamp[];
 }
 
+// New interfaces for external server format
+export interface PatientResponse {
+  Identifier: number;
+  Name: string;
+  Bed: string;
+  Gender: string;
+  Age: number;
+  Vital: Record<string, any>; // Includes timestamps and vital readings
+}
+
+export interface PatientData {
+  id: string;
+  name: string;
+  bed: string;
+  gender: string;
+  age: number;
+  currentVitals?: VitalReading;
+  vitalHistory?: Array<{ timestamp: string; vital: VitalReading }>;
+}
+
+export interface ServerResponse {
+  patients?: PatientResponse[];
+  data?: PatientResponse[];
+  // Support multiple possible response formats
+}
+
+export interface DataSourceConfig {
+  type: 'local' | 'server';
+  url: string;
+  pollInterval?: number;
+}
+
 class VitalsService {
   private data: VitalsData = { readings: [] };
+  private patients: PatientData[] = [];
   private listeners: Array<(data: VitalsData) => void> = [];
+  private patientListeners: Array<(patients: PatientData[]) => void> = [];
   private pollingInterval: NodeJS.Timeout | null = null;
   private lastReadingCount = 0;
+  private config: DataSourceConfig = {
+    type: 'local',
+    url: '/patients.json', // Default to new format
+    pollInterval: 1000
+  };
+
+  // Configure data source
+  setDataSource(config: DataSourceConfig): void {
+    this.config = config;
+    this.stopPolling(); // Stop current polling if any
+  }
 
   async loadInitialData(): Promise<VitalsData> {
     try {
-      const response = await fetch('/vitals.json');
-      if (response.ok) {
-        this.data = await response.json();
-        this.lastReadingCount = this.data.readings.length;
-        
-        // If file is empty or has no recent data, generate demo data
-        if (this.data.readings.length === 0 || this.hasOnlyOldData()) {
-          console.log('No recent data found, generating demo data');
-          this.data = this.generateDemoData();
-        }
+      if (this.config.type === 'server') {
+        await this.loadFromServer();
       } else {
-        // Generate demo data if file doesn't exist
-        this.data = this.generateDemoData();
+        await this.loadFromLocal();
       }
     } catch (error) {
-      console.log('Using demo data:', error);
+      console.log('Failed to load data, using demo data:', error);
       this.data = this.generateDemoData();
+      this.generateDemoPatients();
     }
     
     this.notifyListeners();
+    this.notifyPatientListeners();
     return this.data;
+  }
+
+  private async loadFromServer(): Promise<void> {
+    const response = await fetch(this.config.url);
+    if (response.ok) {
+      const serverData: ServerResponse = await response.json();
+      this.transformServerData(serverData);
+    } else {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+  }
+
+  private async loadFromLocal(): Promise<void> {
+    const response = await fetch(this.config.url);
+    if (response.ok) {
+      const localData = await response.json();
+      
+      // Check if it's the old format (VitalsData) or new format (PatientResponse[])
+      if (localData.readings) {
+        // Old format
+        this.data = localData;
+        this.lastReadingCount = this.data.readings.length;
+        
+        if (this.data.readings.length === 0 || this.hasOnlyOldData()) {
+          console.log('No recent data found, generating demo data');
+          this.data = this.generateDemoData();
+          this.generateDemoPatients();
+        } else {
+          this.extractPatientsFromVitalsData();
+        }
+      } else if (Array.isArray(localData)) {
+        // New format - array of PatientResponse
+        this.transformServerData({ patients: localData });
+      } else {
+        throw new Error('Unknown data format');
+      }
+    } else {
+      throw new Error(`Local file not found: ${this.config.url}`);
+    }
+  }
+
+  private transformServerData(serverData: ServerResponse): void {
+    const patientArray = serverData.patients || serverData.data || [];
+    
+    this.patients = patientArray.map(patient => {
+      const patientData: PatientData = {
+        id: `bed_${patient.Identifier.toString().padStart(2, '0')}`,
+        name: patient.Name,
+        bed: patient.Bed,
+        gender: patient.Gender,
+        age: patient.Age,
+        vitalHistory: []
+      };
+
+      // Extract vital readings from the Vital object
+      if (patient.Vital) {
+        const vitalHistory: Array<{ timestamp: string; vital: VitalReading }> = [];
+        const currentVitals: VitalReading[] = [];
+
+        Object.entries(patient.Vital).forEach(([key, value]) => {
+          if (key === 'timestamp' || typeof value !== 'object') return;
+          
+          // Assume each key represents a timestamp or vital reading
+          if (typeof value === 'object' && value !== null) {
+            const vital = this.parseVitalReading(value);
+            if (vital) {
+              vitalHistory.push({
+                timestamp: key,
+                vital
+              });
+              currentVitals.push(vital);
+            }
+          }
+        });
+
+        patientData.vitalHistory = vitalHistory.sort((a, b) => 
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        
+        // Set current vitals to the most recent reading
+        if (currentVitals.length > 0) {
+          patientData.currentVitals = currentVitals[currentVitals.length - 1];
+        }
+      }
+
+      return patientData;
+    });
+
+    // Convert patient data to VitalsData format for backward compatibility
+    this.convertPatientsToVitalsData();
+  }
+
+  private parseVitalReading(vitalData: any): VitalReading | null {
+    try {
+      return {
+        hr: Number(vitalData.hr || vitalData.heartRate || 75),
+        bps: Number(vitalData.bps || vitalData.systolic || 120),
+        bpd: Number(vitalData.bpd || vitalData.diastolic || 80),
+        rr: Number(vitalData.rr || vitalData.respiratoryRate || 16),
+        temp: Number(vitalData.temp || vitalData.temperature || 98.6),
+        spo2: Number(vitalData.spo2 || vitalData.oxygenSaturation || 98)
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private convertPatientsToVitalsData(): void {
+    const readings: VitalTimestamp[] = [];
+    
+    // Get all unique timestamps from all patients
+    const allTimestamps = new Set<string>();
+    this.patients.forEach(patient => {
+      patient.vitalHistory?.forEach(reading => {
+        allTimestamps.add(reading.timestamp);
+      });
+    });
+
+    // Create VitalTimestamp objects
+    Array.from(allTimestamps).sort().forEach(timestamp => {
+      const reading: VitalTimestamp = { timestamp };
+      
+      this.patients.forEach(patient => {
+        const vitalAtTime = patient.vitalHistory?.find(v => v.timestamp === timestamp);
+        if (vitalAtTime) {
+          reading[patient.id] = vitalAtTime.vital;
+        }
+      });
+
+      if (Object.keys(reading).length > 1) { // More than just timestamp
+        readings.push(reading);
+      }
+    });
+
+    this.data = { readings };
+    this.lastReadingCount = readings.length;
+  }
+
+  private extractPatientsFromVitalsData(): void {
+    // Extract patient list from existing vitals data
+    const patientIds = new Set<string>();
+    
+    this.data.readings.forEach(reading => {
+      Object.keys(reading).forEach(key => {
+        if (key !== 'timestamp') {
+          patientIds.add(key);
+        }
+      });
+    });
+
+    this.patients = Array.from(patientIds).map((id, index) => ({
+      id,
+      name: `Patient ${id.replace('bed_', '')}`,
+      bed: id.replace('_', ' ').toUpperCase(),
+      gender: index % 2 === 0 ? 'Male' : 'Female',
+      age: 30 + Math.floor(Math.random() * 50),
+      vitalHistory: this.getFilteredData(id, '24h')
+    }));
+  }
+
+  private generateDemoPatients(): void {
+    const names = ['Simon A.', 'Maria C.', 'David L.', 'Robert M.', 'Sarah K.', 'Anna T.', 'Elena R.', 'James P.'];
+    
+    this.patients = names.map((name, index) => ({
+      id: `bed_${(index + 1).toString().padStart(2, '0')}`,
+      name,
+      bed: `Bed ${index + 1}`,
+      gender: index % 2 === 0 ? 'Male' : 'Female',
+      age: 25 + Math.floor(Math.random() * 50),
+      vitalHistory: []
+    }));
   }
 
   startPolling(): void {
     if (this.pollingInterval) return;
     
+    const interval = this.config.pollInterval || 1000;
+    
     this.pollingInterval = setInterval(async () => {
       try {
-        const response = await fetch('/vitals.json');
-        if (response.ok) {
-          const newData: VitalsData = await response.json();
-          if (newData.readings.length > this.lastReadingCount) {
-            this.data = newData;
-            this.lastReadingCount = newData.readings.length;
-            this.notifyListeners();
-          }
+        if (this.config.type === 'server') {
+          await this.loadFromServer();
+          this.notifyListeners();
+          this.notifyPatientListeners();
         } else {
-          // Continue generating demo data
-          this.appendDemoReading();
+          // Local polling behavior
+          const response = await fetch(this.config.url);
+          if (response.ok) {
+            const newData: VitalsData = await response.json();
+            if (newData.readings && newData.readings.length > this.lastReadingCount) {
+              this.data = newData;
+              this.lastReadingCount = newData.readings.length;
+              this.extractPatientsFromVitalsData();
+              this.notifyListeners();
+              this.notifyPatientListeners();
+            }
+          } else {
+            this.appendDemoReading();
+          }
         }
       } catch (error) {
         // Continue generating demo data
         this.appendDemoReading();
       }
-    }, 1000);
+    }, interval);
   }
 
   stopPolling(): void {
@@ -85,8 +304,19 @@ class VitalsService {
     };
   }
 
+  subscribeToPatients(callback: (patients: PatientData[]) => void): () => void {
+    this.patientListeners.push(callback);
+    return () => {
+      this.patientListeners = this.patientListeners.filter(listener => listener !== callback);
+    };
+  }
+
   private notifyListeners(): void {
     this.listeners.forEach(listener => listener(this.data));
+  }
+
+  private notifyPatientListeners(): void {
+    this.patientListeners.forEach(listener => listener(this.patients));
   }
 
   private generateDemoData(): VitalsData {
@@ -186,7 +416,22 @@ class VitalsService {
     return this.data;
   }
 
+  getPatients(): PatientData[] {
+    return this.patients;
+  }
+
+  getPatient(patientId: string): PatientData | null {
+    return this.patients.find(p => p.id === patientId) || null;
+  }
+
   getLatestReading(bedId: string = 'bed_15'): VitalReading | null {
+    // First try to get from patient data
+    const patient = this.getPatient(bedId);
+    if (patient?.currentVitals) {
+      return patient.currentVitals;
+    }
+
+    // Fallback to vitals data
     if (this.data.readings.length === 0) return null;
     const latest = this.data.readings[this.data.readings.length - 1];
     return (latest[bedId] as VitalReading) || null;
