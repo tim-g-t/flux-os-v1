@@ -101,7 +101,18 @@ class VitalsService {
   private async loadFromServer(): Promise<void> {
     const response = await fetch(this.config.url);
     if (response.ok) {
-      const serverData: ServerResponse = await response.json();
+      const responseData = await response.json();
+      
+      // Check if the response is a direct array or wrapped in an object
+      let serverData: ServerResponse;
+      if (Array.isArray(responseData)) {
+        // Direct array of patients from API
+        serverData = { data: responseData };
+      } else {
+        // Already wrapped in an object
+        serverData = responseData;
+      }
+      
       this.transformServerData(serverData);
     } else {
       throw new Error(`Server responded with ${response.status}`);
@@ -149,8 +160,12 @@ class VitalsService {
     const patientArray = serverData.patients || serverData.data || [];
     
     this.patients = patientArray.map(patient => {
+      // Extract bed number from various formats (Bed_1, bed_01, etc.)
+      const bedMatch = patient.Bed.match(/\d+/);
+      const bedNumber = bedMatch ? bedMatch[0].padStart(2, '0') : '01';
+      
       const patientData: PatientData = {
-        id: `bed_${patient.Identifier.toString().padStart(2, '0')}`,
+        id: `bed_${bedNumber}`,
         name: patient.Name,
         bed: patient.Bed,
         gender: patient.Gender,
@@ -185,8 +200,14 @@ class VitalsService {
       return patientData;
     });
 
-    // Convert patient data to VitalsData format for backward compatibility
-    this.convertPatientsToVitalsData();
+    // If we have fewer than 8 patients, generate demo patients to fill up
+    if (this.patients.length < 8) {
+      console.log(`Only ${this.patients.length} patients from server, generating demo patients`);
+      this.generateDemoPatients();
+    } else {
+      // Convert patient data to VitalsData format for backward compatibility
+      this.convertPatientsToVitalsData();
+    }
   }
 
   private parseServerVitalReading(serverVital: ServerVitalReading): VitalReading | null {
@@ -453,7 +474,7 @@ class VitalsService {
     return this.patients.find(p => p.id === patientId) || null;
   }
 
-  getLatestReading(bedId: string = 'bed_15'): VitalReading | null {
+  getLatestReading(bedId: string = 'bed_01'): VitalReading | null {
     // First try to get from patient data
     const patient = this.getPatient(bedId);
     if (patient?.currentVitals) {
@@ -466,7 +487,7 @@ class VitalsService {
     return (latest[bedId] as VitalReading) || null;
   }
 
-  getFilteredData(bedId: string = 'bed_15', timeRange: string = '24h'): Array<{ timestamp: string; vital: VitalReading }> {
+  getFilteredData(bedId: string = 'bed_01', timeRange: string = '24h'): Array<{ timestamp: string; vital: VitalReading }> {
     if (this.data.readings.length === 0) return [];
     
     const now = new Date();
