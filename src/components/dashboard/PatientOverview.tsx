@@ -5,42 +5,9 @@ import { calculateRiskScores } from '@/utils/riskCalculations';
 import { VitalReading } from '@/services/vitalsService';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
+import { testPatients, generateVitalsForRiskLevel, generateHistoricalVitals } from '@/data/testData';
 
-// Mock patient data - carefully designed to minimize critical risk scores
-const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical'): VitalReading => {
-  switch (riskLevel) {
-    case 'normal':
-      // All values in safe normal ranges that won't trigger any risk scores
-      return {
-        hr: 75 + Math.floor(Math.random() * 10), // 75-85 (well within normal 70-100)
-        bps: 115 + Math.floor(Math.random() * 10), // 115-125 (safe normal range)
-        bpd: 75 + Math.floor(Math.random() * 5), // 75-80 (normal range)
-        rr: 15 + Math.floor(Math.random() * 3), // 15-18 (normal range 12-20)
-        temp: 98.2 + Math.random() * 1.0, // 98.2-99.2°F (normal range)
-        spo2: 98 + Math.floor(Math.random() * 2) // 98-99% (excellent range)
-      };
-    case 'warning':
-      // Slightly concerning but not critical values
-      return {
-        hr: Math.random() > 0.5 ? 68 + Math.floor(Math.random() * 2) : 102 + Math.floor(Math.random() * 3), // 68-70 or 102-105 (borderline)
-        bps: Math.random() > 0.5 ? 135 + Math.floor(Math.random() * 5) : 88 + Math.floor(Math.random() * 2), // 135-140 or 88-90 (warning range)
-        bpd: 78 + Math.floor(Math.random() * 8), // 78-86 (normal range)
-        rr: 16 + Math.floor(Math.random() * 3), // 16-19 (normal range)
-        temp: 98.5 + Math.random() * 1.0, // 98.5-99.5°F (normal)
-        spo2: 95 + Math.floor(Math.random() * 2) // 95-96% (acceptable but watch)
-      };
-    case 'critical':
-      // Only create truly critical scenarios for 1-2 patients max
-      return {
-        hr: 45 + Math.floor(Math.random() * 8), // 45-53 (critically low)
-        bps: 75 + Math.floor(Math.random() * 5), // 75-80 (critically low)
-        bpd: 50 + Math.floor(Math.random() * 15), // 50-65 (low but not the main issue)
-        rr: 8 + Math.floor(Math.random() * 2), // 8-10 (critically low)
-        temp: 95.5 + Math.random() * 0.5, // 95.5-96.0°F (hypothermic)
-        spo2: 85 + Math.floor(Math.random() * 3) // 85-88% (critically low)
-      };
-  }
-};
+// Clean up - now using centralized test data instead of duplicate functions
 
 // Generate time series data for mini charts (last 12 hours)
 const generateTimeSeriesData = (baseValue: number, variation: number) => {
@@ -66,25 +33,11 @@ const generateAllVitalData = (vitals: VitalReading) => ({
   rr: generateTimeSeriesData(vitals.rr, 8)
 });
 
-const mockPatients = [
-  // Normal patients (4) - truly normal, no risk scores
-  { id: 'bed_01', name: 'Simon A.', age: 45, gender: 'Male', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_02', name: 'Maria C.', age: 62, gender: 'Female', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_03', name: 'David L.', age: 38, gender: 'Male', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_04', name: 'Robert M.', age: 71, gender: 'Male', vitals: generateSpecificVitals('normal') },
-  
-  // Warning patient (1) - Sarah K with one warning
-  { id: 'bed_05', name: 'Sarah K.', age: 54, gender: 'Female', vitals: generateSpecificVitals('warning') },
-  
-  // Critical patient (1) - Anna T with multiple critical issues
-  { id: 'bed_06', name: 'Anna T.', age: 42, gender: 'Female', vitals: generateSpecificVitals('critical') },
-  
-  // Additional normal patients to fill out the grid
-  { id: 'bed_07', name: 'Elena R.', age: 29, gender: 'Female', vitals: generateSpecificVitals('normal') },
-  { id: 'bed_08', name: 'James P.', age: 66, gender: 'Male', vitals: generateSpecificVitals('normal') }
-].map(patient => ({
+// Using centralized test data from testData.ts
+const mockPatients = testPatients.map(patient => ({
   ...patient,
-  chartData: generateAllVitalData(patient.vitals)
+  vitals: generateVitalsForRiskLevel(patient.riskLevel),
+  chartData: generateAllVitalData(generateVitalsForRiskLevel(patient.riskLevel))
 }));
 
 interface PatientOverviewProps {
