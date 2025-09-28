@@ -35,53 +35,53 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
         {/* Dashboard */}
         <button 
           onClick={() => onViewChange('Dashboard')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] mt-6 max-md:ml-2.5 transition-all duration-200 hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[50px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 ${
             activeView === 'Dashboard' 
-              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold scale-105' 
-              : 'text-white hover:text-white'
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white font-normal hover:bg-[rgba(36,37,42,1)]'
           }`}
         >
           <div className="flex w-[21px] shrink-0 h-5 my-auto" />
-          <div className="my-auto">Dashboard</div>
+          <div className={`my-auto ${activeView === 'Dashboard' ? 'text-xl' : ''}`}>Dashboard</div>
         </button>
         
         {/* Patient Detail */}
         <button 
           onClick={() => onViewChange('Patient Detail')}
-          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[132px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 hover:bg-[rgba(36,37,42,1)] ${
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[47px] pl-6 pr-[50px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 ${
             activeView === 'Patient Detail' 
-              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold scale-105' 
-              : 'text-white font-normal'
+              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
+              : 'text-white font-normal hover:bg-[rgba(36,37,42,1)]'
           }`}
         >
           <div className="flex w-[21px] shrink-0 h-5 my-auto" />
-          <div className="my-auto">Patient Detail</div>
+          <div className={`my-auto ${activeView === 'Patient Detail' ? 'text-xl' : ''}`}>Patient Detail</div>
         </button>
         
         {/* Analytics */}
         <button 
           onClick={() => onViewChange('Analytics')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[47px] pl-6 pr-[50px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 ${
             activeView === 'Analytics' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
-              : 'text-white hover:text-white'
+              : 'text-white font-normal hover:bg-[rgba(36,37,42,1)]'
           }`}
         >
           <div className="flex w-[21px] shrink-0 h-5 my-auto" />
-          <div className="my-auto">Analytics</div>
+          <div className={`my-auto ${activeView === 'Analytics' ? 'text-xl' : ''}`}>Analytics</div>
         </button>
         
         {/* Reports */}
         <button 
           onClick={() => onViewChange('Reports')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[47px] pl-6 pr-[50px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 ${
             activeView === 'Reports' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
-              : 'text-white hover:text-white'
+              : 'text-white font-normal hover:bg-[rgba(36,37,42,1)]'
           }`}
         >
           <div className="flex w-[21px] shrink-0 h-5 my-auto" />
-          <div className="my-auto">Reports</div>
+          <div className={`my-auto ${activeView === 'Reports' ? 'text-xl' : ''}`}>Reports</div>
         </button>
         
         {/* Separator */}
@@ -90,27 +90,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
         {/* Settings */}
         <button 
           onClick={() => onViewChange('Settings')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-8 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-8 ml-[23px] pl-6 pr-[50px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 ${
             activeView === 'Settings' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
-              : 'text-white hover:text-white'
+              : 'text-white font-normal hover:bg-[rgba(36,37,42,1)]'
           }`}
         >
           <div className="flex w-[21px] shrink-0 h-5 my-auto" />
-          <div className="my-auto">Settings</div>
+          <div className={`my-auto ${activeView === 'Settings' ? 'text-xl' : ''}`}>Settings</div>
         </button>
         
         {/* Help & Support */}
         <button 
           onClick={() => onViewChange('Help & Support')}
-          className={`flex items-center gap-4 text-lg font-normal ml-[23px] pl-6 mt-6 max-md:ml-2.5 transition-colors hover:bg-[rgba(36,37,42,1)] rounded-lg py-2 px-3 ${
+          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[50px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 ${
             activeView === 'Help & Support' 
               ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
-              : 'text-white hover:text-white'
+              : 'text-white font-normal hover:bg-[rgba(36,37,42,1)]'
           }`}
         >
           <div className="flex w-[21px] shrink-0 h-5 my-auto" />
-          <div className="my-auto">Help & Support</div>
+          <div className={`my-auto ${activeView === 'Help & Support' ? 'text-xl' : ''}`}>Help & Support</div>
         </button>
       </div>
     </nav>

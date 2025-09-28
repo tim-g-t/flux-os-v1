@@ -9,6 +9,7 @@ interface MetricCardProps {
   className?: string;
   onClick?: () => void;
   isSelected?: boolean;
+  trendIndicator?: 'double-up' | 'single-up' | 'neutral' | 'single-down' | 'double-down';
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -18,7 +19,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   label,
   className,
   onClick,
-  isSelected = false
+  isSelected = false,
+  trendIndicator
 }) => {
   return (
     <div 
@@ -35,9 +37,18 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {value}
         </div>
         <div className={cn(
-          "text-xs font-normal mt-1",
+          "text-lg font-medium mt-1 flex items-center gap-1",
           changeType === 'positive' ? "text-[rgba(17,236,121,1)]" : "text-[rgba(252,26,26,1)]"
         )}>
+          {trendIndicator && (
+            <span className="text-xl">
+              {trendIndicator === 'double-up' && '↗↗'}
+              {trendIndicator === 'single-up' && '↗'}
+              {trendIndicator === 'neutral' && '→'}
+              {trendIndicator === 'single-down' && '↘'}
+              {trendIndicator === 'double-down' && '↘↘'}
+            </span>
+          )}
           {change}
         </div>
       </div>

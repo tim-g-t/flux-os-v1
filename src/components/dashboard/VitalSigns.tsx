@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 import { useVitals } from '@/hooks/useVitals';
+import { calculateVitalChange } from '@/utils/riskCalculations';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -10,9 +11,10 @@ interface VitalSignsProps {
 }
 
 export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetricToggle }) => {
-  const { getLatestVitals, loading } = useVitals('bed_15');
+  const { getLatestVitals, getFilteredData, loading } = useVitals('bed_15');
   
   const latestVitals = useMemo(() => getLatestVitals(), [getLatestVitals]);
+  const historicalData = useMemo(() => getFilteredData('bed_15', '24h'), [getFilteredData]);
   
   if (loading || !latestVitals) {
     return (
@@ -24,22 +26,57 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
     );
   }
   
-  // Calculate changes (using simple random values for demo - in production, compare with previous reading)
-  const getRandomChange = () => {
-    const isPositive = Math.random() > 0.5;
-    const change = (Math.random() * 5).toFixed(2);
-    const percent = (Math.random() * 2).toFixed(1);
-    return {
-      value: `${isPositive ? '+' : '-'}${change} (${percent}%)`,
-      type: isPositive ? 'positive' : 'negative'
-    };
+  // Extract historical values for each vital sign
+  const hrValues = historicalData.map(d => d.vital.hr);
+  const bpsValues = historicalData.map(d => d.vital.bps);
+  const bpdValues = historicalData.map(d => d.vital.bpd);
+  const spo2Values = historicalData.map(d => d.vital.spo2);
+  const tempValues = historicalData.map(d => d.vital.temp);
+  const rrValues = historicalData.map(d => d.vital.rr);
+  
+  // Calculate changes for each vital sign
+  const hrChangeData = calculateVitalChange(latestVitals.hr, hrValues);
+  const bpsChangeData = calculateVitalChange(latestVitals.bps, bpsValues);
+  const bpdChangeData = calculateVitalChange(latestVitals.bpd, bpdValues);
+  const spo2ChangeData = calculateVitalChange(latestVitals.spo2, spo2Values);
+  const tempChangeData = calculateVitalChange(latestVitals.temp, tempValues);
+  const rrChangeData = calculateVitalChange(latestVitals.rr, rrValues);
+  
+  // Format change values for display with units
+  const formatChange = (changeData: typeof hrChangeData, unit: string) => {
+    const sign = changeData.absoluteChange >= 0 ? '+' : '';
+    return `${sign}${changeData.absoluteChange.toFixed(1)} ${unit}`;
   };
-
-  const hrChange = getRandomChange();
-  const bpChange = getRandomChange();
-  const spo2Change = getRandomChange();
-  const tempChange = getRandomChange();
-  const rrChange = getRandomChange();
+  
+  const hrChange = {
+    value: formatChange(hrChangeData, 'bpm'),
+    type: hrChangeData.absoluteChange >= 0 ? 'positive' : 'negative',
+    trendIndicator: hrChangeData.trendIndicator
+  };
+  
+  const bpChange = {
+    value: formatChange(bpsChangeData, 'mmHg'),
+    type: bpsChangeData.absoluteChange >= 0 ? 'positive' : 'negative',
+    trendIndicator: bpsChangeData.trendIndicator
+  };
+  
+  const spo2Change = {
+    value: formatChange(spo2ChangeData, '%'),
+    type: spo2ChangeData.absoluteChange >= 0 ? 'positive' : 'negative',
+    trendIndicator: spo2ChangeData.trendIndicator
+  };
+  
+  const tempChange = {
+    value: formatChange(tempChangeData, '°F'),
+    type: tempChangeData.absoluteChange >= 0 ? 'positive' : 'negative',
+    trendIndicator: tempChangeData.trendIndicator
+  };
+  
+  const rrChange = {
+    value: formatChange(rrChangeData, 'bpm'),
+    type: rrChangeData.absoluteChange >= 0 ? 'positive' : 'negative',
+    trendIndicator: rrChangeData.trendIndicator
+  };
   
   return (
     <section className="w-[82%] ml-5 max-md:w-full max-md:ml-0">
@@ -73,6 +110,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             }
             change={hrChange.value}
             changeType={hrChange.type as 'positive' | 'negative'}
+            trendIndicator={hrChange.trendIndicator}
             label="Heart Rate"
             className="pl-4 pr-[34px]"
             onClick={() => onMetricToggle('heartRate')}
@@ -87,6 +125,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             }
             change={bpChange.value}
             changeType={bpChange.type as 'positive' | 'negative'}
+            trendIndicator={bpChange.trendIndicator}
             label="Blood Pressure"
             onClick={() => onMetricToggle('bloodPressure')}
             isSelected={selectedMetrics.includes('bloodPressure')}
@@ -100,6 +139,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             }
             change={spo2Change.value}
             changeType={spo2Change.type as 'positive' | 'negative'}
+            trendIndicator={spo2Change.trendIndicator}
             label="SpO2"
             className="pl-4 pr-[34px]"
             onClick={() => onMetricToggle('spo2')}
@@ -114,6 +154,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             }
             change={tempChange.value}
             changeType={tempChange.type as 'positive' | 'negative'}
+            trendIndicator={tempChange.trendIndicator}
             label="Temp"
             className="pl-[15px] pr-[34px]"
             onClick={() => onMetricToggle('temperature')}
@@ -128,6 +169,7 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             }
             change={rrChange.value}
             changeType={rrChange.type as 'positive' | 'negative'}
+            trendIndicator={rrChange.trendIndicator}
             label="Respiratory Rate"
             className="pl-4 pr-[34px]"
             onClick={() => onMetricToggle('respiratoryRate')}

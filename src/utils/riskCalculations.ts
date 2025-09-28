@@ -1,5 +1,71 @@
 import { VitalReading } from '@/services/vitalsService';
 
+export interface VitalChange {
+  absoluteChange: number;
+  relativeChange: number;
+  trendIndicator: 'double-up' | 'single-up' | 'neutral' | 'single-down' | 'double-down';
+}
+
+// Calculate standard deviation for a set of values
+export const calculateStandardDeviation = (values: number[]): number => {
+  if (values.length === 0) return 0;
+  
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
+  const avgSquaredDiff = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;
+  
+  return Math.sqrt(avgSquaredDiff);
+};
+
+// Calculate relative change and trend indicator for a vital sign
+export const calculateVitalChange = (
+  currentValue: number,
+  historicalValues: number[],
+  thresholdMultiplier: number = 2
+): VitalChange => {
+  if (historicalValues.length === 0) {
+    return {
+      absoluteChange: 0,
+      relativeChange: 0,
+      trendIndicator: 'neutral'
+    };
+  }
+
+  // Get value from 1 hour ago (assuming values are in chronological order)
+  const oneHourAgoIndex = Math.max(0, historicalValues.length - 120); // 120 readings = 1 hour (30s intervals)
+  const oneHourAgoValue = historicalValues[oneHourAgoIndex];
+  
+  const absoluteChange = currentValue - oneHourAgoValue;
+  const relativeChange = oneHourAgoValue !== 0 ? (absoluteChange / oneHourAgoValue) * 100 : 0;
+  
+  // Calculate standard deviation for trend analysis
+  const stdDev = calculateStandardDeviation(historicalValues);
+  const singleThreshold = stdDev * 1.0; // Lower threshold for single arrows
+  const doubleThreshold = stdDev * 2.0; // Higher threshold for double arrows
+  
+  let trendIndicator: 'double-up' | 'single-up' | 'neutral' | 'single-down' | 'double-down';
+  
+  if (Math.abs(absoluteChange) < stdDev * 0.3) {
+    trendIndicator = 'neutral';
+  } else if (absoluteChange > doubleThreshold) {
+    trendIndicator = 'double-up';
+  } else if (absoluteChange > singleThreshold) {
+    trendIndicator = 'single-up';
+  } else if (absoluteChange < -doubleThreshold) {
+    trendIndicator = 'double-down';
+  } else if (absoluteChange < -singleThreshold) {
+    trendIndicator = 'single-down';
+  } else {
+    trendIndicator = 'neutral';
+  }
+  
+  return {
+    absoluteChange,
+    relativeChange,
+    trendIndicator
+  };
+};
+
 export interface RiskScore {
   shockIndex: {
     value: number;
