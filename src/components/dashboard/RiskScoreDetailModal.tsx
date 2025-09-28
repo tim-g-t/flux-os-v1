@@ -347,236 +347,239 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
           {/* Chart Section */}
           <div className="px-6 pb-4">
+            <div className="bg-gray-900/50 border border-[rgba(64,66,73,0.3)] rounded-lg p-4">
+              <div className="h-80 w-full">
+                {processedData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={processedData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#404249" opacity={0.3} />
+                      <XAxis dataKey="time" stroke="#9CA3AF" />
 
-            <div className="h-80 w-full">
-              {processedData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={processedData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#404249" opacity={0.3} />
-                    <XAxis dataKey="time" stroke="#9CA3AF" />
-
-                    {axisMode === 'dual' ? (
-                      <>
-                        <YAxis
-                          yAxisId="score"
-                          orientation="right"
-                          stroke={config.color}
-                          domain={['dataMin - 5', 'dataMax + 5']}
-                        />
-                        {selectedVitals.length > 0 && (
+                      {axisMode === 'dual' ? (
+                        <>
                           <YAxis
-                            yAxisId="vitals"
-                            orientation="left"
-                            stroke="#9CA3AF"
+                            yAxisId="score"
+                            orientation="right"
+                            stroke={config.color}
                             domain={['dataMin - 5', 'dataMax + 5']}
                           />
-                        )}
-                      </>
-                    ) : (
-                      <YAxis
-                        domain={[0, 100]}
-                        tickFormatter={(value) => `${value}%`}
-                        stroke="#9CA3AF"
-                      />
-                    )}
+                          {selectedVitals.length > 0 && (
+                            <YAxis
+                              yAxisId="vitals"
+                              orientation="left"
+                              stroke="#9CA3AF"
+                              domain={['dataMin - 5', 'dataMax + 5']}
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <YAxis
+                          domain={[0, 100]}
+                          tickFormatter={(value) => `${value}%`}
+                          stroke="#9CA3AF"
+                        />
+                      )}
 
-                    <Tooltip content={<CustomTooltip />} />
+                      <Tooltip content={<CustomTooltip />} />
 
-                    {/* Critical threshold lines - always visible (no animation) */}
-                    <ReferenceLine
-                      yAxisId={axisMode === 'dual' ? 'score' : undefined}
-                      y={axisMode === 'normalized'
-                        ? ((config.criticalThreshold - Math.min(...processedData.map(d => d.score))) /
-                           (Math.max(...processedData.map(d => d.score)) - Math.min(...processedData.map(d => d.score)) || 1)) * 100
-                        : config.criticalThreshold}
-                      stroke="#EF4444"
-                      strokeWidth={2}
-                      strokeDasharray="8 4"
-                      label={{ value: "Critical", position: "right", fill: "#EF4444" }}
-                    />
-
-                    {config.warningThreshold && (
+                      {/* Critical threshold lines - always visible (no animation) */}
                       <ReferenceLine
                         yAxisId={axisMode === 'dual' ? 'score' : undefined}
                         y={axisMode === 'normalized'
-                          ? ((config.warningThreshold - Math.min(...processedData.map(d => d.score))) /
+                          ? ((config.criticalThreshold - Math.min(...processedData.map(d => d.score))) /
                              (Math.max(...processedData.map(d => d.score)) - Math.min(...processedData.map(d => d.score)) || 1)) * 100
-                          : config.warningThreshold}
-                        stroke="#F59E0B"
-                        strokeWidth={1}
+                          : config.criticalThreshold}
+                        stroke="#EF4444"
+                        strokeWidth={2}
                         strokeDasharray="8 4"
-                        opacity={0.7}
+                        label={{ value: "Critical", position: "right", fill: "#EF4444" }}
                       />
-                    )}
 
-                    {/* Risk Score Line - Primary (No animation) - 150% thicker */}
-                    <Line
-                      yAxisId={axisMode === 'dual' ? 'score' : undefined}
-                      type="monotone"
-                      dataKey={axisMode === 'normalized' ? 'scoreNormalized' : 'score'}
-                      stroke={config.color}
-                      strokeWidth={5}
-                      dot={false}
-                      name={config.name}
-                      isAnimationActive={false}
-                    />
+                      {config.warningThreshold && (
+                        <ReferenceLine
+                          yAxisId={axisMode === 'dual' ? 'score' : undefined}
+                          y={axisMode === 'normalized'
+                            ? ((config.warningThreshold - Math.min(...processedData.map(d => d.score))) /
+                               (Math.max(...processedData.map(d => d.score)) - Math.min(...processedData.map(d => d.score)) || 1)) * 100
+                            : config.warningThreshold}
+                          stroke="#F59E0B"
+                          strokeWidth={1}
+                          strokeDasharray="8 4"
+                          opacity={0.7}
+                        />
+                      )}
 
-                    {/* Vital Overlays with left-to-right animation */}
-                    {selectedVitals.includes('hr') && (
-                      <Area
-                        yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
-                        type="monotone"
-                        dataKey={axisMode === 'normalized' ? 'hrNormalized' : 'hr'}
-                        stroke={VITAL_CONFIGS.hr.color}
-                        fill={VITAL_CONFIGS.hr.color}
-                        fillOpacity={0.3}
-                        name="HR"
-                        animationBegin={0}
-                        animationDuration={800}
-                        animationEasing="ease-out"
-                      />
-                    )}
-
-                    {selectedVitals.includes('bpSys') && (
+                      {/* Risk Score Line - Primary (No animation) - 150% thicker */}
                       <Line
-                        yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                        yAxisId={axisMode === 'dual' ? 'score' : undefined}
                         type="monotone"
-                        dataKey={axisMode === 'normalized' ? 'bpSysNormalized' : 'bpSys'}
-                        stroke={VITAL_CONFIGS.bpSys.color}
-                        strokeWidth={2}
+                        dataKey={axisMode === 'normalized' ? 'scoreNormalized' : 'score'}
+                        stroke={config.color}
+                        strokeWidth={5}
                         dot={false}
-                        name="BP Sys"
-                        animationBegin={0}
-                        animationDuration={800}
-                        animationEasing="ease-out"
+                        name={config.name}
+                        isAnimationActive={false}
                       />
-                    )}
 
-                    {selectedVitals.includes('bpDia') && (
-                      <Line
-                        yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
-                        type="monotone"
-                        dataKey={axisMode === 'normalized' ? 'bpDiaNormalized' : 'bpDia'}
-                        stroke={VITAL_CONFIGS.bpDia.color}
-                        strokeWidth={2}
-                        dot={false}
-                        name="BP Dia"
-                        animationBegin={0}
-                        animationDuration={800}
-                        animationEasing="ease-out"
-                      />
-                    )}
+                      {/* Vital Overlays with left-to-right animation */}
+                      {selectedVitals.includes('hr') && (
+                        <Area
+                          yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                          type="monotone"
+                          dataKey={axisMode === 'normalized' ? 'hrNormalized' : 'hr'}
+                          stroke={VITAL_CONFIGS.hr.color}
+                          fill={VITAL_CONFIGS.hr.color}
+                          fillOpacity={0.3}
+                          name="HR"
+                          animationBegin={0}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                        />
+                      )}
 
-                    {selectedVitals.includes('map') && (
-                      <Line
-                        yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
-                        type="monotone"
-                        dataKey={axisMode === 'normalized' ? 'mapNormalized' : 'map'}
-                        stroke={VITAL_CONFIGS.map.color}
-                        strokeWidth={2}
-                        strokeDasharray={VITAL_CONFIGS.map.strokeDasharray}
-                        dot={false}
-                        name="MAP"
-                        animationBegin={0}
-                        animationDuration={800}
-                        animationEasing="ease-out"
-                      />
-                    )}
+                      {selectedVitals.includes('bpSys') && (
+                        <Line
+                          yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                          type="monotone"
+                          dataKey={axisMode === 'normalized' ? 'bpSysNormalized' : 'bpSys'}
+                          stroke={VITAL_CONFIGS.bpSys.color}
+                          strokeWidth={2}
+                          dot={false}
+                          name="BP Sys"
+                          animationBegin={0}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                        />
+                      )}
 
-                    {selectedVitals.includes('spo2') && (
-                      <Area
-                        yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
-                        type="monotone"
-                        dataKey={axisMode === 'normalized' ? 'spo2Normalized' : 'spo2'}
-                        stroke={VITAL_CONFIGS.spo2.color}
-                        fill={VITAL_CONFIGS.spo2.color}
-                        fillOpacity={0.3}
-                        name="SpO₂"
-                        animationBegin={0}
-                        animationDuration={800}
-                        animationEasing="ease-out"
-                      />
-                    )}
+                      {selectedVitals.includes('bpDia') && (
+                        <Line
+                          yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                          type="monotone"
+                          dataKey={axisMode === 'normalized' ? 'bpDiaNormalized' : 'bpDia'}
+                          stroke={VITAL_CONFIGS.bpDia.color}
+                          strokeWidth={2}
+                          dot={false}
+                          name="BP Dia"
+                          animationBegin={0}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                        />
+                      )}
 
-                    {selectedVitals.includes('temp') && (
-                      <Area
-                        yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
-                        type="monotone"
-                        dataKey={axisMode === 'normalized' ? 'tempNormalized' : 'temp'}
-                        stroke={VITAL_CONFIGS.temp.color}
-                        fill={VITAL_CONFIGS.temp.color}
-                        fillOpacity={0.3}
-                        name="Temp"
-                        animationBegin={0}
-                        animationDuration={800}
-                        animationEasing="ease-out"
-                      />
-                    )}
+                      {selectedVitals.includes('map') && (
+                        <Line
+                          yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                          type="monotone"
+                          dataKey={axisMode === 'normalized' ? 'mapNormalized' : 'map'}
+                          stroke={VITAL_CONFIGS.map.color}
+                          strokeWidth={2}
+                          strokeDasharray={VITAL_CONFIGS.map.strokeDasharray}
+                          dot={false}
+                          name="MAP"
+                          animationBegin={0}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                        />
+                      )}
 
-                    {selectedVitals.includes('rr') && (
-                      <Area
-                        yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
-                        type="monotone"
-                        dataKey={axisMode === 'normalized' ? 'rrNormalized' : 'rr'}
-                        stroke={VITAL_CONFIGS.rr.color}
-                        fill={VITAL_CONFIGS.rr.color}
-                        fillOpacity={0.3}
-                        name="RR"
-                        animationBegin={0}
-                        animationDuration={800}
-                        animationEasing="ease-out"
-                      />
-                    )}
-                  </ComposedChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                  <p className="text-lg">No data for this period</p>
-                  <button
-                    onClick={() => setTimeRange('1w')}
-                    className="mt-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
-                  >
-                    Adjust time range
-                  </button>
-                </div>
-              )}
+                      {selectedVitals.includes('spo2') && (
+                        <Area
+                          yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                          type="monotone"
+                          dataKey={axisMode === 'normalized' ? 'spo2Normalized' : 'spo2'}
+                          stroke={VITAL_CONFIGS.spo2.color}
+                          fill={VITAL_CONFIGS.spo2.color}
+                          fillOpacity={0.3}
+                          name="SpO₂"
+                          animationBegin={0}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                        />
+                      )}
+
+                      {selectedVitals.includes('temp') && (
+                        <Area
+                          yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                          type="monotone"
+                          dataKey={axisMode === 'normalized' ? 'tempNormalized' : 'temp'}
+                          stroke={VITAL_CONFIGS.temp.color}
+                          fill={VITAL_CONFIGS.temp.color}
+                          fillOpacity={0.3}
+                          name="Temp"
+                          animationBegin={0}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                        />
+                      )}
+
+                      {selectedVitals.includes('rr') && (
+                        <Area
+                          yAxisId={axisMode === 'dual' ? 'vitals' : undefined}
+                          type="monotone"
+                          dataKey={axisMode === 'normalized' ? 'rrNormalized' : 'rr'}
+                          stroke={VITAL_CONFIGS.rr.color}
+                          fill={VITAL_CONFIGS.rr.color}
+                          fillOpacity={0.3}
+                          name="RR"
+                          animationBegin={0}
+                          animationDuration={800}
+                          animationEasing="ease-out"
+                        />
+                      )}
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-500">
+                    <p className="text-lg">No data for this period</p>
+                    <button
+                      onClick={() => setTimeRange('1w')}
+                      className="mt-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                    >
+                      Adjust time range
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Recent Values Table */}
           <div className="px-6 pb-6">
             <h3 className="text-white text-sm font-medium mb-4">Recent Values</h3>
-            <div className="bg-black border border-[rgba(64,66,73,0.3)] rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-[rgba(64,66,73,0.3)]">
-                    <th className="text-left px-4 py-3 text-gray-500 text-sm font-medium">Time</th>
-                    <th className="text-center px-4 py-3 text-gray-500 text-sm font-medium">Value</th>
-                    <th className="text-right px-4 py-3 text-gray-500 text-sm font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentValues.map((value, index) => (
-                    <tr key={index} className="border-b border-[rgba(64,66,73,0.2)] last:border-0 hover:bg-[rgba(64,66,73,0.1)]">
-                      <td className="px-4 py-3 text-gray-300 text-sm">{value.time}</td>
-                      <td className="text-center px-4 py-3">
-                        <span className="text-white font-semibold text-sm">{value.value.toFixed(1)}</span>
-                        {value.isComputed && (
-                          <span className="text-gray-500 text-xs ml-2">computed</span>
-                        )}
-                      </td>
-                      <td className="text-right px-4 py-3">
-                        <span className={`inline-block w-2 h-2 rounded-full ${
-                          value.risk === 'critical' ? 'bg-red-500' :
-                          value.risk === 'high' ? 'bg-orange-500' :
-                          value.risk === 'medium' ? 'bg-yellow-500' :
-                          'bg-green-500'
-                        }`}></span>
-                      </td>
+            <div className="bg-gray-900/50 border border-[rgba(64,66,73,0.3)] rounded-lg overflow-hidden">
+              <div className="max-h-64 overflow-y-auto">
+                <table className="w-full">
+                  <thead className="sticky top-0 bg-gray-900/80 backdrop-blur-sm">
+                    <tr className="border-b border-[rgba(64,66,73,0.3)]">
+                      <th className="text-left px-4 py-3 text-gray-500 text-sm font-medium">Time</th>
+                      <th className="text-center px-4 py-3 text-gray-500 text-sm font-medium">Value</th>
+                      <th className="text-right px-4 py-3 text-gray-500 text-sm font-medium">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recentValues.map((value, index) => (
+                      <tr key={index} className="border-b border-[rgba(64,66,73,0.2)] last:border-0 hover:bg-[rgba(64,66,73,0.1)] transition-colors">
+                        <td className="px-4 py-3 text-gray-300 text-sm">{value.time}</td>
+                        <td className="text-center px-4 py-3">
+                          <span className="text-white font-semibold text-sm">{value.value.toFixed(1)}</span>
+                          {value.isComputed && (
+                            <span className="text-gray-500 text-xs ml-2">computed</span>
+                          )}
+                        </td>
+                        <td className="text-right px-4 py-3">
+                          <span className={`inline-block w-2 h-2 rounded-full ${
+                            value.risk === 'critical' ? 'bg-red-500' :
+                            value.risk === 'high' ? 'bg-orange-500' :
+                            value.risk === 'medium' ? 'bg-yellow-500' :
+                            'bg-green-500'
+                          }`}></span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
       </DialogContent>
