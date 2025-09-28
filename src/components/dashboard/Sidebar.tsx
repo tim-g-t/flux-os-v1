@@ -100,19 +100,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
           <div className={`my-auto ${activeView === 'Settings' ? 'text-xl' : ''}`}>Settings</div>
         </button>
         
-        {/* Server Config */}
-        <button 
-          onClick={() => onViewChange('Server Config')}
-          className={`flex items-center gap-4 text-lg whitespace-nowrap justify-start mt-6 ml-[23px] pl-6 pr-[50px] py-[18px] max-md:mr-0.5 max-md:px-5 rounded-lg transition-all duration-200 ${
-            activeView === 'Server Config' 
-              ? 'bg-[rgba(1,119,251,1)] text-white font-semibold' 
-              : 'text-white font-normal hover:bg-[rgba(36,37,42,1)]'
-          }`}
-        >
-          <div className="flex w-[21px] shrink-0 h-5 my-auto" />
-          <div className={`my-auto ${activeView === 'Server Config' ? 'text-xl' : ''}`}>Server Config</div>
-        </button>
-        
         {/* Help & Support */}
         <button 
           onClick={() => onViewChange('Help & Support')}

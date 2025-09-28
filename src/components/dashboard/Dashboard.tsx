@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePatients } from '@/hooks/usePatients';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { PatientCard } from './PatientCard';
 import { VitalSigns } from './VitalSigns';
-import { LiveRiskScores } from './LiveRiskScores';
+import { RiskScores } from './RiskScores';
 import { PatientMonitoringChart } from './PatientMonitoringChart';
 import { PatientOverview } from './PatientOverview';
-import { ServerConfig } from '@/components/ServerConfig';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -17,19 +15,6 @@ export const Dashboard: React.FC = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string>('bed_01'); // Default to first patient
-  const { patients, loading, error, setServerEndpoint } = usePatients();
-
-  // Auto-configure server endpoint on component mount
-  useEffect(() => {
-    // Configure server endpoint with the provided API URL
-    const serverUrl = 'http://a0g88w80ssoos8gcs408gs.157.90.23.234.sslip.io/data';
-    console.log('🚀 Dashboard: Configuring server endpoint:', serverUrl);
-    
-    // Enable server endpoint
-    setServerEndpoint(serverUrl);
-    
-    console.log('📊 Dashboard: Current patients loaded:', patients.length);
-  }, [setServerEndpoint, patients.length]);
 
   const toggleMetric = (metric: MetricType) => {
     setSelectedMetrics(prev => 
@@ -62,56 +47,26 @@ export const Dashboard: React.FC = () => {
             <div className="w-full">
               <PatientOverview onPatientSelect={handlePatientSelect} />
             </div>
-          ) : activeView === 'Server Config' ? (
-            <div className="w-full">
-              <Header />
-              <div className="mt-8">
-                <ServerConfig />
-              </div>
-            </div>
           ) : (
             <>
               <Header />
               <div className="bg-[rgba(26,27,32,1)] border w-full mt-8 pt-6 px-6 pb-8 rounded-[32px] border-[rgba(64,66,73,1)] border-solid max-md:max-w-full max-md:px-5">
                 <div className="max-md:max-w-full max-md:mr-[9px]">
                   <div className="gap-5 flex items-stretch max-md:flex-col">
-                    {(() => {
-                      const selectedPatient = patients.find(p => p.id === selectedPatientId);
-                      if (!selectedPatient) {
-                        return (
-                          <PatientCard
-                            bedNumber="No Patient"
-                            patientName="Select Patient"
-                            demographics="-- --"
-                            duration="--"
-                            backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
-                          />
-                        );
-                      }
-                      
-                      // Calculate duration (hours since first reading)
-                      const firstReading = selectedPatient.vitalHistory?.[0];
-                      const duration = firstReading ? 
-                        Math.floor((Date.now() - new Date(firstReading.timestamp).getTime()) / (1000 * 60 * 60)) + 'h' : 
-                        '--';
-                      
-                      return (
-                        <PatientCard
-                          bedNumber={selectedPatient.bed}
-                          patientName={selectedPatient.name}
-                          demographics={`${selectedPatient.age} y / ${selectedPatient.gender.toLowerCase()}`}
-                          duration={duration}
-                          backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
-                        />
-                      );
-                    })()}
-                    <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} bedId={selectedPatientId} />
+                    <PatientCard
+                      bedNumber="Bed 15"
+                      patientName="Simon A."
+                      demographics="45 y / male"
+                      duration="142h"
+                      backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
+                    />
+                    <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} />
                   </div>
                 </div>
                 <div className="mt-6">
-                  <PatientMonitoringChart selectedMetrics={selectedMetrics} bedId={selectedPatientId} />
+                  <PatientMonitoringChart selectedMetrics={selectedMetrics} />
                 </div>
-                <LiveRiskScores bedId={selectedPatientId} />
+                <RiskScores />
               </div>
             </>
           )}

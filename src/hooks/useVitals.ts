@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { vitalsService, VitalsData, VitalReading } from '@/services/vitalsService';
 
-export const useVitals = (bedId: string = 'bed_01') => {
+export const useVitals = (bedId: string = 'bed_15') => {
   const [data, setData] = useState<VitalsData>({ readings: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
