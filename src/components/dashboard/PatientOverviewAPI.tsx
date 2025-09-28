@@ -233,12 +233,6 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
       <Header />
       <div className="pt-6 px-6 mt-8">
         <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl pt-6 px-6 pb-8">
-          <div className="mb-4 text-white">
-            <h2 className="text-2xl font-bold">Patient Overview - Live Data</h2>
-            <p className="text-[rgba(217,217,217,1)] text-sm mt-1">
-              Showing {patients.length} patients with real-time vital signs
-            </p>
-          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
             {patients.slice(0, 12).map(patient => {
