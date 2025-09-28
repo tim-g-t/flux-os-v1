@@ -8,13 +8,14 @@ type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'resp
 interface VitalSignsProps {
   selectedMetrics: MetricType[];
   onMetricToggle: (metric: MetricType) => void;
+  bedId?: string;
 }
 
-export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetricToggle }) => {
-  const { getLatestVitals, getFilteredData, loading } = useVitals('bed_15');
+export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetricToggle, bedId = 'bed_15' }) => {
+  const { getLatestVitals, getFilteredData, loading } = useVitals(bedId);
   
   const latestVitals = useMemo(() => getLatestVitals(), [getLatestVitals]);
-  const historicalData = useMemo(() => getFilteredData('bed_15', '24h'), [getFilteredData]);
+  const historicalData = useMemo(() => getFilteredData('24h'), [getFilteredData]);
   
   if (loading || !latestVitals) {
     return (

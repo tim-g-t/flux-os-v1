@@ -4,7 +4,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar';
 import { Header } from '@/components/dashboard/Header';
 import { PatientCard } from '@/components/dashboard/PatientCard';
 import { VitalSigns } from '@/components/dashboard/VitalSigns';
-import { RiskScores } from '@/components/dashboard/RiskScores';
+import { LiveRiskScores } from '@/components/dashboard/LiveRiskScores';
 import { PatientMonitoringChart } from '@/components/dashboard/PatientMonitoringChart';
 import { VitalReading } from '@/services/vitalsService';
 
@@ -12,7 +12,6 @@ type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'resp
 
 // Mock patient data (same as in PatientOverview for consistency)
 const generateSpecificVitals = (riskLevel: 'normal' | 'warning' | 'critical', avoidCriticalRiskScores: boolean = false): VitalReading => {
-  // ... same implementation as in PatientOverview
   switch (riskLevel) {
     case 'normal':
       return {
@@ -125,13 +124,24 @@ export const PatientDetail: React.FC = () => {
                   duration="142h"
                   backgroundImage={patient.backgroundImage}
                 />
-                <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} />
+                <VitalSigns 
+                  selectedMetrics={selectedMetrics}
+                  onMetricToggle={toggleMetric}
+                  bedId={patient.id}
+                />
+              </div>
+            </div>
+            <div className="flex gap-6 mt-6 max-md:flex-col">
+              <div className="flex-1">
+                <PatientMonitoringChart 
+                  bedId={patient.id}
+                  selectedMetrics={selectedMetrics} 
+                />
               </div>
             </div>
             <div className="mt-6">
-              <PatientMonitoringChart selectedMetrics={selectedMetrics} />
+              <LiveRiskScores bedId={patient.id} />
             </div>
-            <RiskScores />
           </div>
         </main>
       </div>
