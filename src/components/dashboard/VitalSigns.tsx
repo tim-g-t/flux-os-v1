@@ -11,7 +11,7 @@ interface VitalSignsProps {
   bedId?: string;
 }
 
-export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetricToggle, bedId = 'bed_15' }) => {
+export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetricToggle, bedId = 'bed_01' }) => {
   const { getLatestVitals, getFilteredData, loading } = useVitals(bedId);
   
   const latestVitals = useMemo(() => getLatestVitals(), [getLatestVitals]);

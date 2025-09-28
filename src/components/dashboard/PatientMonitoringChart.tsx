@@ -10,7 +10,7 @@ interface PatientMonitoringChartProps {
   bedId?: string;
 }
 
-export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics, bedId = 'bed_15' }) => {
+export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics, bedId = 'bed_01' }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const { getFilteredData, loading } = useVitals(bedId);
 

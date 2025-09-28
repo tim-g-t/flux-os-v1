@@ -526,32 +526,46 @@ class VitalsService {
     if (patient?.vitalHistory && patient.vitalHistory.length > 0) {
       console.log(`✅ Using patient data for ${bedId}: ${patient.vitalHistory.length} readings`);
       
-      const now = new Date();
+      // For historical data, determine the time range based on the actual data
+      const allTimes = patient.vitalHistory.map(reading => new Date(reading.timestamp));
+      const minTime = new Date(Math.min(...allTimes.map(t => t.getTime())));
+      const maxTime = new Date(Math.max(...allTimes.map(t => t.getTime())));
+      
+      console.log(`📅 Data range: ${minTime.toISOString()} to ${maxTime.toISOString()}`);
+      
+      // Calculate time range from the latest data point backwards
       let startTime: Date;
       
       switch (timeRange) {
         case '1h':
-          startTime = new Date(now.getTime() - 60 * 60 * 1000);
+          startTime = new Date(maxTime.getTime() - 60 * 60 * 1000);
           break;
         case '4h':
-          startTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+          startTime = new Date(maxTime.getTime() - 4 * 60 * 60 * 1000);
           break;
         case '12h':
-          startTime = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+          startTime = new Date(maxTime.getTime() - 12 * 60 * 60 * 1000);
           break;
         case '24h':
-          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          startTime = new Date(maxTime.getTime() - 24 * 60 * 60 * 1000);
           break;
         case '1w':
-          startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          startTime = new Date(maxTime.getTime() - 7 * 24 * 60 * 60 * 1000);
           break;
         default:
-          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          startTime = new Date(maxTime.getTime() - 24 * 60 * 60 * 1000);
       }
+      
+      // Ensure we don't go before the actual data start
+      if (startTime < minTime) {
+        startTime = minTime;
+      }
+      
+      console.log(`🕐 Filtering from ${startTime.toISOString()} to ${maxTime.toISOString()}`);
       
       const filtered = patient.vitalHistory.filter(reading => {
         const readingTime = new Date(reading.timestamp);
-        return readingTime >= startTime;
+        return readingTime >= startTime && readingTime <= maxTime;
       });
       
       console.log(`📈 Filtered to ${filtered.length} readings for timeRange ${timeRange}`);
@@ -574,31 +588,37 @@ class VitalsService {
       return [];
     }
     
-    const now = new Date();
+    // For historical data in VitalsData format, use the same approach
+    const allTimes = this.data.readings.map(reading => new Date(reading.timestamp));
+    const maxTime = new Date(Math.max(...allTimes.map(t => t.getTime())));
+    
     let startTime: Date;
     
     switch (timeRange) {
       case '1h':
-        startTime = new Date(now.getTime() - 60 * 60 * 1000);
+        startTime = new Date(maxTime.getTime() - 60 * 60 * 1000);
         break;
       case '4h':
-        startTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+        startTime = new Date(maxTime.getTime() - 4 * 60 * 60 * 1000);
         break;
       case '12h':
-        startTime = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+        startTime = new Date(maxTime.getTime() - 12 * 60 * 60 * 1000);
         break;
       case '24h':
-        startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        startTime = new Date(maxTime.getTime() - 24 * 60 * 60 * 1000);
         break;
       case '1w':
-        startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        startTime = new Date(maxTime.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
       default:
-        startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        startTime = new Date(maxTime.getTime() - 24 * 60 * 60 * 1000);
     }
     
     const filtered = this.data.readings
-      .filter(reading => new Date(reading.timestamp) >= startTime)
+      .filter(reading => {
+        const readingTime = new Date(reading.timestamp);
+        return readingTime >= startTime && readingTime <= maxTime;
+      })
       .map(reading => ({
         timestamp: reading.timestamp,
         vital: reading[bedId] as VitalReading
