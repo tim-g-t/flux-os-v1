@@ -252,63 +252,91 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden">
         <div className="bg-black border border-[rgba(64,66,73,1)] w-full mx-auto rounded-[32px]">
-          {/* Header Section - Exactly like Vital Signs */}
-          <div className="px-8 py-5">
-            <div className="flex w-full items-stretch gap-[40px_100px] flex-wrap">
-              <h2 className="text-white text-xl font-medium my-auto">
+          {/* Header Section */}
+          <div className="px-6 py-4 border-b border-[rgba(64,66,73,0.5)]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-white text-lg font-medium">
                 {config.name}
               </h2>
-              <div className="flex flex-1 justify-end">
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-white transition-colors p-1"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Stats and Controls Section */}
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between mb-4">
+
+              {/* Stats Group */}
+              <div className="flex items-start gap-12">
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-xs uppercase mb-1">Current</span>
+                  <span className="text-white text-2xl font-bold">{statistics.current.toFixed(1)}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-xs uppercase mb-1">Min</span>
+                  <span className="text-gray-300 text-xl">{statistics.min.toFixed(1)}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-xs uppercase mb-1">Avg</span>
+                  <span className="text-gray-300 text-xl">{statistics.avg.toFixed(1)}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-xs uppercase mb-1">Max</span>
+                  <span className="text-gray-300 text-xl">{statistics.max.toFixed(1)}</span>
+                </div>
+              </div>
+
+              {/* Control Buttons */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowVitalSelector(!showVitalSelector)}
-                  className="border flex items-center gap-2.5 text-base text-white font-normal justify-center px-[26px] py-[18px] rounded-[32px] border-white border-solid hover:bg-white hover:text-black transition-colors"
+                  className="text-gray-300 text-sm px-4 py-2 border border-gray-600 rounded-full hover:border-white hover:text-white transition-colors"
                 >
-                  <div className="self-stretch my-auto">
-                    {showVitalSelector ? 'Hide vitals' : 'Add vitals...'}
-                  </div>
+                  {showVitalSelector ? '− Hide vitals' : '+ Add vitals...'}
                 </button>
+                {/* Time Range Buttons */}
+                <div className="flex gap-1 ml-4">
+                  {(['1h', '4h', '12h', '24h', '1w'] as TimeRange[]).map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange(range)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        timeRange === range
+                          ? 'bg-white text-black'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={() => setAxisMode(axisMode === 'dual' ? 'normalized' : 'dual')}
-                  className="ml-2 border flex gap-2.5 p-[18px] rounded-[32px] border-white border-solid hover:bg-white hover:text-black transition-colors"
+                  className="ml-2 text-gray-300 text-sm px-3 py-1.5 border border-gray-600 rounded-full hover:border-white hover:text-white transition-colors"
                 >
-                  <div className="text-sm font-medium">
-                    {axisMode === 'dual' ? 'Dual' : 'Norm'}
-                  </div>
+                  {axisMode === 'dual' ? 'Dual axes' : 'Normalize'}
                 </button>
-              </div>
-            </div>
-
-            {/* Stats Row */}
-            <div className="flex items-center gap-8 mt-4">
-              <div className="flex items-baseline gap-2">
-                <span className="text-white text-3xl font-bold">{statistics.current.toFixed(1)}</span>
-                <span className="text-gray-500 text-sm">{config.unit} Current</span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-white text-xl">{statistics.min.toFixed(1)}</span>
-                <span className="text-gray-500 text-sm">Min</span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-white text-xl">{statistics.avg.toFixed(1)}</span>
-                <span className="text-gray-500 text-sm">Avg</span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-white text-xl">{statistics.max.toFixed(1)}</span>
-                <span className="text-gray-500 text-sm">Max</span>
               </div>
             </div>
 
             {/* Vital Selector Pills */}
             {showVitalSelector && (
-              <div className="flex gap-2 mt-4">
+              <div className="flex gap-2 mt-3 pt-3 border-t border-[rgba(64,66,73,0.5)]">
                 {Object.entries(VITAL_CONFIGS).map(([key, vital]) => (
                   <button
                     key={key}
                     onClick={() => toggleVital(key)}
-                    className={`px-4 py-2 rounded-[20px] text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                       selectedVitals.includes(key)
-                        ? 'bg-white text-black'
-                        : 'bg-transparent border border-gray-600 text-gray-300 hover:border-white'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                     }`}
                   >
                     {vital.label}
@@ -319,25 +347,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
           </div>
 
           {/* Chart Section */}
-          <div className="px-8 pb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white text-xl">Risk Score Trend</h3>
-              <div className="flex gap-2">
-                {(['1h', '4h', '12h', '24h', '1w'] as TimeRange[]).map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      timeRange === range
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    {range}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="px-6 pb-4">
 
             <div className="h-80 w-full">
               {processedData.length > 0 ? (
@@ -537,47 +547,35 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
           </div>
 
           {/* Recent Values Table */}
-          <div className="px-8 pb-6">
-            <h3 className="text-white text-lg font-medium mb-3">Recent Values</h3>
-            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl overflow-hidden">
+          <div className="px-6 pb-6">
+            <h3 className="text-white text-sm font-medium mb-3 uppercase tracking-wider">Recent Values</h3>
+            <div className="bg-gray-900/50 border border-[rgba(64,66,73,0.5)] rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[rgba(64,66,73,1)]">
-                    <th className="text-left p-3 text-gray-400 text-sm font-medium">Time</th>
-                    <th className="text-center p-3 text-gray-400 text-sm font-medium">Value</th>
-                    <th className="text-center p-3 text-gray-400 text-sm font-medium">Change</th>
-                    <th className="text-center p-3 text-gray-400 text-sm font-medium">Status</th>
+                  <tr className="border-b border-[rgba(64,66,73,0.5)]">
+                    <th className="text-left p-3 text-gray-500 text-xs font-normal uppercase">Time</th>
+                    <th className="text-right p-3 text-gray-500 text-xs font-normal uppercase">Value</th>
+                    <th className="text-right p-3 text-gray-500 text-xs font-normal uppercase">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentValues.map((value, index) => {
-                    const prevValue = recentValues[index + 1]?.value || value.value;
-                    const change = value.value - prevValue;
-                    return (
-                      <tr key={index} className="border-b border-[rgba(64,66,73,0.5)]">
-                        <td className="p-3 text-gray-300 text-sm">{value.time}</td>
-                        <td className="text-center p-3 text-white font-medium">
-                          {value.value.toFixed(1)} {config.unit}
-                        </td>
-                        <td className={`text-center p-3 text-sm ${
-                          change > 0 ? 'text-red-400' : change < 0 ? 'text-green-400' : 'text-gray-400'
-                        }`}>
-                          {change > 0 ? '+' : ''}{change.toFixed(1)}
-                        </td>
-                        <td className="text-center p-3">
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            value.risk === 'critical' ? 'bg-red-900/50 text-red-400' :
-                            value.risk === 'high' ? 'bg-orange-900/50 text-orange-400' :
-                            value.risk === 'medium' ? 'bg-yellow-900/50 text-yellow-400' :
-                            'bg-green-900/50 text-green-400'
-                          }`}>
-                            {value.risk}
-                            {value.isComputed && ' (computed)'}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {recentValues.map((value, index) => (
+                    <tr key={index} className="border-b border-[rgba(64,66,73,0.3)] last:border-0">
+                      <td className="p-3 text-gray-400 text-sm font-mono">{value.time}</td>
+                      <td className="text-right p-3 text-white font-medium">
+                        {value.value.toFixed(1)}
+                        <span className="text-gray-500 text-xs ml-1">{value.isComputed ? 'computed' : ''}</span>
+                      </td>
+                      <td className="text-right p-3">
+                        <span className={`inline-block w-2 h-2 rounded-full ${
+                          value.risk === 'critical' ? 'bg-red-500' :
+                          value.risk === 'high' ? 'bg-orange-500' :
+                          value.risk === 'medium' ? 'bg-yellow-500' :
+                          'bg-green-500'
+                        }`}></span>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
