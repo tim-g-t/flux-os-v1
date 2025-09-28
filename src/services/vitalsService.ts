@@ -45,8 +45,13 @@ export interface PatientData {
   bed: string;
   gender: string;
   age: number;
+  condition?: string;
+  admissionDate?: string;
   currentVitals?: VitalReading;
   vitalHistory?: Array<{ timestamp: string; vital: VitalReading }>;
+  alerts?: string[];
+  medications?: string[];
+  notes?: string[];
 }
 
 export interface ServerResponse {
@@ -99,23 +104,31 @@ class VitalsService {
   }
 
   private async loadFromServer(): Promise<void> {
-    const response = await fetch(this.config.url);
-    if (response.ok) {
-      const responseData = await response.json();
-      
-      // Check if the response is a direct array or wrapped in an object
-      let serverData: ServerResponse;
-      if (Array.isArray(responseData)) {
-        // Direct array of patients from API
-        serverData = { data: responseData };
+    try {
+      console.log('Loading from server:', this.config.url);
+      const response = await fetch(this.config.url);
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('Server response received:', responseData.length, 'patients');
+        
+        // Check if the response is a direct array or wrapped in an object
+        let serverData: ServerResponse;
+        if (Array.isArray(responseData)) {
+          // Direct array of patients from API
+          serverData = { data: responseData };
+        } else {
+          // Already wrapped in an object
+          serverData = responseData;
+        }
+        
+        this.transformServerData(serverData);
+        console.log('Server data transformed successfully. Patients loaded:', this.patients.length);
       } else {
-        // Already wrapped in an object
-        serverData = responseData;
+        throw new Error(`Server responded with ${response.status}`);
       }
-      
-      this.transformServerData(serverData);
-    } else {
-      throw new Error(`Server responded with ${response.status}`);
+    } catch (error) {
+      console.error('Failed to load from server:', error);
+      throw error;
     }
   }
 
@@ -157,24 +170,35 @@ class VitalsService {
   }
 
   private transformServerData(serverData: ServerResponse): void {
+    console.log('🔄 Transforming server data...');
     const patientArray = serverData.patients || serverData.data || [];
+    console.log('📊 Patient array length:', patientArray.length);
     
-    this.patients = patientArray.map(patient => {
+    this.patients = patientArray.map((patient, index) => {
       // Extract bed number from various formats (Bed_1, bed_01, etc.)
       const bedMatch = patient.Bed.match(/\d+/);
-      const bedNumber = bedMatch ? bedMatch[0].padStart(2, '0') : '01';
+      const bedNumber = bedMatch ? bedMatch[0].padStart(2, '0') : (index + 1).toString().padStart(2, '0');
+      const patientId = `bed_${bedNumber}`;
+      
+      console.log(`👤 Processing patient ${patient.Name} - Bed: ${patient.Bed} -> ID: ${patientId}`);
       
       const patientData: PatientData = {
-        id: `bed_${bedNumber}`,
+        id: patientId,
         name: patient.Name,
         bed: patient.Bed,
         gender: patient.Gender,
         age: patient.Age,
-        vitalHistory: []
+        condition: 'Stable',
+        admissionDate: new Date().toISOString().split('T')[0],
+        vitalHistory: [],
+        alerts: [],
+        medications: [],
+        notes: []
       };
 
       // Extract vital readings from the Vitals array
       if (patient.Vitals && Array.isArray(patient.Vitals)) {
+        console.log(`📈 Processing ${patient.Vitals.length} vital readings for ${patientId}`);
         const vitalHistory: Array<{ timestamp: string; vital: VitalReading }> = [];
         
         patient.Vitals.forEach(serverVital => {
@@ -194,20 +218,20 @@ class VitalsService {
         // Set current vitals to the most recent reading
         if (vitalHistory.length > 0) {
           patientData.currentVitals = vitalHistory[vitalHistory.length - 1].vital;
+          console.log(`✅ Set current vitals for ${patientId}:`, patientData.currentVitals);
         }
+      } else {
+        console.log(`⚠️ No vitals data found for patient ${patientId}`);
       }
 
       return patientData;
     });
 
-    // If we have fewer than 8 patients, generate demo patients to fill up
-    if (this.patients.length < 8) {
-      console.log(`Only ${this.patients.length} patients from server, generating demo patients`);
-      this.generateDemoPatients();
-    } else {
-      // Convert patient data to VitalsData format for backward compatibility
-      this.convertPatientsToVitalsData();
-    }
+    console.log('✅ All patients processed:', this.patients.map(p => `${p.id}(${p.vitalHistory?.length || 0} readings)`));
+    
+    // Always convert patient data to VitalsData format for backward compatibility  
+    this.convertPatientsToVitalsData();
+    console.log('🔄 Data conversion to VitalsData format complete');
   }
 
   private parseServerVitalReading(serverVital: ServerVitalReading): VitalReading | null {
@@ -471,7 +495,14 @@ class VitalsService {
   }
 
   getPatient(patientId: string): PatientData | null {
-    return this.patients.find(p => p.id === patientId) || null;
+    console.log(`🔍 Looking for patient: ${patientId}`);
+    const patient = this.patients.find(p => p.id === patientId);
+    if (patient) {
+      console.log(`✅ Found patient ${patientId}:`, patient.name, `with ${patient.vitalHistory?.length || 0} vital readings`);
+    } else {
+      console.log(`❌ Patient ${patientId} not found. Available patients:`, this.patients.map(p => p.id));
+    }
+    return patient || null;
   }
 
   getLatestReading(bedId: string = 'bed_01'): VitalReading | null {
@@ -488,7 +519,60 @@ class VitalsService {
   }
 
   getFilteredData(bedId: string = 'bed_01', timeRange: string = '24h'): Array<{ timestamp: string; vital: VitalReading }> {
-    if (this.data.readings.length === 0) return [];
+    console.log(`📊 Getting filtered data for ${bedId}, timeRange: ${timeRange}`);
+    
+    // First try to get from patient data
+    const patient = this.getPatient(bedId);
+    if (patient?.vitalHistory && patient.vitalHistory.length > 0) {
+      console.log(`✅ Using patient data for ${bedId}: ${patient.vitalHistory.length} readings`);
+      
+      const now = new Date();
+      let startTime: Date;
+      
+      switch (timeRange) {
+        case '1h':
+          startTime = new Date(now.getTime() - 60 * 60 * 1000);
+          break;
+        case '4h':
+          startTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+          break;
+        case '12h':
+          startTime = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+          break;
+        case '24h':
+          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          break;
+        case '1w':
+          startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      }
+      
+      const filtered = patient.vitalHistory.filter(reading => {
+        const readingTime = new Date(reading.timestamp);
+        return readingTime >= startTime;
+      });
+      
+      console.log(`📈 Filtered to ${filtered.length} readings for timeRange ${timeRange}`);
+      
+      // Subsample for performance (max 200 points)
+      if (filtered.length > 200) {
+        const step = Math.floor(filtered.length / 200);
+        const subsampled = filtered.filter((_, index) => index % step === 0);
+        console.log(`🎯 Subsampled from ${filtered.length} to ${subsampled.length} points`);
+        return subsampled;
+      }
+      
+      return filtered;
+    }
+    
+    // Fallback to old VitalsData format
+    console.log(`⚠️ No patient data found for ${bedId}, trying VitalsData format`);
+    if (this.data.readings.length === 0) {
+      console.log(`❌ No data available at all`);
+      return [];
+    }
     
     const now = new Date();
     let startTime: Date;
@@ -527,6 +611,7 @@ class VitalsService {
       return filtered.filter((_, index) => index % step === 0);
     }
     
+    console.log(`📊 Returning ${filtered.length} data points from VitalsData for ${bedId}`);
     return filtered;
   }
 }

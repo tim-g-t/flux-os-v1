@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePatients } from '@/hooks/usePatients';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { PatientCard } from './PatientCard';
@@ -15,6 +16,19 @@ export const Dashboard: React.FC = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string>('bed_01'); // Default to first patient
+  const { patients, loading, error, setServerEndpoint } = usePatients();
+
+  // Auto-configure server endpoint on component mount
+  useEffect(() => {
+    // Set your server endpoint here - replace with your actual API URL
+    const serverUrl = 'https://your-api-endpoint.com/patients';
+    console.log('🚀 Dashboard: Configuring server endpoint:', serverUrl);
+    
+    // Uncomment the line below and set your actual server URL
+    // setServerEndpoint(serverUrl);
+    
+    console.log('📊 Dashboard: Current patients loaded:', patients.length);
+  }, [setServerEndpoint, patients.length]);
 
   const toggleMetric = (metric: MetricType) => {
     setSelectedMetrics(prev => 
