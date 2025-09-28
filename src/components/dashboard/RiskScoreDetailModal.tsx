@@ -250,8 +250,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden">
-        <div className="bg-black border border-[rgba(64,66,73,1)] w-full mx-auto rounded-[32px]">
+      <DialogContent className="max-w-4xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden rounded-[32px]">
           {/* Header Section */}
           <div className="px-6 py-4 border-b border-[rgba(64,66,73,0.5)]">
             <div className="flex items-center justify-between">
@@ -578,7 +577,6 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
               </table>
             </div>
           </div>
-        </div>
       </DialogContent>
     </Dialog>
   );
