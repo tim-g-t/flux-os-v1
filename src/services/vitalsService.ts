@@ -104,30 +104,61 @@ class VitalsService {
   }
 
   private async loadFromServer(): Promise<void> {
+    if (!this.config?.url) {
+      throw new Error('Server URL not configured');
+    }
+
     try {
-      console.log('Loading from server:', this.config.url);
-      const response = await fetch(this.config.url);
-      if (response.ok) {
-        const responseData = await response.json();
-        console.log('Server response received:', responseData.length, 'patients');
-        
-        // Check if the response is a direct array or wrapped in an object
-        let serverData: ServerResponse;
-        if (Array.isArray(responseData)) {
-          // Direct array of patients from API
-          serverData = { data: responseData };
-        } else {
-          // Already wrapped in an object
-          serverData = responseData;
-        }
-        
-        this.transformServerData(serverData);
-        console.log('Server data transformed successfully. Patients loaded:', this.patients.length);
-      } else {
-        throw new Error(`Server responded with ${response.status}`);
+      console.log('📡 VitalsService: Loading from server:', this.config.url);
+      console.log('⏳ Large dataset loading - this may take several seconds...');
+      
+      // Set longer timeout for large datasets (30 seconds)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      
+      const response = await fetch(this.config.url, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
       }
+
+      console.log('📡 Response received, parsing JSON data...');
+      const responseData = await response.json();
+      console.log('📊 VitalsService: Raw server data received, size:', JSON.stringify(responseData).length, 'characters');
+      
+      // Check if the response is a direct array or wrapped in an object
+      let serverData: ServerResponse;
+      if (Array.isArray(responseData)) {
+        // Direct array of patients from API
+        serverData = { data: responseData };
+        console.log('Server response received:', responseData.length, 'patients');
+      } else {
+        // Already wrapped in an object
+        serverData = responseData;
+        console.log('Server response received:', serverData.data?.length || 'unknown', 'patients');
+      }
+      
+      console.log('🔄 Processing server data...');
+      this.transformServerData(serverData);
+      console.log('✅ VitalsService: Server data processed successfully');
+      console.log('👥 Patients loaded:', this.patients.length);
+      
     } catch (error) {
-      console.error('Failed to load from server:', error);
+      console.error('❌ VitalsService: Error loading from server:', error);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - the server took too long to respond (>30s)');
+        }
+        throw new Error(`Server loading failed: ${error.message}`);
+      }
       throw error;
     }
   }

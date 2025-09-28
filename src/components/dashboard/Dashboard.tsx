@@ -8,6 +8,7 @@ import { VitalSigns } from './VitalSigns';
 import { LiveRiskScores } from './LiveRiskScores';
 import { PatientMonitoringChart } from './PatientMonitoringChart';
 import { PatientOverview } from './PatientOverview';
+import { ServerConfig } from '@/components/ServerConfig';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -20,12 +21,12 @@ export const Dashboard: React.FC = () => {
 
   // Auto-configure server endpoint on component mount
   useEffect(() => {
-    // Set your server endpoint here - replace with your actual API URL
-    const serverUrl = 'https://your-api-endpoint.com/patients';
+    // Configure server endpoint with the provided API URL
+    const serverUrl = 'http://a0g88w80ssoos8gcs408gs.157.90.23.234.sslip.io/data';
     console.log('🚀 Dashboard: Configuring server endpoint:', serverUrl);
     
-    // Uncomment the line below and set your actual server URL
-    // setServerEndpoint(serverUrl);
+    // Enable server endpoint
+    setServerEndpoint(serverUrl);
     
     console.log('📊 Dashboard: Current patients loaded:', patients.length);
   }, [setServerEndpoint, patients.length]);
@@ -60,6 +61,13 @@ export const Dashboard: React.FC = () => {
           {activeView === 'Dashboard' ? (
             <div className="w-full">
               <PatientOverview onPatientSelect={handlePatientSelect} />
+            </div>
+          ) : activeView === 'Server Config' ? (
+            <div className="w-full">
+              <Header />
+              <div className="mt-8">
+                <ServerConfig />
+              </div>
             </div>
           ) : (
             <>
