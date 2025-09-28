@@ -6,7 +6,6 @@ import { PatientCard } from './PatientCard';
 import { VitalSigns } from './VitalSigns';
 import { RiskScores } from './RiskScores';
 import { PatientMonitoringChart } from './PatientMonitoringChart';
-import { PatientOverview } from './PatientOverview';
 import { PatientOverviewAPI } from './PatientOverviewAPI';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
@@ -16,7 +15,6 @@ export const Dashboard: React.FC = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string>('bed_01'); // Default to first patient
-  const [useApiData, setUseApiData] = useState<boolean>(true); // Default to API data
 
   const toggleMetric = (metric: MetricType) => {
     setSelectedMetrics(prev => 
@@ -47,19 +45,7 @@ export const Dashboard: React.FC = () => {
         <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-6">
           {activeView === 'Dashboard' ? (
             <div className="w-full">
-              <div className="flex justify-end mb-4 pr-6">
-                <button
-                  onClick={() => setUseApiData(!useApiData)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  {useApiData ? 'Switch to Demo Data' : 'Switch to Live API Data'}
-                </button>
-              </div>
-              {useApiData ? (
-                <PatientOverviewAPI onPatientSelect={handlePatientSelect} />
-              ) : (
-                <PatientOverview onPatientSelect={handlePatientSelect} />
-              )}
+              <PatientOverviewAPI onPatientSelect={handlePatientSelect} />
             </div>
           ) : (
             <>
