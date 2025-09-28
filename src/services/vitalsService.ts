@@ -93,9 +93,9 @@ class VitalsService {
         await this.loadFromLocal();
       }
     } catch (error) {
-      console.log('Failed to load data, using demo data:', error);
-      this.data = this.generateDemoData();
-      this.generateDemoPatients();
+      console.error('❌ VitalsService: Failed to load data:', error);
+      this.data = { readings: [] };
+      this.patients = [];
     }
     
     this.notifyListeners();
@@ -175,9 +175,9 @@ class VitalsService {
         this.lastReadingCount = this.data.readings.length;
         
         if (this.data.readings.length === 0 || this.hasOnlyOldData()) {
-          console.log('No recent data found, generating demo data');
-          this.data = this.generateDemoData();
-          this.generateDemoPatients();
+          console.warn('⚠️ VitalsService: No recent data found in local file');
+          this.data = { readings: [] };
+          this.patients = [];
         } else {
           this.extractPatientsFromVitalsData();
         }
@@ -216,9 +216,9 @@ class VitalsService {
       patientArray = serverData.data;
       console.log('📊 VitalsService: Processing data array of', patientArray.length, 'patients');
     } else {
-      console.warn('⚠️ VitalsService: Unexpected server data format, using demo data');
-      this.generateDemoPatients();
-      this.convertPatientsToVitalsData();
+      console.error('❌ VitalsService: Unexpected server data format');
+      this.patients = [];
+      this.data = { readings: [] };
       return;
     }
     
@@ -369,19 +369,6 @@ class VitalsService {
     }));
   }
 
-  private generateDemoPatients(): void {
-    const names = ['Simon A.', 'Maria C.', 'David L.', 'Robert M.', 'Sarah K.', 'Anna T.', 'Elena R.', 'James P.'];
-    
-    this.patients = names.map((name, index) => ({
-      id: `bed_${(index + 1).toString().padStart(2, '0')}`,
-      name,
-      bed: `Bed ${index + 1}`,
-      gender: index % 2 === 0 ? 'Male' : 'Female',
-      age: 25 + Math.floor(Math.random() * 50),
-      vitalHistory: []
-    }));
-  }
-
   startPolling(): void {
     if (this.pollingInterval) return;
     
@@ -406,12 +393,11 @@ class VitalsService {
               this.notifyPatientListeners();
             }
           } else {
-            this.appendDemoReading();
+            console.error('❌ VitalsService: Failed to fetch local data during polling');
           }
         }
       } catch (error) {
-        // Continue generating demo data
-        this.appendDemoReading();
+        console.error('❌ VitalsService: Polling error:', error);
       }
     }, interval);
   }
@@ -443,88 +429,6 @@ class VitalsService {
 
   private notifyPatientListeners(): void {
     this.patientListeners.forEach(listener => listener(this.patients));
-  }
-
-  private generateDemoData(): VitalsData {
-    const readings: VitalTimestamp[] = [];
-    const beds = ['bed_01', 'bed_02', 'bed_03', 'bed_04', 'bed_05', 'bed_06', 'bed_07', 'bed_08'];
-    
-    // Generate last 24 hours of data (every 30 seconds for demo)
-    const now = new Date();
-    const startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
-    
-    // Generate every 30 seconds for last 24 hours = 2,880 readings
-    const intervalMs = 30 * 1000; // 30 seconds
-    const totalReadings = Math.floor((24 * 60 * 60 * 1000) / intervalMs);
-    
-    for (let i = 0; i < totalReadings; i++) {
-      const timestamp = new Date(startTime.getTime() + i * intervalMs);
-      const reading: VitalTimestamp = {
-        timestamp: timestamp.toISOString()
-      };
-      
-      beds.forEach(bed => {
-        reading[bed] = this.generateVitalReading(i, bed);
-      });
-      
-      readings.push(reading);
-    }
-    
-    return { readings };
-  }
-
-  private generateVitalReading(index: number, bedId: string): VitalReading {
-    // Seed based on bed for consistency
-    const bedSeed = bedId.charCodeAt(bedId.length - 1);
-    const timeSeed = index;
-    
-    // Base values with some per-bed variation
-    const baseHR = 70 + (bedSeed % 10);
-    const baseBPS = 120 + (bedSeed % 20);
-    const baseBPD = 80 + (bedSeed % 10);
-    const baseRR = 16 + (bedSeed % 4);
-    const baseTemp = 98.6 + ((bedSeed % 10) - 5) * 0.1;
-    const baseSpo2 = 97 + (bedSeed % 3);
-    
-    // Add natural variations and circadian rhythms
-    const hourOfDay = Math.floor((timeSeed * 10) / 1000 / 3600) % 24;
-    const circadianFactor = Math.sin((hourOfDay - 6) * Math.PI / 12) * 0.1;
-    
-    // Random variations
-    const hrVariation = Math.sin(timeSeed * 0.01) * 15 + Math.random() * 10 - 5;
-    const bpVariation = Math.sin(timeSeed * 0.008) * 10 + Math.random() * 8 - 4;
-    const tempVariation = Math.sin(timeSeed * 0.002) * 0.5 + Math.random() * 0.4 - 0.2;
-    const rrVariation = Math.sin(timeSeed * 0.015) * 3 + Math.random() * 2 - 1;
-    const spo2Variation = Math.random() * 3 - 1;
-    
-    // Occasional anomalies (every ~100 readings)
-    const anomaly = Math.random() < 0.01;
-    const anomalyMultiplier = anomaly ? (Math.random() > 0.5 ? 1.3 : 0.7) : 1;
-    
-    return {
-      hr: Math.round(Math.max(30, Math.min(200, (baseHR + hrVariation + circadianFactor * 10) * anomalyMultiplier))),
-      bps: Math.round(Math.max(80, Math.min(200, (baseBPS + bpVariation + circadianFactor * 5) * anomalyMultiplier))),
-      bpd: Math.round(Math.max(40, Math.min(120, (baseBPD + bpVariation * 0.6 + circadianFactor * 3) * anomalyMultiplier))),
-      rr: Math.round(Math.max(8, Math.min(40, (baseRR + rrVariation) * anomalyMultiplier))),
-      temp: Math.round((Math.max(95, Math.min(105, baseTemp + tempVariation + circadianFactor * 0.3)) * anomalyMultiplier) * 10) / 10,
-      spo2: Math.round(Math.max(70, Math.min(100, (baseSpo2 + spo2Variation - circadianFactor * 2) * (anomaly ? 0.9 : 1))))
-    };
-  }
-
-  private appendDemoReading(): void {
-    const beds = ['bed_01', 'bed_02', 'bed_03', 'bed_04', 'bed_05', 'bed_06', 'bed_07', 'bed_08'];
-    const timestamp = new Date().toISOString();
-    const index = this.data.readings.length;
-    
-    const reading: VitalTimestamp = { timestamp };
-    
-    beds.forEach(bed => {
-      reading[bed] = this.generateVitalReading(index, bed);
-    });
-    
-    this.data.readings.push(reading);
-    this.lastReadingCount = this.data.readings.length;
-    this.notifyListeners();
   }
 
   private hasOnlyOldData(): boolean {
