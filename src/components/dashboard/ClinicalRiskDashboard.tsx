@@ -353,7 +353,7 @@ export const ClinicalRiskDashboard: React.FC = () => {
 
   if (loading || !scores) {
     return (
-      <section className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-6 mt-6">
+      <section className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-6 mt-6">
         <div className="text-[rgba(217,217,217,1)] text-base">Loading risk scores...</div>
       </section>
     );
@@ -372,7 +372,7 @@ export const ClinicalRiskDashboard: React.FC = () => {
 
   return (
     <>
-      <section className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-3xl p-6 mt-6">
+      <section className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-6 mt-6">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {Object.entries(scores).map(([name, score]) => {
             const sparklineData = historicalScores[name]?.map((d: any) => d.value) || [];

@@ -25,6 +25,15 @@ export default defineConfig(({ mode }) => ({
           });
         },
       },
+      '/api/local-data': {
+        target: 'http://localhost:5174',
+        changeOrigin: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (_err, _req, _res) => {
+            // Silently fail - expected when local server is not running
+          });
+        },
+      },
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

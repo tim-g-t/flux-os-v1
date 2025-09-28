@@ -7,6 +7,7 @@ const API_URL = import.meta.env.DEV
   : 'http://a0g88w80ssoos8gkgcs408gs.157.90.23.234.sslip.io/data';
 const CACHE_KEY = 'patient_data_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const LOCAL_FILE_PATH = '/Users/timtoepper/Downloads/code-of-website/patient-data.json';
 
 class PatientApiService {
   private patients: APIPatient[] = [];
@@ -74,6 +75,34 @@ class PatientApiService {
     }
   }
 
+  // Try to load from local file via API endpoint (silently fail if not available)
+  private async tryLoadFromLocalFile(): Promise<APIPatient[] | null> {
+    try {
+      // Try the local file endpoint first (will be proxied in dev)
+      const localUrl = import.meta.env.DEV ? '/api/local-data' : 'http://localhost:5173/api/local-data';
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 500); // Very short timeout for local file
+
+      const response = await fetch(localUrl, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Loaded data from local cache (fast)');
+        return data;
+      }
+    } catch {
+      // Silently fail - this is expected if file doesn't exist
+    }
+    return null;
+  }
+
   // Fetch patients from API with timeout handling
   async fetchPatients(forceRefresh = false): Promise<APIPatient[]> {
     // Return cached data if valid and not forcing refresh
@@ -97,6 +126,19 @@ class PatientApiService {
     }
 
     this.loading = true;
+
+    // First, try to load from local file (super fast)
+    if (!forceRefresh) {
+      const localData = await this.tryLoadFromLocalFile();
+      if (localData) {
+        this.patients = localData;
+        this.lastFetchTime = Date.now();
+        this.saveToCache(localData);
+        this.notifyListeners();
+        this.loading = false;
+        return localData;
+      }
+    }
 
     try {
       // Create abort controller for timeout - increased to 120 seconds for large dataset
