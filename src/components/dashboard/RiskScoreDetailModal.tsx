@@ -545,25 +545,27 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
           {/* Recent Values Table */}
           <div className="px-6 pb-6">
-            <h3 className="text-white text-sm font-medium mb-3 uppercase tracking-wider">Recent Values</h3>
-            <div className="bg-gray-900/50 border border-[rgba(64,66,73,0.5)] rounded-lg overflow-hidden">
+            <h3 className="text-white text-sm font-medium mb-4">Recent Values</h3>
+            <div className="bg-black border border-[rgba(64,66,73,0.3)] rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[rgba(64,66,73,0.5)]">
-                    <th className="text-left p-3 text-gray-500 text-xs font-normal uppercase">Time</th>
-                    <th className="text-right p-3 text-gray-500 text-xs font-normal uppercase">Value</th>
-                    <th className="text-right p-3 text-gray-500 text-xs font-normal uppercase">Status</th>
+                  <tr className="border-b border-[rgba(64,66,73,0.3)]">
+                    <th className="text-left px-4 py-3 text-gray-500 text-sm font-medium">Time</th>
+                    <th className="text-center px-4 py-3 text-gray-500 text-sm font-medium">Value</th>
+                    <th className="text-right px-4 py-3 text-gray-500 text-sm font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentValues.map((value, index) => (
-                    <tr key={index} className="border-b border-[rgba(64,66,73,0.3)] last:border-0">
-                      <td className="p-3 text-gray-400 text-sm font-mono">{value.time}</td>
-                      <td className="text-right p-3 text-white font-medium">
-                        {value.value.toFixed(1)}
-                        <span className="text-gray-500 text-xs ml-1">{value.isComputed ? 'computed' : ''}</span>
+                    <tr key={index} className="border-b border-[rgba(64,66,73,0.2)] last:border-0 hover:bg-[rgba(64,66,73,0.1)]">
+                      <td className="px-4 py-3 text-gray-300 text-sm">{value.time}</td>
+                      <td className="text-center px-4 py-3">
+                        <span className="text-white font-semibold text-sm">{value.value.toFixed(1)}</span>
+                        {value.isComputed && (
+                          <span className="text-gray-500 text-xs ml-2">computed</span>
+                        )}
                       </td>
-                      <td className="text-right p-3">
+                      <td className="text-right px-4 py-3">
                         <span className={`inline-block w-2 h-2 rounded-full ${
                           value.risk === 'critical' ? 'bg-red-500' :
                           value.risk === 'high' ? 'bg-orange-500' :
