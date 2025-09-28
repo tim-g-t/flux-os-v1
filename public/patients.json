@@ -1,134 +1,113 @@
 [
   {
     "Identifier": 1,
-    "Name": "Simon A.",
-    "Bed": "Bed 01",
+    "Name": "Patricia Hernandez",
+    "Bed": "Bed_1",
     "Gender": "Male",
-    "Age": 45,
-    "Vital": {
-      "2024-01-20T08:00:00Z": {
-        "hr": 72,
-        "bps": 118,
-        "bpd": 78,
-        "rr": 16,
-        "temp": 98.4,
-        "spo2": 98
+    "Age": 68,
+    "Vitals": [
+      {
+        "time": "2025-09-24T17:19:22.866716",
+        "Pulse": 71,
+        "BloodPressure": {
+          "Systolic": 110,
+          "Diastolic": 77,
+          "Mean": 88
+        },
+        "RespirationRate": 15,
+        "SpO2": 98,
+        "Temp": 97.9
       },
-      "2024-01-20T08:15:00Z": {
-        "hr": 75,
-        "bps": 120,
-        "bpd": 80,
-        "rr": 16,
-        "temp": 98.6,
-        "spo2": 98
+      {
+        "time": "2025-09-24T17:19:35.866716",
+        "Pulse": 72,
+        "BloodPressure": {
+          "Systolic": 110,
+          "Diastolic": 76,
+          "Mean": 87
+        },
+        "RespirationRate": 12,
+        "SpO2": 98,
+        "Temp": 98.3
       },
-      "2024-01-20T08:30:00Z": {
-        "hr": 73,
-        "bps": 116,
-        "bpd": 77,
-        "rr": 15,
-        "temp": 98.5,
-        "spo2": 99
+      {
+        "time": "2025-09-24T17:19:47.866716",
+        "Pulse": 73,
+        "BloodPressure": {
+          "Systolic": 112,
+          "Diastolic": 74,
+          "Mean": 86
+        },
+        "RespirationRate": 14,
+        "SpO2": 97,
+        "Temp": 97.7
       }
-    }
+    ]
   },
   {
     "Identifier": 2,
     "Name": "Maria C.",
-    "Bed": "Bed 02", 
+    "Bed": "Bed_2",
     "Gender": "Female",
     "Age": 62,
-    "Vital": {
-      "2024-01-20T08:00:00Z": {
-        "hr": 68,
-        "bps": 135,
-        "bpd": 85,
-        "rr": 18,
-        "temp": 98.8,
-        "spo2": 96
+    "Vitals": [
+      {
+        "time": "2025-09-24T17:19:22.866716",
+        "Pulse": 68,
+        "BloodPressure": {
+          "Systolic": 135,
+          "Diastolic": 85,
+          "Mean": 102
+        },
+        "RespirationRate": 18,
+        "SpO2": 96,
+        "Temp": 98.8
       },
-      "2024-01-20T08:15:00Z": {
-        "hr": 70,
-        "bps": 138,
-        "bpd": 87,
-        "rr": 19,
-        "temp": 98.9,
-        "spo2": 95
-      },
-      "2024-01-20T08:30:00Z": {
-        "hr": 69,
-        "bps": 140,
-        "bpd": 88,
-        "rr": 18,
-        "temp": 99.0,
-        "spo2": 96
+      {
+        "time": "2025-09-24T17:19:35.866716",
+        "Pulse": 70,
+        "BloodPressure": {
+          "Systolic": 138,
+          "Diastolic": 87,
+          "Mean": 104
+        },
+        "RespirationRate": 19,
+        "SpO2": 95,
+        "Temp": 98.9
       }
-    }
+    ]
   },
   {
     "Identifier": 3,
     "Name": "Anna T.",
-    "Bed": "Bed 03",
-    "Gender": "Female", 
+    "Bed": "Bed_3",
+    "Gender": "Female",
     "Age": 42,
-    "Vital": {
-      "2024-01-20T08:00:00Z": {
-        "hr": 48,
-        "bps": 76,
-        "bpd": 52,
-        "rr": 9,
-        "temp": 95.8,
-        "spo2": 87
+    "Vitals": [
+      {
+        "time": "2025-09-24T17:19:22.866716",
+        "Pulse": 48,
+        "BloodPressure": {
+          "Systolic": 76,
+          "Diastolic": 52,
+          "Mean": 60
+        },
+        "RespirationRate": 9,
+        "SpO2": 87,
+        "Temp": 95.8
       },
-      "2024-01-20T08:15:00Z": {
-        "hr": 46,
-        "bps": 74,
-        "bpd": 50,
-        "rr": 8,
-        "temp": 95.6,
-        "spo2": 85
-      },
-      "2024-01-20T08:30:00Z": {
-        "hr": 50,
-        "bps": 78,
-        "bpd": 54,
-        "rr": 10,
-        "temp": 95.9,
-        "spo2": 88
+      {
+        "time": "2025-09-24T17:19:35.866716",
+        "Pulse": 46,
+        "BloodPressure": {
+          "Systolic": 74,
+          "Diastolic": 50,
+          "Mean": 58
+        },
+        "RespirationRate": 8,
+        "SpO2": 85,
+        "Temp": 95.6
       }
-    }
-  },
-  {
-    "Identifier": 4,
-    "Name": "David L.",
-    "Bed": "Bed 04",
-    "Gender": "Male",
-    "Age": 38,
-    "Vital": {
-      "2024-01-20T08:00:00Z": {
-        "hr": 78,
-        "bps": 122,
-        "bpd": 82,
-        "rr": 17,
-        "temp": 98.7,
-        "spo2": 99
-      },
-      "2024-01-20T08:15:00Z": {
-        "hr": 80,
-        "bps": 124,
-        "bpd": 84,
-        "rr": 17,
-        "temp": 98.8,
-        "spo2": 98
-      },
-      "2024-01-20T08:30:00Z": {
-        "hr": 77,
-        "bps": 120,
-        "bpd": 80,
-        "rr": 16,
-        "temp": 98.6,
-        "spo2": 99
-      }
-    }
+    ]
   }
 ]

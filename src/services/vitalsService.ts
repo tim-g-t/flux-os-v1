@@ -17,13 +17,26 @@ export interface VitalsData {
 }
 
 // New interfaces for external server format
+export interface ServerVitalReading {
+  time: string;
+  Pulse: number;
+  BloodPressure: {
+    Systolic: number;
+    Diastolic: number;
+    Mean: number;
+  };
+  RespirationRate: number;
+  SpO2: number;
+  Temp: number;
+}
+
 export interface PatientResponse {
   Identifier: number;
   Name: string;
   Bed: string;
   Gender: string;
   Age: number;
-  Vital: Record<string, any>; // Includes timestamps and vital readings
+  Vitals: ServerVitalReading[]; // Array of vital readings
 }
 
 export interface PatientData {
@@ -102,7 +115,7 @@ class VitalsService {
       
       // Check if it's the old format (VitalsData) or new format (PatientResponse[])
       if (localData.readings) {
-        // Old format
+        // Old format - vitals.json
         this.data = localData;
         this.lastReadingCount = this.data.readings.length;
         
@@ -114,8 +127,16 @@ class VitalsService {
           this.extractPatientsFromVitalsData();
         }
       } else if (Array.isArray(localData)) {
-        // New format - array of PatientResponse
-        this.transformServerData({ patients: localData });
+        // Check if it's the new server format with Vitals array or old format with Vital object
+        if (localData.length > 0 && localData[0].Vitals) {
+          // New server format - array of PatientResponse with Vitals array
+          this.transformServerData({ data: localData });
+        } else if (localData.length > 0 && localData[0].Vital) {
+          // Old patient format - array of PatientResponse with Vital object
+          this.transformServerData({ patients: localData });
+        } else {
+          throw new Error('Unknown patient data format');
+        }
       } else {
         throw new Error('Unknown data format');
       }
@@ -137,24 +158,17 @@ class VitalsService {
         vitalHistory: []
       };
 
-      // Extract vital readings from the Vital object
-      if (patient.Vital) {
+      // Extract vital readings from the Vitals array
+      if (patient.Vitals && Array.isArray(patient.Vitals)) {
         const vitalHistory: Array<{ timestamp: string; vital: VitalReading }> = [];
-        const currentVitals: VitalReading[] = [];
-
-        Object.entries(patient.Vital).forEach(([key, value]) => {
-          if (key === 'timestamp' || typeof value !== 'object') return;
-          
-          // Assume each key represents a timestamp or vital reading
-          if (typeof value === 'object' && value !== null) {
-            const vital = this.parseVitalReading(value);
-            if (vital) {
-              vitalHistory.push({
-                timestamp: key,
-                vital
-              });
-              currentVitals.push(vital);
-            }
+        
+        patient.Vitals.forEach(serverVital => {
+          const vital = this.parseServerVitalReading(serverVital);
+          if (vital) {
+            vitalHistory.push({
+              timestamp: serverVital.time,
+              vital
+            });
           }
         });
 
@@ -163,8 +177,8 @@ class VitalsService {
         );
         
         // Set current vitals to the most recent reading
-        if (currentVitals.length > 0) {
-          patientData.currentVitals = currentVitals[currentVitals.length - 1];
+        if (vitalHistory.length > 0) {
+          patientData.currentVitals = vitalHistory[vitalHistory.length - 1].vital;
         }
       }
 
@@ -173,6 +187,21 @@ class VitalsService {
 
     // Convert patient data to VitalsData format for backward compatibility
     this.convertPatientsToVitalsData();
+  }
+
+  private parseServerVitalReading(serverVital: ServerVitalReading): VitalReading | null {
+    try {
+      return {
+        hr: Number(serverVital.Pulse),
+        bps: Number(serverVital.BloodPressure.Systolic),
+        bpd: Number(serverVital.BloodPressure.Diastolic),
+        rr: Number(serverVital.RespirationRate),
+        temp: Number(serverVital.Temp),
+        spo2: Number(serverVital.SpO2)
+      };
+    } catch {
+      return null;
+    }
   }
 
   private parseVitalReading(vitalData: any): VitalReading | null {

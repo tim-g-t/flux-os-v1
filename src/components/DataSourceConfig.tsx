@@ -89,16 +89,24 @@ export const DataSourceConfig: React.FC = () => {
 {`[
   {
     "Identifier": 1,
-    "Name": "Patient Name",
-    "Bed": "Bed 01",
+    "Name": "Patricia Hernandez",
+    "Bed": "Bed_1",
     "Gender": "Male",
-    "Age": 45,
-    "Vital": {
-      "2024-01-20T08:00:00Z": {
-        "hr": 72, "bps": 118, "bpd": 78,
-        "rr": 16, "temp": 98.4, "spo2": 98
+    "Age": 68,
+    "Vitals": [
+      {
+        "time": "2025-09-24T17:19:22.866716",
+        "Pulse": 71,
+        "BloodPressure": {
+          "Systolic": 110,
+          "Diastolic": 77,
+          "Mean": 88
+        },
+        "RespirationRate": 15,
+        "SpO2": 98,
+        "Temp": 97.9
       }
-    }
+    ]
   }
 ]`}
           </pre>
