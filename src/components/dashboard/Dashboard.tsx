@@ -75,13 +75,36 @@ export const Dashboard: React.FC = () => {
               <div className="bg-[rgba(26,27,32,1)] border w-full mt-8 pt-6 px-6 pb-8 rounded-[32px] border-[rgba(64,66,73,1)] border-solid max-md:max-w-full max-md:px-5">
                 <div className="max-md:max-w-full max-md:mr-[9px]">
                   <div className="gap-5 flex items-stretch max-md:flex-col">
-                    <PatientCard
-                      bedNumber="Bed 15"
-                      patientName="Simon A."
-                      demographics="45 y / male"
-                      duration="142h"
-                      backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
-                    />
+                    {(() => {
+                      const selectedPatient = patients.find(p => p.id === selectedPatientId);
+                      if (!selectedPatient) {
+                        return (
+                          <PatientCard
+                            bedNumber="No Patient"
+                            patientName="Select Patient"
+                            demographics="-- --"
+                            duration="--"
+                            backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
+                          />
+                        );
+                      }
+                      
+                      // Calculate duration (hours since first reading)
+                      const firstReading = selectedPatient.vitalHistory?.[0];
+                      const duration = firstReading ? 
+                        Math.floor((Date.now() - new Date(firstReading.timestamp).getTime()) / (1000 * 60 * 60)) + 'h' : 
+                        '--';
+                      
+                      return (
+                        <PatientCard
+                          bedNumber={selectedPatient.bed}
+                          patientName={selectedPatient.name}
+                          demographics={`${selectedPatient.age} y / ${selectedPatient.gender.toLowerCase()}`}
+                          duration={duration}
+                          backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
+                        />
+                      );
+                    })()}
                     <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} bedId={selectedPatientId} />
                   </div>
                 </div>

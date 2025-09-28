@@ -200,14 +200,31 @@ class VitalsService {
     }
   }
 
-  private transformServerData(serverData: ServerResponse): void {
-    console.log('🔄 Transforming server data...');
-    const patientArray = serverData.patients || serverData.data || [];
-    console.log('📊 Patient array length:', patientArray.length);
+  private transformServerData(serverData: ServerResponse | any[]): void {
+    console.log('🔄 VitalsService: Transforming server data');
+    
+    let patientArray: PatientResponse[] = [];
+    
+    // Handle different response formats
+    if (Array.isArray(serverData)) {
+      patientArray = serverData;
+      console.log('📊 VitalsService: Processing direct array of', patientArray.length, 'patients');
+    } else if (serverData.patients && Array.isArray(serverData.patients)) {
+      patientArray = serverData.patients;
+      console.log('📊 VitalsService: Processing wrapped array of', patientArray.length, 'patients');
+    } else if (serverData.data && Array.isArray(serverData.data)) {
+      patientArray = serverData.data;
+      console.log('📊 VitalsService: Processing data array of', patientArray.length, 'patients');
+    } else {
+      console.warn('⚠️ VitalsService: Unexpected server data format, using demo data');
+      this.generateDemoPatients();
+      this.convertPatientsToVitalsData();
+      return;
+    }
     
     this.patients = patientArray.map((patient, index) => {
       // Extract bed number from various formats (Bed_1, bed_01, etc.)
-      const bedMatch = patient.Bed.match(/\d+/);
+      const bedMatch = patient.Bed?.match(/\d+/);
       const bedNumber = bedMatch ? bedMatch[0].padStart(2, '0') : (index + 1).toString().padStart(2, '0');
       const patientId = `bed_${bedNumber}`;
       
@@ -215,10 +232,10 @@ class VitalsService {
       
       const patientData: PatientData = {
         id: patientId,
-        name: patient.Name,
-        bed: patient.Bed,
-        gender: patient.Gender,
-        age: patient.Age,
+        name: patient.Name || `Patient ${index + 1}`,
+        bed: patient.Bed || `Bed ${index + 1}`,
+        gender: patient.Gender || 'Unknown',
+        age: patient.Age || 0,
         condition: 'Stable',
         admissionDate: new Date().toISOString().split('T')[0],
         vitalHistory: [],
@@ -249,7 +266,11 @@ class VitalsService {
         // Set current vitals to the most recent reading
         if (vitalHistory.length > 0) {
           patientData.currentVitals = vitalHistory[vitalHistory.length - 1].vital;
-          console.log(`✅ Set current vitals for ${patientId}:`, patientData.currentVitals);
+          console.log(`✅ Set current vitals for ${patientId}:`, {
+            hr: patientData.currentVitals.hr,
+            bp: `${patientData.currentVitals.bps}/${patientData.currentVitals.bpd}`,
+            temp: patientData.currentVitals.temp
+          });
         }
       } else {
         console.log(`⚠️ No vitals data found for patient ${patientId}`);
