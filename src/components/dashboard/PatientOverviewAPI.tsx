@@ -99,6 +99,8 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
     return () => {
       unsubscribe();
       if (progressInterval) clearInterval(progressInterval);
+      // Clean up polling when component unmounts
+      patientApiService.cleanup();
     };
   }, []);
 

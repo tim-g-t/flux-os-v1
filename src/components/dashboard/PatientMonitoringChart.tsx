@@ -67,9 +67,10 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
           break;
         case '12h':
         case '24h':
-          timeLabel = date.toLocaleTimeString('en-US', { 
+          timeLabel = date.toLocaleTimeString('en-US', {
             hour: '2-digit',
-            hour12: false 
+            minute: '2-digit',
+            hour12: false
           });
           break;
         case '1w':

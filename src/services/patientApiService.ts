@@ -5,15 +5,22 @@ import { VitalReading } from './vitalsService';
 const API_URL = import.meta.env.DEV
   ? '/api/patient-data'  // Proxied through Vite in development
   : 'http://a0g88w80ssoos8gkgcs408gs.157.90.23.234.sslip.io/data';
+const SNAPSHOT_API_URL = 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/snapshot';
 const CACHE_KEY = 'patient_data_cache';
+const VITAL_HISTORY_KEY = 'patient_vital_history';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const LOCAL_FILE_PATH = '/Users/timtoepper/Downloads/code-of-website/patient-data.json';
+const SNAPSHOT_INTERVAL = 5000; // 5 seconds
 
 class PatientApiService {
   private patients: APIPatient[] = [];
   private loading = false;
   private lastFetchTime: number | null = null;
   private listeners: Array<(patients: APIPatient[]) => void> = [];
+  private snapshotInterval: NodeJS.Timeout | null = null;
+  private lastSnapshotIdentifier: number = -1;
+  private isUsingSnapshot = false;
+  private autoRefreshInterval: NodeJS.Timeout | null = null;
 
   // Transform API vital reading to internal format
   transformVitalReading(apiVital: APIVitalReading): VitalReading {
@@ -22,7 +29,7 @@ class PatientApiService {
       bps: apiVital.BloodPressure.Systolic,
       bpd: apiVital.BloodPressure.Diastolic,
       rr: apiVital.RespirationRate,
-      temp: apiVital.Temp,
+      temp: typeof apiVital.Temp === 'string' ? parseFloat(apiVital.Temp) : apiVital.Temp,
       spo2: apiVital.SpO2
     };
   }
@@ -70,9 +77,49 @@ class PatientApiService {
         data,
         timestamp: Date.now()
       }));
+      // Also save vital history separately for graphs
+      this.saveVitalHistory(data);
     } catch (error) {
       console.error('Failed to save to cache:', error);
     }
+  }
+
+  // Save vital history for patient graphs
+  private saveVitalHistory(data: APIPatient[]): void {
+    try {
+      // Create a simplified vital history object for efficient storage
+      const vitalHistory: Record<number, APIVitalReading[]> = {};
+
+      data.forEach(patient => {
+        if (patient.Vitals && patient.Vitals.length > 0) {
+          // Store vitals by patient identifier
+          vitalHistory[patient.Identifier] = patient.Vitals;
+        }
+      });
+
+      localStorage.setItem(VITAL_HISTORY_KEY, JSON.stringify({
+        history: vitalHistory,
+        lastUpdated: Date.now()
+      }));
+
+      console.log(`Saved vital history for ${Object.keys(vitalHistory).length} patients`);
+    } catch (error) {
+      console.error('Failed to save vital history:', error);
+    }
+  }
+
+  // Load vital history from localStorage
+  private loadVitalHistory(): Record<number, APIVitalReading[]> | null {
+    try {
+      const stored = localStorage.getItem(VITAL_HISTORY_KEY);
+      if (stored) {
+        const { history } = JSON.parse(stored);
+        return history;
+      }
+    } catch (error) {
+      console.error('Failed to load vital history:', error);
+    }
+    return null;
   }
 
   // Try to load from local file via API endpoint (silently fail if not available)
@@ -103,10 +150,196 @@ class PatientApiService {
     return null;
   }
 
+  // Fetch snapshot data from API
+  private async fetchSnapshot(): Promise<void> {
+    try {
+      const response = await fetch(SNAPSHOT_API_URL, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Snapshot API error:', response.status);
+        return;
+      }
+
+      const snapshotData = await response.json();
+
+      // Check if identifier has changed
+      if (snapshotData.identifier !== this.lastSnapshotIdentifier && snapshotData.identifier !== undefined) {
+        this.lastSnapshotIdentifier = snapshotData.identifier;
+
+        // Process the new vital data
+        if (snapshotData.patients && Array.isArray(snapshotData.patients)) {
+          this.updatePatientsWithSnapshot(snapshotData.patients);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch snapshot:', error);
+    }
+  }
+
+  // Update patients with snapshot data
+  private updatePatientsWithSnapshot(snapshotPatients: Array<{
+    Identifier: number;
+    Name: string;
+    Bed: string;
+    Gender: string;
+    Age: number;
+    Vital?: {
+      time: string;
+      Pulse: number;
+      BloodPressure: {
+        Systolic: number;
+        Diastolic: number;
+        Mean: number;
+      };
+      RespirationRate: number;
+      SpO2: number;
+      Temp: string;
+    };
+  }>): void {
+    let updated = false;
+
+    snapshotPatients.forEach(snapshotPatient => {
+      // Find existing patient by BOTH identifier AND name for exact matching
+      const existingPatient = this.patients.find(p =>
+        p.Identifier === snapshotPatient.Identifier &&
+        p.Name === snapshotPatient.Name
+      );
+
+      if (existingPatient && snapshotPatient.Vital) {
+        // Convert snapshot vital to API format (Temp comes as string, needs conversion)
+        const newVital: APIVitalReading = {
+          time: snapshotPatient.Vital.time,
+          Pulse: snapshotPatient.Vital.Pulse,
+          BloodPressure: {
+            Systolic: snapshotPatient.Vital.BloodPressure.Systolic,
+            Diastolic: snapshotPatient.Vital.BloodPressure.Diastolic,
+            Mean: snapshotPatient.Vital.BloodPressure.Mean
+          },
+          RespirationRate: snapshotPatient.Vital.RespirationRate,
+          SpO2: snapshotPatient.Vital.SpO2,
+          Temp: parseFloat(snapshotPatient.Vital.Temp) || 0
+        };
+
+        // Check if this vital reading already exists (prevent duplicates)
+        const existingVitalIndex = existingPatient.Vitals.findIndex(v => v.time === newVital.time);
+        if (existingVitalIndex === -1) {
+          // Add new vital to existing patient's vitals (preserving history)
+          existingPatient.Vitals.push(newVital);
+
+          // Keep only last 1000 vitals to prevent memory issues
+          if (existingPatient.Vitals.length > 1000) {
+            existingPatient.Vitals = existingPatient.Vitals.slice(-1000);
+          }
+
+          updated = true;
+        }
+      } else if (!existingPatient && snapshotPatient.Vital) {
+        // Create new patient from snapshot if doesn't exist
+        const newPatient: APIPatient = {
+          Identifier: snapshotPatient.Identifier,
+          Name: snapshotPatient.Name,
+          Bed: snapshotPatient.Bed,
+          Gender: snapshotPatient.Gender,
+          Age: snapshotPatient.Age,
+          Vitals: [{
+            time: snapshotPatient.Vital.time,
+            Pulse: snapshotPatient.Vital.Pulse,
+            BloodPressure: {
+              Systolic: snapshotPatient.Vital.BloodPressure.Systolic,
+              Diastolic: snapshotPatient.Vital.BloodPressure.Diastolic,
+              Mean: snapshotPatient.Vital.BloodPressure.Mean
+            },
+            RespirationRate: snapshotPatient.Vital.RespirationRate,
+            SpO2: snapshotPatient.Vital.SpO2,
+            Temp: parseFloat(snapshotPatient.Vital.Temp) || 0
+          }]
+        };
+        this.patients.push(newPatient);
+        updated = true;
+        console.log(`Created new patient from snapshot: ${snapshotPatient.Name} (ID: ${snapshotPatient.Identifier})`);
+      }
+    });
+
+    if (updated) {
+      console.log(`Updated vitals from snapshot (ID: ${this.lastSnapshotIdentifier})`);
+      // Update cache with merged data including vital history
+      this.saveToCache(this.patients);
+      this.notifyListeners();
+    }
+  }
+
+  // Start snapshot polling
+  startSnapshotPolling(): void {
+    if (this.snapshotInterval) {
+      return; // Already polling
+    }
+
+    console.log('Starting vital snapshot polling (every 5 seconds)...');
+    this.isUsingSnapshot = true;
+
+    // Fetch immediately
+    this.fetchSnapshot();
+
+    // Set up interval
+    this.snapshotInterval = setInterval(() => {
+      this.fetchSnapshot();
+    }, SNAPSHOT_INTERVAL);
+
+    // Start auto-refresh if not already running
+    this.startAutoRefresh();
+  }
+
+  // Stop snapshot polling
+  stopSnapshotPolling(): void {
+    if (this.snapshotInterval) {
+      clearInterval(this.snapshotInterval);
+      this.snapshotInterval = null;
+      this.isUsingSnapshot = false;
+      console.log('Stopped vital snapshot polling');
+    }
+  }
+
+  // Start auto-refresh to trigger UI updates every 10 seconds
+  private startAutoRefresh(): void {
+    if (this.autoRefreshInterval) {
+      return; // Already refreshing
+    }
+
+    console.log('Starting auto-refresh (every 10 seconds)...');
+
+    // Set up refresh interval
+    this.autoRefreshInterval = setInterval(() => {
+      // Trigger a refresh by notifying all listeners
+      this.notifyListeners();
+      console.log('Auto-refresh triggered');
+    }, 10000); // 10 seconds
+  }
+
+  // Stop auto-refresh
+  private stopAutoRefresh(): void {
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+      this.autoRefreshInterval = null;
+      console.log('Stopped auto-refresh');
+    }
+  }
+
   // Fetch patients from API with timeout handling
   async fetchPatients(forceRefresh = false): Promise<APIPatient[]> {
+    // Clear cache if forcing refresh
+    if (forceRefresh) {
+      this.clearCache();
+    }
+
     // Return cached data if valid and not forcing refresh
     if (!forceRefresh && this.isCacheValid()) {
+      // Start snapshot polling after returning cached data
+      this.startSnapshotPolling();
       return this.patients;
     }
 
@@ -116,6 +349,8 @@ class PatientApiService {
       if (cached) {
         this.patients = cached;
         this.notifyListeners();
+        // Start snapshot polling after loading cached data
+        this.startSnapshotPolling();
         return cached;
       }
     }
@@ -136,6 +371,8 @@ class PatientApiService {
         this.saveToCache(localData);
         this.notifyListeners();
         this.loading = false;
+        // Start snapshot polling after loading local data - this will merge new data
+        this.startSnapshotPolling();
         return localData;
       }
     }
@@ -145,7 +382,7 @@ class PatientApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
 
-      console.log('Fetching patient data from API (this will take 30+ seconds due to large dataset)...');
+      console.log('Fetching historical patient data from main API...');
 
       const response = await fetch(API_URL, {
         signal: controller.signal,
@@ -169,7 +406,11 @@ class PatientApiService {
       this.saveToCache(data);
       this.notifyListeners();
 
-      console.log(`Successfully loaded ${data.length} patients from API`);
+      console.log(`Successfully loaded ${data.length} patients with historical data from main API`);
+
+      // Start snapshot polling after loading API data for real-time updates
+      this.startSnapshotPolling();
+
       return data;
     } catch (error) {
       if (error instanceof Error) {
@@ -223,6 +464,23 @@ class PatientApiService {
     );
   }
 
+  // Get complete vital history for a patient (for graphs)
+  getPatientVitalHistory(patientId: number): APIVitalReading[] {
+    // First try to get from current patients array
+    const patient = this.patients.find(p => p.Identifier === patientId);
+    if (patient && patient.Vitals) {
+      return patient.Vitals;
+    }
+
+    // If not found, try to load from vital history storage
+    const vitalHistory = this.loadVitalHistory();
+    if (vitalHistory && vitalHistory[patientId]) {
+      return vitalHistory[patientId];
+    }
+
+    return [];
+  }
+
   // Subscribe to patient updates
   subscribe(callback: (patients: APIPatient[]) => void): () => void {
     this.listeners.push(callback);
@@ -239,6 +497,26 @@ class PatientApiService {
   // Check if currently loading
   isLoading(): boolean {
     return this.loading;
+  }
+
+  // Clean up method to stop polling
+  cleanup(): void {
+    this.stopSnapshotPolling();
+    this.stopAutoRefresh();
+  }
+
+  // Clear all cached data
+  clearCache(): void {
+    try {
+      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem(VITAL_HISTORY_KEY);
+      this.patients = [];
+      this.lastFetchTime = null;
+      this.lastSnapshotIdentifier = -1;
+      console.log('Cache and vital history cleared successfully');
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
   }
 }
 

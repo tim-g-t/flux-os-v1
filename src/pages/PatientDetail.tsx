@@ -84,7 +84,15 @@ export const PatientDetail: React.FC = () => {
   const navigate = useNavigate();
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Patient Detail');
-  const [patient, setPatient] = useState<any>(null);
+  const [patient, setPatient] = useState<{
+    id: string;
+    name: string;
+    age: number;
+    gender: string;
+    bed: string;
+    vitals?: any[];
+    backgroundImage: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,7 +107,7 @@ export const PatientDetail: React.FC = () => {
         const bedNumber = parseInt(patientId?.replace('bed_', '') || '0');
 
         // Find patient by Identifier
-        const foundPatient = data.find((p: any) => p.Identifier === bedNumber);
+        const foundPatient = data.find(p => p.Identifier === bedNumber);
 
         if (foundPatient) {
 
@@ -137,6 +145,28 @@ export const PatientDetail: React.FC = () => {
     };
 
     fetchPatientData();
+
+    // Subscribe to real-time patient updates
+    const unsubscribe = patientApiService.subscribe((updatedPatients) => {
+      const bedNumber = parseInt(patientId?.replace('bed_', '') || '0');
+      const updatedPatient = updatedPatients.find(p => p.Identifier === bedNumber);
+
+      if (updatedPatient) {
+        setPatient({
+          id: patientId,
+          name: updatedPatient.Name,
+          age: updatedPatient.Age,
+          gender: updatedPatient.Gender,
+          bed: updatedPatient.Bed,
+          vitals: updatedPatient.Vitals, // Updated vitals data
+          backgroundImage: "https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
+        });
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [patientId]);
 
   const toggleMetric = (metric: MetricType) => {
