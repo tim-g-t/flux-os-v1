@@ -135,7 +135,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-[#1a1b23] border border-[rgba(64,66,73,1)] rounded-3xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div className="relative bg-black border border-[rgba(64,66,73,1)] rounded-3xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-[rgba(217,217,217,1)] hover:text-white transition-colors"
@@ -148,7 +148,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
         <h2 className="text-white text-2xl font-bold mb-6">{scoreName}</h2>
 
         {/* Current Value Display */}
-        <div className="bg-[#2a2d3a] border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
+        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
           <div className="flex items-baseline gap-4">
             <span className="text-5xl font-bold text-white">{currentValue}</span>
             <span className="text-[rgba(217,217,217,1)]">Current</span>
@@ -171,7 +171,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
         </div>
 
         {/* Chart */}
-        <div className="bg-[#2a2d3a] border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
+        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
           <h3 className="text-white font-semibold mb-4">24 Hour Trend</h3>
           <div className="h-64 relative">
             <svg className="w-full h-full">
@@ -220,7 +220,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
         </div>
 
         {/* Data Table */}
-        <div className="bg-[#2a2d3a] border border-[rgba(64,66,73,1)] rounded-xl p-6">
+        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-xl p-6">
           <h3 className="text-white font-semibold mb-4">Recent Values</h3>
           <div className="max-h-48 overflow-y-auto">
             <table className="w-full">
