@@ -1,8 +1,93 @@
-import React, { useState } from 'react';
-import { Bell, Settings, Search } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Bell, Settings, Search, X, Loader2, ExternalLink } from 'lucide-react';
+import { askMedicalQuestion, MedicalResponse } from '../../services/geminiApiService';
 
 export const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState<MedicalResponse | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Handle click outside to close results
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    if (showResults) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showResults]);
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      e.preventDefault();
+      await performSearch();
+    }
+  };
+
+  const performSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
+
+    setIsLoading(true);
+    setShowResults(true);
+    setSearchResult(null);
+
+    try {
+      const result = await askMedicalQuestion(searchQuery);
+
+      // Check if request was aborted
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
+
+      setSearchResult(result);
+    } catch (error) {
+      // Don't set error if request was aborted
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
+
+      console.error('Search failed:', error);
+      setSearchResult({
+        answer: "An error occurred while searching. Please try again.",
+        source: []
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatMarkdown = (text: string): string => {
+    // Basic markdown to HTML conversion
+    return text
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br />');
+  };
+
+  // Clear results when search query changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setShowResults(false);
+      setSearchResult(null);
+    }
+  }, [searchQuery]);
 
   return (
     <header className="w-full max-md:max-w-full max-md:mt-10">
@@ -16,7 +101,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Centered Search Bar */}
-        <div className="flex-1 max-w-[600px] max-md:mx-0 max-md:max-w-full max-md:order-3">
+        <div className="flex-1 max-w-[600px] max-md:mx-0 max-md:max-w-full max-md:order-3 relative" ref={searchRef}>
           <div className="bg-[rgba(26,27,32,1)] flex items-center gap-3 text-[21px] text-[rgba(203,204,209,1)] font-normal pl-[27px] pr-[27px] py-[18px] rounded-[36px] max-md:px-5">
             <Search className="w-6 h-6 text-[rgba(203,204,209,1)]" />
             <input
@@ -24,9 +109,63 @@ export const Header: React.FC = () => {
               placeholder="Ask Flux.io anything"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="flex-1 bg-transparent border-none outline-none text-[rgba(203,204,209,1)] placeholder-[rgba(203,204,209,1)]"
             />
+            {isLoading && <Loader2 className="w-5 h-5 animate-spin text-[rgba(203,204,209,1)]" />}
           </div>
+
+          {/* Search Results Dropdown */}
+          {showResults && (
+            <div className="absolute z-50 w-full max-w-[600px] mt-2 bg-[rgba(26,27,32,1)] rounded-[20px] border border-[rgba(36,37,42,1)] shadow-2xl overflow-hidden">
+              <div className="p-4">
+                {searchResult ? (
+                  <div>
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-white text-lg font-medium">Medical Research Response</h3>
+                      <button
+                        onClick={() => {
+                          setShowResults(false);
+                          setSearchResult(null);
+                          setSearchQuery('');
+                        }}
+                        className="text-[rgba(203,204,209,1)] hover:text-white transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="text-[rgba(203,204,209,1)] text-base leading-relaxed mb-4 prose prose-invert max-w-none"
+                         dangerouslySetInnerHTML={{ __html: formatMarkdown(searchResult.answer) }}>
+                    </div>
+                    {searchResult.source && searchResult.source.length > 0 && (
+                      <div className="border-t border-[rgba(36,37,42,1)] pt-3">
+                        <p className="text-[rgba(203,204,209,1)] text-sm mb-2">Sources:</p>
+                        <div className="space-y-1">
+                          {searchResult.source.map((src, idx) => (
+                            <a
+                              key={idx}
+                              href={src}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              <span className="truncate">{src}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-[rgba(203,204,209,1)] text-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
+                    <p>Searching medical literature...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right User Profile */}
