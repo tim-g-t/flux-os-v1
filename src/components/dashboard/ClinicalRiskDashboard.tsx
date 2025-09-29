@@ -462,197 +462,79 @@ export const ClinicalRiskDashboard: React.FC = () => {
   return (
     <>
       <section className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-6 mt-6">
-        {/* Header with live indicator */}
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-4">
-            <h2 className="text-white text-xl font-semibold">CLINICAL INTELLIGENCE ENGINE</h2>
-            <div className="flex items-center gap-2 text-green-400 text-sm">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>LIVE | 147 calculations/sec | Pattern Match Active</span>
-            </div>
-          </div>
-        </div>
-        
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-[rgba(217,217,217,1)] text-lg">Risk Score Analysis - Bed 01 - Simon A.</h3>
+          <h2 className="text-white text-xl font-semibold">Risk Scores Overview</h2>
           <div className="flex gap-2">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium">Show All</button>
-            <button className="border border-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[rgba(30,31,35,1)]">Critical Only</button>
-            <button className="border border-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[rgba(30,31,35,1)]">Deteriorating</button>
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium">All</button>
+            <button className="border border-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[rgba(30,31,35,1)]">Gainers</button>
+            <button className="border border-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[rgba(30,31,35,1)]">Losers</button>
           </div>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="text-[rgba(128,128,128,1)] text-sm border-b border-[rgba(64,66,73,1)]">
-                <th className="text-left pb-4 font-medium">Score</th>
-                <th className="text-center pb-4 font-medium">Current</th>
-                <th className="text-center pb-4 font-medium">Status</th>
-                <th className="text-center pb-4 font-medium">Change</th>
-                <th className="text-center pb-4 font-medium">Normal</th>
-                <th className="text-center pb-4 font-medium">Baseline(24h)</th>
-                <th className="text-center pb-4 font-medium">Prediction(6h)</th>
-                <th className="text-right pb-4 font-medium">ACTION</th>
+              <tr className="text-[rgba(128,128,128,1)] text-sm">
+                <th className="text-left pb-4 font-medium">Stock</th>
+                <th className="text-right pb-4 font-medium">Last Value</th>
+                <th className="text-right pb-4 font-medium">Change</th>
+                <th className="text-right pb-4 font-medium">Baseline (24h)</th>
+                <th className="text-right pb-4 font-medium">Average (4h)</th>
+                <th className="text-right pb-4 font-medium">Last 7 days</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(scores).map(([name, score], index) => {
                 const sparklineData = historicalScores[name]?.map((d: any) => d.value) || [];
                 const status = getStatus(score.risk);
-                
-                // Generate realistic clinical data
-                const getScoreData = (scoreName: string, scoreValue: number | string) => {
-                  switch (scoreName) {
-                    case 'NEWS2':
-                      return {
-                        change: '+0.0%',
-                        trend: '→',
-                        normal: '0-4',
-                        baseline: '5.0',
-                        prediction: '2 (↑ likely)',
-                        action: 'Continue monitoring',
-                        statusIcon: '✅'
-                      };
-                    case 'MSI':
-                      return {
-                        change: '+18%',
-                        trend: '↑',
-                        normal: '<0.7',
-                        baseline: '0.7',
-                        prediction: '0.9 (critical)',
-                        action: 'Check volume status\nPattern: Pre-shock (71% match)',
-                        statusIcon: '⚠️',
-                        animate: true
-                      };
-                    case 'Respiratory Index':
-                      return {
-                        change: '+0.0%',
-                        trend: '→',
-                        normal: '0-1',
-                        baseline: '1.0',
-                        prediction: '0.3',
-                        action: 'No action needed',
-                        statusIcon: '✅'
-                      };
-                    case 'Shock Index':
-                      return {
-                        change: '+9%',
-                        trend: '↑',
-                        normal: '0.5-0.7',
-                        baseline: '0.5',
-                        prediction: '0.7',
-                        action: 'Monitor trend',
-                        statusIcon: '✅'
-                      };
-                    case 'qSOFA':
-                      return {
-                        change: '+0.0%',
-                        trend: '→',
-                        normal: '0-1',
-                        baseline: '0.5',
-                        prediction: '1 (↑ possible)',
-                        action: 'Check in 2h',
-                        statusIcon: '✅'
-                      };
-                    case 'MAP':
-                      return {
-                        change: '+0.0%',
-                        trend: '→',
-                        normal: '>65',
-                        baseline: '87.0',
-                        prediction: '91',
-                        action: 'Adequate perfusion',
-                        statusIcon: '✅'
-                      };
-                    case 'Pulse Pressure':
-                      return {
-                        change: '+2%',
-                        trend: '↑',
-                        normal: '30-50',
-                        baseline: '44.0',
-                        prediction: '46',
-                        action: 'Normal',
-                        statusIcon: '✅'
-                      };
-                    case 'System Stability':
-                      return {
-                        change: '+0.0%',
-                        trend: '→',
-                        normal: '8-10',
-                        baseline: '9.0',
-                        prediction: '9.0',
-                        action: 'Stable',
-                        statusIcon: '✅'
-                      };
-                    default:
-                      return {
-                        change: '+0.0%',
-                        trend: '→',
-                        normal: 'N/A',
-                        baseline: 'N/A',
-                        prediction: 'N/A',
-                        action: 'Monitor',
-                        statusIcon: '✅'
-                      };
+                const getBorderColor = () => {
+                  switch (status) {
+                    case 'critical': return 'border-l-red-500';
+                    case 'warning': return 'border-l-yellow-500';
+                    default: return 'border-l-green-500';
                   }
                 };
-
-                const scoreData = getScoreData(name, score.value);
+                
+                const recent24h = sparklineData.slice(-48);
+                const recent4h = sparklineData.slice(-8);
+                const baseline = recent24h.length > 0 ? (Math.min(...recent24h) + Math.max(...recent24h)) / 2 : 0;
+                const average4h = recent4h.length > 0 ? recent4h.reduce((a, b) => a + b, 0) / recent4h.length : 0;
                 
                 return (
                   <tr 
                     key={name}
-                    className={`border-b border-[rgba(64,66,73,0.3)] hover:bg-[rgba(30,31,35,0.3)] cursor-pointer transition-all duration-200 group ${
-                      scoreData.animate ? 'animate-pulse' : ''
-                    }`}
+                    className={`border-l-4 ${getBorderColor()} bg-[rgba(20,21,25,0.5)] hover:bg-[rgba(30,31,35,0.7)] cursor-pointer transition-all duration-200 group`}
                     onClick={() => handleScoreClick(name)}
                   >
                     <td className="py-4 pl-4 pr-6">
                       <div className="text-white font-medium">{name}</div>
                     </td>
-                    <td className="text-center py-4 px-4">
+                    <td className="text-right py-4 px-4">
                       <div className="text-white font-semibold">
                         {typeof score.value === 'number' ? score.value.toFixed(1) : score.value}
                       </div>
                     </td>
-                    <td className="text-center py-4 px-4">
-                      <span className="text-lg">{scoreData.statusIcon}</span>
+                    <td className="text-right py-4 px-4">
+                      <div className="text-green-400 text-sm">+0.0%</div>
                     </td>
-                    <td className="text-center py-4 px-4">
-                      <div className={`text-sm flex items-center justify-center gap-1 ${
-                        scoreData.change.includes('+') && scoreData.change !== '+0.0%' 
-                          ? 'text-red-400' 
-                          : scoreData.change.includes('-') 
-                            ? 'text-green-400' 
-                            : 'text-gray-400'
-                      }`}>
-                        <span className="text-lg">{scoreData.trend}</span>
-                        <span>{scoreData.change}</span>
-                      </div>
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      <div className="text-[rgba(217,217,217,1)] text-sm font-mono">
-                        {scoreData.normal}
-                      </div>
-                    </td>
-                    <td className="text-center py-4 px-4">
+                    <td className="text-right py-4 px-4">
                       <div className="text-[rgba(217,217,217,1)] text-sm">
-                        {scoreData.baseline}
+                        {recent24h.length > 0 ? `${baseline.toFixed(1)}` : 'N/A'}
                       </div>
                     </td>
-                    <td className="text-center py-4 px-4">
+                    <td className="text-right py-4 px-4">
                       <div className="text-[rgba(217,217,217,1)] text-sm">
-                        {scoreData.prediction}
+                        {recent4h.length > 0 ? `${average4h.toFixed(1)}` : 'N/A'}
                       </div>
                     </td>
-                    <td className="text-right py-4 pr-4">
-                      <div className="text-[rgba(217,217,217,1)] text-sm max-w-[200px]">
-                        {scoreData.action.split('\n').map((line, i) => (
-                          <div key={i} className={i > 0 ? 'text-yellow-400 mt-1' : ''}>
-                            {line}
-                          </div>
-                        ))}
+                    <td className="text-right py-4 pr-4 pl-6">
+                      <div className="flex justify-end">
+                        <Sparkline
+                          data={sparklineData.slice(-20)}
+                          color={status === 'critical' ? '#ef4444' : status === 'warning' ? '#f59e0b' : '#10b981'}
+                          width={80}
+                          height={25}
+                        />
                       </div>
                     </td>
                   </tr>
