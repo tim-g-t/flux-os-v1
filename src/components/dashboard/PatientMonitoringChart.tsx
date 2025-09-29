@@ -7,11 +7,12 @@ type TimeRange = '1h' | '4h' | '12h' | '24h' | '1w';
 
 interface PatientMonitoringChartProps {
   selectedMetrics: MetricType[];
+  patientId?: string;
 }
 
-export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics }) => {
+export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics, patientId = 'bed_01' }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
-  const { getFilteredData, loading } = useVitals('bed_15');
+  const { getFilteredData, loading } = useVitals(patientId);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

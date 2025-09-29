@@ -91,7 +91,7 @@ class VitalsService {
 
   private generateDemoData(): VitalsData {
     const readings: VitalTimestamp[] = [];
-    const beds = ['bed_15', 'bed_16', 'bed_17', 'bed_18', 'bed_19', 'bed_20', 'bed_21', 'bed_22', 'bed_23', 'bed_24', 'bed_25', 'bed_26'];
+    const beds = ['bed_01', 'bed_02', 'bed_03', 'bed_04', 'bed_05', 'bed_06', 'bed_07', 'bed_08'];
     
     // Generate last 24 hours of data (every 30 seconds for demo)
     const now = new Date();
@@ -156,7 +156,7 @@ class VitalsService {
   }
 
   private appendDemoReading(): void {
-    const beds = ['bed_15', 'bed_16', 'bed_17', 'bed_18', 'bed_19', 'bed_20', 'bed_21', 'bed_22', 'bed_23', 'bed_24', 'bed_25', 'bed_26'];
+    const beds = ['bed_01', 'bed_02', 'bed_03', 'bed_04', 'bed_05', 'bed_06', 'bed_07', 'bed_08'];
     const timestamp = new Date().toISOString();
     const index = this.data.readings.length;
     
@@ -186,13 +186,23 @@ class VitalsService {
     return this.data;
   }
 
-  getLatestReading(bedId: string = 'bed_15'): VitalReading | null {
-    if (this.data.readings.length === 0) return null;
+  getLatestReading(bedId: string = 'bed_01'): VitalReading | null {
+    if (this.data.readings.length === 0) {
+      return null;
+    }
+
     const latest = this.data.readings[this.data.readings.length - 1];
+
+    // If no data exists for this bed, generate it dynamically
+    if (!latest[bedId]) {
+      const index = this.data.readings.length - 1;
+      latest[bedId] = this.generateVitalReading(index, bedId);
+    }
+
     return (latest[bedId] as VitalReading) || null;
   }
 
-  getFilteredData(bedId: string = 'bed_15', timeRange: string = '24h'): Array<{ timestamp: string; vital: VitalReading }> {
+  getFilteredData(bedId: string = 'bed_01', timeRange: string = '24h'): Array<{ timestamp: string; vital: VitalReading }> {
     if (this.data.readings.length === 0) return [];
     
     const now = new Date();
@@ -220,10 +230,16 @@ class VitalsService {
     
     const filtered = this.data.readings
       .filter(reading => new Date(reading.timestamp) >= startTime)
-      .map(reading => ({
-        timestamp: reading.timestamp,
-        vital: reading[bedId] as VitalReading
-      }))
+      .map((reading, idx) => {
+        // Generate data for this bed if it doesn't exist
+        if (!reading[bedId]) {
+          reading[bedId] = this.generateVitalReading(idx, bedId);
+        }
+        return {
+          timestamp: reading.timestamp,
+          vital: reading[bedId] as VitalReading
+        };
+      })
       .filter(item => item.vital);
     
     // Subsample for performance (max 200 points)

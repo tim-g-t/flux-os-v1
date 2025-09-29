@@ -128,6 +128,8 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
   const [showVitalSelector, setShowVitalSelector] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const [axisMode, setAxisMode] = useState<'dual' | 'normalized'>('dual');
+  const [interventionMode, setInterventionMode] = useState(false);
+  const [simulatedIntervention, setSimulatedIntervention] = useState<string | null>(null);
 
   const config = SCORE_CONFIGS[scoreType];
 
@@ -545,6 +547,109 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
               </div>
             </div>
           </div>
+
+
+          {/* Intervention Simulator - HIDDEN FOR NOW */}
+          {false && <div className="px-6 pb-4">
+            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-2xl p-4">
+              <h3 className="text-white font-semibold mb-3">Intervention Simulator</h3>
+              <div className="grid grid-cols-4 gap-2">
+                <button
+                  onClick={() => setSimulatedIntervention('fluids')}
+                  className={`p-2 rounded-lg border text-xs transition-colors ${
+                    simulatedIntervention === 'fluids'
+                      ? 'bg-blue-600/30 border-blue-400 text-blue-300'
+                      : 'border-[rgba(64,66,73,1)] text-[rgba(128,128,128,1)] hover:text-white hover:border-[rgba(128,128,128,1)]'
+                  }`}
+                >
+                  Fluid Bolus
+                </button>
+                <button
+                  onClick={() => setSimulatedIntervention('oxygen')}
+                  className={`p-2 rounded-lg border text-xs transition-colors ${
+                    simulatedIntervention === 'oxygen'
+                      ? 'bg-blue-600/30 border-blue-400 text-blue-300'
+                      : 'border-[rgba(64,66,73,1)] text-[rgba(128,128,128,1)] hover:text-white hover:border-[rgba(128,128,128,1)]'
+                  }`}
+                >
+                  O2 Adjust
+                </button>
+                <button
+                  onClick={() => setSimulatedIntervention('medication')}
+                  className={`p-2 rounded-lg border text-xs transition-colors ${
+                    simulatedIntervention === 'medication'
+                      ? 'bg-blue-600/30 border-blue-400 text-blue-300'
+                      : 'border-[rgba(64,66,73,1)] text-[rgba(128,128,128,1)] hover:text-white hover:border-[rgba(128,128,128,1)]'
+                  }`}
+                >
+                  Vasopressor
+                </button>
+                <button
+                  onClick={() => setSimulatedIntervention('position')}
+                  className={`p-2 rounded-lg border text-xs transition-colors ${
+                    simulatedIntervention === 'position'
+                      ? 'bg-blue-600/30 border-blue-400 text-blue-300'
+                      : 'border-[rgba(64,66,73,1)] text-[rgba(128,128,128,1)] hover:text-white hover:border-[rgba(128,128,128,1)]'
+                  }`}
+                >
+                  Position
+                </button>
+              </div>
+
+              {simulatedIntervention && (
+                <div className="mt-4 p-3 bg-[rgba(20,21,25,0.5)] rounded-lg">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-[rgba(128,128,128,1)] text-xs mb-1">In 30min</p>
+                      <p className="text-green-400 font-bold text-lg">
+                        {(currentValue * (simulatedIntervention === 'fluids' ? 0.85 : simulatedIntervention === 'oxygen' ? 0.9 : simulatedIntervention === 'position' ? 0.95 : 0.8)).toFixed(1)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[rgba(128,128,128,1)] text-xs mb-1">Success Rate</p>
+                      <p className="text-yellow-400 font-bold text-lg">
+                        {simulatedIntervention === 'fluids' ? '89%' : simulatedIntervention === 'oxygen' ? '76%' : simulatedIntervention === 'position' ? '65%' : '82%'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[rgba(128,128,128,1)] text-xs mb-1">Risk Reduction</p>
+                      <p className="text-cyan-400 font-bold text-lg">
+                        {simulatedIntervention === 'fluids' ? '-47%' : simulatedIntervention === 'oxygen' ? '-32%' : simulatedIntervention === 'position' ? '-15%' : '-41%'}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[rgba(128,128,128,1)] text-xs text-center mt-3">
+                    Based on {Math.floor(Math.random() * 500 + 1500)} similar network cases
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>}
+
+          {/* Economic Impact - HIDDEN FOR NOW */}
+          {false && <div className="px-6 pb-4">
+            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-2xl p-4">
+              <h3 className="text-white font-semibold mb-3">Economic Impact</h3>
+              <div className="flex items-center justify-between">
+                <div className="flex gap-6">
+                  <div>
+                    <p className="text-[rgba(128,128,128,1)] text-xs mb-1">Current Trajectory</p>
+                    <p className="text-red-400 text-xl font-bold">$47,000</p>
+                    <p className="text-[rgba(128,128,128,1)] text-xs">ICU admission likely</p>
+                  </div>
+                  <div>
+                    <p className="text-[rgba(128,128,128,1)] text-xs mb-1">With Intervention</p>
+                    <p className="text-green-400 text-xl font-bold">$3,000</p>
+                    <p className="text-[rgba(128,128,128,1)] text-xs">Avoid escalation</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-cyan-400 text-sm font-bold">Save $44,000</p>
+                  <p className="text-[rgba(128,128,128,1)] text-xs">93.6% reduction</p>
+                </div>
+              </div>
+            </div>
+          </div>}
 
           {/* Recent Values Table */}
           <div className="px-6 pb-6">

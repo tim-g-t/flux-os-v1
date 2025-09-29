@@ -60,13 +60,23 @@ export const Dashboard: React.FC = () => {
                       duration="142h"
                       backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
                     />
-                    <VitalSigns selectedMetrics={selectedMetrics} onMetricToggle={toggleMetric} />
+                    <VitalSigns
+                      selectedMetrics={selectedMetrics}
+                      onMetricToggle={toggleMetric}
+                      patientId="bed_01"
+                    />
                   </div>
                 </div>
                 <div className="mt-6">
-                  <PatientMonitoringChart selectedMetrics={selectedMetrics} />
+                  <PatientMonitoringChart
+                    selectedMetrics={selectedMetrics}
+                    patientId="bed_01"
+                  />
                 </div>
-                <ClinicalRiskDashboard />
+                <ClinicalRiskDashboard
+                  patientId="bed_01"
+                  patientName="Simon A."
+                />
               </div>
             </>
           )}
