@@ -462,20 +462,86 @@ export const ClinicalRiskDashboard: React.FC = () => {
   return (
     <>
       <section className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-6 mt-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Object.entries(scores).map(([name, score]) => {
-            const sparklineData = historicalScores[name]?.map((d: any) => d.value) || [];
-            return (
-              <ScoreCard
-                key={name}
-                name={name}
-                value={typeof score.value === 'number' ? score.value.toFixed(1) : score.value}
-                sparklineData={sparklineData.slice(-20)} // Last 20 points for sparkline
-                status={getStatus(score.risk)}
-                onClick={() => handleScoreClick(name)}
-              />
-            );
-          })}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-white text-xl font-semibold">Risk Scores Overview</h2>
+          <div className="flex gap-2">
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium">All</button>
+            <button className="border border-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[rgba(30,31,35,1)]">Gainers</button>
+            <button className="border border-[rgba(64,66,73,1)] text-[rgba(217,217,217,1)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[rgba(30,31,35,1)]">Losers</button>
+          </div>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-[rgba(128,128,128,1)] text-sm">
+                <th className="text-left pb-4 font-medium">Stock</th>
+                <th className="text-right pb-4 font-medium">Last Value</th>
+                <th className="text-right pb-4 font-medium">Change</th>
+                <th className="text-right pb-4 font-medium">Baseline (24h)</th>
+                <th className="text-right pb-4 font-medium">Average (4h)</th>
+                <th className="text-right pb-4 font-medium">Last 7 days</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(scores).map(([name, score], index) => {
+                const sparklineData = historicalScores[name]?.map((d: any) => d.value) || [];
+                const status = getStatus(score.risk);
+                const getBorderColor = () => {
+                  switch (status) {
+                    case 'critical': return 'border-l-red-500';
+                    case 'warning': return 'border-l-yellow-500';
+                    default: return 'border-l-green-500';
+                  }
+                };
+                
+                const recent24h = sparklineData.slice(-48);
+                const recent4h = sparklineData.slice(-8);
+                const baseline = recent24h.length > 0 ? (Math.min(...recent24h) + Math.max(...recent24h)) / 2 : 0;
+                const average4h = recent4h.length > 0 ? recent4h.reduce((a, b) => a + b, 0) / recent4h.length : 0;
+                
+                return (
+                  <tr 
+                    key={name}
+                    className={`border-l-4 ${getBorderColor()} bg-[rgba(20,21,25,0.5)] hover:bg-[rgba(30,31,35,0.7)] cursor-pointer transition-all duration-200 group`}
+                    onClick={() => handleScoreClick(name)}
+                  >
+                    <td className="py-4 pl-4 pr-6">
+                      <div className="text-white font-medium">{name}</div>
+                    </td>
+                    <td className="text-right py-4 px-4">
+                      <div className="text-white font-semibold">
+                        {typeof score.value === 'number' ? score.value.toFixed(1) : score.value}
+                      </div>
+                    </td>
+                    <td className="text-right py-4 px-4">
+                      <div className="text-green-400 text-sm">+0.0%</div>
+                    </td>
+                    <td className="text-right py-4 px-4">
+                      <div className="text-[rgba(217,217,217,1)] text-sm">
+                        {recent24h.length > 0 ? `${baseline.toFixed(1)}` : 'N/A'}
+                      </div>
+                    </td>
+                    <td className="text-right py-4 px-4">
+                      <div className="text-[rgba(217,217,217,1)] text-sm">
+                        {recent4h.length > 0 ? `${average4h.toFixed(1)}` : 'N/A'}
+                      </div>
+                    </td>
+                    <td className="text-right py-4 pr-4 pl-6">
+                      <div className="flex justify-end">
+                        <Sparkline
+                          data={sparklineData.slice(-20)}
+                          color={status === 'critical' ? '#ef4444' : status === 'warning' ? '#f59e0b' : '#10b981'}
+                          width={80}
+                          height={25}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
 
