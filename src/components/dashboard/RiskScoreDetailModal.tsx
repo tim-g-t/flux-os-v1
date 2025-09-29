@@ -270,9 +270,8 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
           {/* Stats and Controls Section */}
           <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-
-              {/* Stats Group */}
+            {/* Stats Section with Black Background */}
+            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-4 mb-4">
               <div className="flex items-start gap-12">
                 <div className="flex flex-col">
                   <span className="text-gray-400 text-xs uppercase mb-1">Current</span>
@@ -291,6 +290,9 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                   <span className="text-gray-300 text-xl">{statistics.max.toFixed(1)}</span>
                 </div>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between mb-4">
 
               {/* Control Buttons */}
               <div className="flex items-center gap-2">
@@ -347,12 +349,12 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
           {/* Chart Section */}
           <div className="px-6 pb-4">
-            <div className="bg-[#2a2d3a]/30 border border-[#2a2d3a] rounded-lg p-4">
+            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-4">
               <div className="h-80 w-full">
                 {processedData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={processedData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3a" opacity={0.3} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(64,66,73,0.5)" />
                       <XAxis dataKey="time" stroke="#9CA3AF" />
 
                       {axisMode === 'dual' ? (
@@ -547,10 +549,10 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
           {/* Recent Values Table */}
           <div className="px-6 pb-6">
             <h3 className="text-white text-sm font-medium mb-4">Recent Values</h3>
-            <div className="bg-[#2a2d3a]/30 border border-[#2a2d3a] rounded-lg overflow-hidden">
+            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl overflow-hidden">
               <div className="max-h-64 overflow-y-auto">
                 <table className="w-full">
-                  <thead className="sticky top-0 bg-[#1a1b23]/90 backdrop-blur-sm">
+                  <thead className="sticky top-0 bg-black/95 backdrop-blur-sm">
                     <tr className="border-b border-[#2a2d3a]">
                       <th className="text-left px-4 py-3 text-gray-500 text-sm font-medium">Time</th>
                       <th className="text-center px-4 py-3 text-gray-500 text-sm font-medium">Value</th>
@@ -559,7 +561,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
                   </thead>
                   <tbody>
                     {recentValues.map((value, index) => (
-                      <tr key={index} className="border-b border-[#2a2d3a]/50 last:border-0 hover:bg-[#2a2d3a]/20 transition-colors">
+                      <tr key={index} className="border-b border-[rgba(64,66,73,0.3)] last:border-0 hover:bg-[rgba(64,66,73,0.2)] transition-colors">
                         <td className="px-4 py-3 text-gray-300 text-sm">{value.time}</td>
                         <td className="text-center px-4 py-3">
                           <span className="text-white font-semibold text-sm">{value.value.toFixed(1)}</span>
