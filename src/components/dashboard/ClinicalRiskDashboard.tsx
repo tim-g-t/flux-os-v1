@@ -148,7 +148,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
         <h2 className="text-white text-2xl font-bold mb-6">{scoreName}</h2>
 
         {/* Current Value Display */}
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
+        <div className="bg-[#2a2d3a] border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
           <div className="flex items-baseline gap-4">
             <span className="text-5xl font-bold text-white">{currentValue}</span>
             <span className="text-[rgba(217,217,217,1)]">Current</span>
@@ -171,7 +171,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
         </div>
 
         {/* Chart */}
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
+        <div className="bg-[#2a2d3a] border border-[rgba(64,66,73,1)] rounded-xl p-6 mb-6">
           <h3 className="text-white font-semibold mb-4">24 Hour Trend</h3>
           <div className="h-64 relative">
             <svg className="w-full h-full">
@@ -220,7 +220,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
         </div>
 
         {/* Data Table */}
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-xl p-6">
+        <div className="bg-[#2a2d3a] border border-[rgba(64,66,73,1)] rounded-xl p-6">
           <h3 className="text-white font-semibold mb-4">Recent Values</h3>
           <div className="max-h-48 overflow-y-auto">
             <table className="w-full">
@@ -236,7 +236,7 @@ const ScoreDetailModal: React.FC<ScoreDetailModalProps> = ({
                   const prevValue = i < arr.length - 1 ? arr[i + 1].value : d.value;
                   const change = d.value - prevValue;
                   return (
-                    <tr key={i} className="border-t border-[rgba(64,66,73,0.3)] hover:bg-[rgba(64,66,73,0.2)] transition-colors">
+                    <tr key={i} className="border-t border-[rgba(64,66,73,0.3)] hover:bg-[#1a1b23]/30 transition-colors">
                       <td className="py-2 text-[rgba(217,217,217,1)] text-sm">{d.time}</td>
                       <td className="text-right text-white font-medium">{d.value.toFixed(1)}</td>
                       <td className={`text-right text-sm ${
