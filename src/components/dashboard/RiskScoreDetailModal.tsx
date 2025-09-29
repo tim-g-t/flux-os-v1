@@ -250,7 +250,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden rounded-[24px]">
+      <DialogContent className="max-w-4xl p-0 bg-black border-[rgba(64,66,73,1)] overflow-hidden rounded-[32px]">
           {/* Header Section */}
           <div className="px-6 py-4 border-b border-[#2a2d3a]/50">
             <div className="flex items-center justify-between">
@@ -271,7 +271,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
           {/* Stats and Controls Section */}
           <div className="px-6 py-4">
             {/* Stats Section with Grey Background */}
-            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-xl p-4 mb-4">
+            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-2xl p-4 mb-4">
               <div className="flex items-start gap-12">
                 <div className="flex flex-col">
                   <span className="text-gray-400 text-xs uppercase mb-1">Current</span>
@@ -349,7 +349,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
 
           {/* Chart Section */}
           <div className="px-6 pb-4">
-            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-xl p-4">
+            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-2xl p-4">
               <div className="h-80 w-full">
                 {processedData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -549,7 +549,7 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
           {/* Recent Values Table */}
           <div className="px-6 pb-6">
             <h3 className="text-white text-sm font-medium mb-4">Recent Values</h3>
-            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-xl overflow-hidden">
+            <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-2xl overflow-hidden">
               <div className="max-h-64 overflow-y-auto">
                 <table className="w-full">
                   <thead className="sticky top-0 bg-[rgba(26,27,32,0.95)] backdrop-blur-sm">
