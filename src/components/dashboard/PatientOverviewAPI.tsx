@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { patientApiService } from '@/services/patientApiService';
 import { calculateRiskScores } from '@/utils/riskCalculations';
 import { APIPatient, APIVitalReading } from '@/types/patient';
-import { VitalReading } from '@/services/vitalsService';
+import { VitalReading } from '@/types/vitals';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
 

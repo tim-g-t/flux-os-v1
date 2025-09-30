@@ -1,5 +1,5 @@
 import { APIPatient, APIVitalReading, TransformedPatient } from '@/types/patient';
-import { VitalReading } from './vitalsService';
+import { VitalReading } from '@/types/vitals';
 
 // Use proxied endpoint in development to avoid CORS issues
 const API_URL = import.meta.env.DEV

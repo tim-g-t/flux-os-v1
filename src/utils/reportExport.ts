@@ -10,7 +10,7 @@ import {
   calculateRiskTrajectory,
   ClinicalScore
 } from '@/utils/clinicalScores';
-import { VitalReading } from '@/services/vitalsService';
+import { VitalReading } from '@/types/vitals';
 
 export interface ReportOptions {
   includeVitals: boolean;

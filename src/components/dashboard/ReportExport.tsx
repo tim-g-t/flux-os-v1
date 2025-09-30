@@ -54,7 +54,7 @@ import {
   calculateModifiedShockIndex,
   calculateRespiratoryIndex
 } from '@/utils/clinicalScores';
-import { VitalReading } from '@/services/vitalsService';
+import { VitalReading } from '@/types/vitals';
 
 interface ReportExportProps {
   patients: TransformedPatient[];

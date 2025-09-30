@@ -6,7 +6,7 @@ import { PatientCard } from '@/components/dashboard/PatientCard';
 import { VitalSigns } from '@/components/dashboard/VitalSigns';
 import { ClinicalRiskDashboard } from '@/components/dashboard/ClinicalRiskDashboard';
 import { PatientMonitoringChart } from '@/components/dashboard/PatientMonitoringChart';
-import { VitalReading } from '@/services/vitalsService';
+import { VitalReading } from '@/types/vitals';
 import { patientApiService } from '@/services/patientApiService';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';

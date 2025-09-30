@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -7,6 +7,8 @@ import { VitalSigns } from './VitalSigns';
 import { ClinicalRiskDashboard } from './ClinicalRiskDashboard';
 import { PatientMonitoringChart } from './PatientMonitoringChart';
 import { PatientOverviewAPI } from './PatientOverviewAPI';
+import { patientApiService } from '@/services/patientApiService';
+import { APIPatient } from '@/types/patient';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -15,6 +17,7 @@ export const Dashboard: React.FC = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string>('bed_01'); // Default to first patient
+  const [selectedPatient, setSelectedPatient] = useState<APIPatient | null>(null);
 
   const toggleMetric = (metric: MetricType) => {
     setSelectedMetrics(prev => 
@@ -36,7 +39,44 @@ export const Dashboard: React.FC = () => {
   const handlePatientSelect = (patientId: string) => {
     console.log('Patient selected:', patientId);
     setSelectedPatientId(patientId);
+
+    // Get the selected patient data
+    const patient = patientApiService.getPatientByBedId(patientId);
+    setSelectedPatient(patient);
   };
+
+  // Load initial patient data
+  useEffect(() => {
+    const loadInitialPatient = async () => {
+      // Wait for patients to be loaded
+      const patients = patientApiService.getPatients();
+      if (patients.length === 0) {
+        // If not loaded yet, fetch them
+        await patientApiService.fetchPatients();
+      }
+
+      // Get the default patient
+      const patient = patientApiService.getPatientByBedId(selectedPatientId);
+      if (patient) {
+        setSelectedPatient(patient);
+      }
+    };
+
+    loadInitialPatient();
+
+    // Subscribe to patient updates
+    const unsubscribe = patientApiService.subscribe(() => {
+      // Update selected patient when data changes
+      const patient = patientApiService.getPatientByBedId(selectedPatientId);
+      if (patient) {
+        setSelectedPatient(patient);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedPatientId]);
 
   return (
     <div className="bg-black min-h-screen pl-[27px] pt-10 pr-6 max-md:pl-5">
@@ -54,28 +94,28 @@ export const Dashboard: React.FC = () => {
                 <div className="max-md:max-w-full max-md:mr-[9px]">
                   <div className="gap-5 flex items-stretch max-md:flex-col">
                     <PatientCard
-                      bedNumber="Bed 15"
-                      patientName="Simon A."
-                      demographics="45 y / male"
+                      bedNumber={selectedPatient ? selectedPatient.Bed : 'Loading...'}
+                      patientName={selectedPatient ? selectedPatient.Name : 'Loading...'}
+                      demographics={selectedPatient ? `${selectedPatient.Age} y / ${selectedPatient.Gender.toLowerCase()}` : 'Loading...'}
                       duration="142h"
                       backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
                     />
                     <VitalSigns
                       selectedMetrics={selectedMetrics}
                       onMetricToggle={toggleMetric}
-                      patientId="bed_01"
+                      patientId={selectedPatientId}
                     />
                   </div>
                 </div>
                 <div className="mt-6">
                   <PatientMonitoringChart
                     selectedMetrics={selectedMetrics}
-                    patientId="bed_01"
+                    patientId={selectedPatientId}
                   />
                 </div>
                 <ClinicalRiskDashboard
-                  patientId="bed_01"
-                  patientName="Simon A."
+                  patientId={selectedPatientId}
+                  patientName={selectedPatient ? selectedPatient.Name : 'Patient'}
                 />
               </div>
             </>

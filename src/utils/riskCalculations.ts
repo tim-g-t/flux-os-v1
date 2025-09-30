@@ -1,4 +1,4 @@
-import { VitalReading } from '@/services/vitalsService';
+import { VitalReading } from '@/types/vitals';
 
 export interface VitalChange {
   absoluteChange: number;
