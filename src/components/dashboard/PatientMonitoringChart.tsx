@@ -16,9 +16,13 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const dataPoint = payload[0]?.payload;
       return (
         <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-medium mb-2">{`Time: ${label}`}</p>
+          {/* Show actual timestamp from data */}
+          <p className="text-white font-medium mb-2">
+            {dataPoint?.actualTimestamp ? new Date(dataPoint.actualTimestamp).toLocaleString() : label}
+          </p>
           {payload.map((entry: any, index: number) => {
             const metricNames = {
               heartRate: 'Heart Rate',
@@ -34,7 +38,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
               bloodPressureSystolic: 'mmHg',
               bloodPressureDiastolic: 'mmHg',
               bloodPressureMean: 'mmHg',
-              temperature: '°C',
+              temperature: '°F',
               spo2: '%',
               respiratoryRate: 'rpm'
             };
@@ -52,43 +56,20 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
 
   const chartData = useMemo(() => {
     const data = getFilteredData(timeRange);
-    return data.map((item) => {
+    return data.map((item, index) => {
+      // Use index for continuous display, preserve timestamp for tooltip
       const date = new Date(item.timestamp);
-      let timeLabel;
-      
-      switch (timeRange) {
-        case '1h':
-        case '4h':
-          timeLabel = date.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          });
-          break;
-        case '12h':
-        case '24h':
-          timeLabel = date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          });
-          break;
-        case '1w':
-          timeLabel = date.toLocaleDateString('en-US', { 
-            month: 'short',
-            day: 'numeric'
-          });
-          break;
-        default:
-          timeLabel = date.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          });
-      }
-      
+
+      // Show every Nth label to avoid overcrowding
+      const showLabel = index % Math.max(1, Math.floor(data.length / 10)) === 0 || index === data.length - 1;
+      const timeLabel = showLabel ? `Point ${index + 1}` : '';
+
       return {
+        // For display: use index or simplified label
         time: timeLabel,
+        // Preserve actual timestamp for tooltip
+        actualTimestamp: item.timestamp,
+        // Vital values
         heartRate: item.vital.hr,
         bloodPressureSystolic: item.vital.bps,
         bloodPressureDiastolic: item.vital.bpd,

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { MetricCard } from '@/components/ui/metric-card';
 import { useVitals } from '@/hooks/useVitals';
 import { calculateVitalChange } from '@/utils/riskCalculations';
@@ -14,8 +14,9 @@ interface VitalSignsProps {
 export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetricToggle, patientId = 'bed_01' }) => {
   const { getLatestVitals, getFilteredData, loading } = useVitals(patientId);
 
-  const latestVitals = useMemo(() => getLatestVitals(), [getLatestVitals]);
-  const historicalData = useMemo(() => getFilteredData('24h'), [getFilteredData]);
+  // No useMemo to ensure updates are reflected immediately
+  const latestVitals = getLatestVitals();
+  const historicalData = getFilteredData('24h');
   
   if (loading || !latestVitals) {
     return (

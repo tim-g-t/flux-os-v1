@@ -34,6 +34,16 @@ export default defineConfig(({ mode }) => ({
           });
         },
       },
+      '/api/vitals': {
+        target: 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('vitals proxy error', err);
+          });
+        },
+      },
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

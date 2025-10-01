@@ -4,26 +4,42 @@ import { VitalReading } from '@/types/vitals';
 import { APIPatient } from '@/types/patient';
 
 export const useVitals = (bedId: string = 'bed_01') => {
-  const [loading, setLoading] = useState(true);
+  // Check if data is already loaded to set initial loading state
+  const initialDataLoaded = patientApiService.getPatients().length > 0;
+  const [loading, setLoading] = useState(!initialDataLoaded);
   const [error, setError] = useState<string | null>(null);
   const [patient, setPatient] = useState<APIPatient | null>(null);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   useEffect(() => {
     const initializeData = async () => {
       try {
-        setLoading(true);
-
         // Check if patients are already loaded
         const patients = patientApiService.getPatients();
-        if (patients.length === 0) {
-          // Fetch patients if not loaded
-          await patientApiService.fetchPatients();
+
+        // If data is already loaded, get patient immediately without setting loading
+        if (patients.length > 0) {
+          const patientData = patientApiService.getPatientByBedId(bedId);
+          if (patientData) {
+            setPatient(patientData);
+            setLoading(false);
+            setError(null);
+          } else {
+            setError(`Patient with bed ID ${bedId} not found`);
+            setLoading(false);
+          }
+          return;
         }
 
-        // Get the specific patient
+        // Only set loading if we actually need to fetch
+        setLoading(true);
+        await patientApiService.fetchPatients();
+
+        // Get the specific patient after fetching
         const patientData = patientApiService.getPatientByBedId(bedId);
         if (patientData) {
           setPatient(patientData);
+          setError(null);
         } else {
           setError(`Patient with bed ID ${bedId} not found`);
         }
@@ -34,11 +50,14 @@ export const useVitals = (bedId: string = 'bed_01') => {
       }
     };
 
-    // Subscribe to patient updates
-    const unsubscribe = patientApiService.subscribe((updatedPatients) => {
+    // Subscribe to patient updates with version tracking
+    const unsubscribe = patientApiService.subscribe((updatedPatients, updateVersion) => {
       const updatedPatient = patientApiService.getPatientByBedId(bedId);
       if (updatedPatient) {
         setPatient(updatedPatient);
+        setLoading(false);
+        // Force re-render with update version
+        setUpdateTrigger(updateVersion || 0);
       }
     });
 
@@ -51,7 +70,7 @@ export const useVitals = (bedId: string = 'bed_01') => {
 
   const getLatestVitals = useCallback((): VitalReading | null => {
     return patientApiService.getLatestVitals(bedId);
-  }, [bedId]);
+  }, [bedId, updateTrigger]); // Add updateTrigger to dependencies
 
   const getFilteredData = useCallback((timeRange: string) => {
     if (!patient) return [];
@@ -67,7 +86,7 @@ export const useVitals = (bedId: string = 'bed_01') => {
       default: hours = 24;
     }
 
-    // Get filtered vitals from the API service
+    // Get filtered vitals from the API service (now point-based)
     const filteredVitals = patientApiService.getFilteredVitals(bedId, hours);
 
     // Transform to the expected format
@@ -75,7 +94,7 @@ export const useVitals = (bedId: string = 'bed_01') => {
       timestamp: vital.time,
       vital: patientApiService.transformVitalReading(vital)
     }));
-  }, [bedId, patient]);
+  }, [bedId, patient, updateTrigger]); // Add updateTrigger to dependencies
 
   // For backward compatibility, create a data object similar to the old format
   const data = {

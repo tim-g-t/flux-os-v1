@@ -5,7 +5,19 @@ import { VitalReading } from '@/types/vitals';
 const API_URL = import.meta.env.DEV
   ? '/api/patient-data'  // Proxied through Vite in development
   : 'http://a0g88w80ssoos8gkgcs408gs.157.90.23.234.sslip.io/data';
-const SNAPSHOT_API_URL = 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/snapshot';
+// Use proxied endpoints in development to avoid CORS, direct URLs in production
+const SNAPSHOT_API_URL = import.meta.env.DEV
+  ? '/api/vitals/snapshot'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/snapshot';
+const CURRENT_API_URL = import.meta.env.DEV
+  ? '/api/vitals/current'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/current';
+const INCREMENT_API_URL = import.meta.env.DEV
+  ? '/api/vitals/increment'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/increment';
+const SAVE_API_URL = import.meta.env.DEV
+  ? '/api/vitals/save'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/save';
 const CACHE_KEY = 'patient_data_cache';
 const VITAL_HISTORY_KEY = 'patient_vital_history';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -16,11 +28,12 @@ class PatientApiService {
   private patients: APIPatient[] = [];
   private loading = false;
   private lastFetchTime: number | null = null;
-  private listeners: Array<(patients: APIPatient[]) => void> = [];
+  private listeners: Array<(patients: APIPatient[], updateVersion?: number) => void> = [];
   private snapshotInterval: NodeJS.Timeout | null = null;
   private lastSnapshotIdentifier: number = -1;
   private isUsingSnapshot = false;
-  private autoRefreshInterval: NodeJS.Timeout | null = null;
+  private vitalCycleRunning = false;
+  private updateVersion = 0;
 
   // Transform API vital reading to internal format
   transformVitalReading(apiVital: APIVitalReading): VitalReading {
@@ -150,6 +163,48 @@ class PatientApiService {
     return null;
   }
 
+  // Trigger vital signs increment
+  private async triggerVitalIncrement(): Promise<void> {
+    try {
+      const response = await fetch(INCREMENT_API_URL, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Increment API error:', response.status);
+        return;
+      }
+
+      console.log('Triggered vital signs increment');
+    } catch (error) {
+      console.error('Failed to trigger increment:', error);
+    }
+  }
+
+  // Save vital signs to snapshot
+  private async saveVitalSnapshot(): Promise<void> {
+    try {
+      const response = await fetch(SAVE_API_URL, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Save API error:', response.status);
+        return;
+      }
+
+      console.log('Saved vital signs to snapshot');
+    } catch (error) {
+      console.error('Failed to save snapshot:', error);
+    }
+  }
+
   // Fetch snapshot data from API
   private async fetchSnapshot(): Promise<void> {
     try {
@@ -178,6 +233,42 @@ class PatientApiService {
       }
     } catch (error) {
       console.error('Failed to fetch snapshot:', error);
+    }
+  }
+
+  // Execute the vital signs update cycle
+  private async executeVitalCycle(): Promise<void> {
+    if (this.vitalCycleRunning) {
+      console.log('Vital cycle already running, skipping...');
+      return;
+    }
+
+    this.vitalCycleRunning = true;
+
+    try {
+      console.log('Starting vital cycle...');
+
+      // Step 1: Trigger increment
+      await this.triggerVitalIncrement();
+      console.log('Step 1: Increment triggered');
+
+      // Step 2: Wait 5 seconds
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      console.log('Step 2: Waited 5 seconds');
+
+      // Step 3: Save new state
+      await this.saveVitalSnapshot();
+      console.log('Step 3: Saved snapshot');
+
+      // Step 4: Retrieve updated vital signs
+      await this.fetchSnapshot();
+      console.log('Step 4: Fetched new snapshot');
+
+      console.log('Completed vital signs update cycle');
+    } catch (error) {
+      console.error('Error in vital cycle:', error);
+    } finally {
+      this.vitalCycleRunning = false;
     }
   }
 
@@ -273,25 +364,22 @@ class PatientApiService {
     }
   }
 
-  // Start snapshot polling
+  // Start snapshot polling with vital cycle
   startSnapshotPolling(): void {
     if (this.snapshotInterval) {
       return; // Already polling
     }
 
-    console.log('Starting vital snapshot polling (every 5 seconds)...');
+    console.log('Starting vital snapshot cycle (increment->wait->save->fetch)...');
     this.isUsingSnapshot = true;
 
-    // Fetch immediately
+    // Fetch initial snapshot immediately
     this.fetchSnapshot();
 
-    // Set up interval
-    this.snapshotInterval = setInterval(() => {
-      this.fetchSnapshot();
-    }, SNAPSHOT_INTERVAL);
-
-    // Start auto-refresh if not already running
-    this.startAutoRefresh();
+    // Set up interval for the complete cycle
+    this.snapshotInterval = setInterval(async () => {
+      await this.executeVitalCycle();
+    }, 15000); // Run cycle every 15 seconds (includes 5s wait in cycle)
   }
 
   // Stop snapshot polling
@@ -304,30 +392,6 @@ class PatientApiService {
     }
   }
 
-  // Start auto-refresh to trigger UI updates every 10 seconds
-  private startAutoRefresh(): void {
-    if (this.autoRefreshInterval) {
-      return; // Already refreshing
-    }
-
-    console.log('Starting auto-refresh (every 10 seconds)...');
-
-    // Set up refresh interval
-    this.autoRefreshInterval = setInterval(() => {
-      // Trigger a refresh by notifying all listeners
-      this.notifyListeners();
-      console.log('Auto-refresh triggered');
-    }, 10000); // 10 seconds
-  }
-
-  // Stop auto-refresh
-  private stopAutoRefresh(): void {
-    if (this.autoRefreshInterval) {
-      clearInterval(this.autoRefreshInterval);
-      this.autoRefreshInterval = null;
-      console.log('Stopped auto-refresh');
-    }
-  }
 
   // Fetch patients from API with timeout handling
   async fetchPatients(forceRefresh = false): Promise<APIPatient[]> {
@@ -451,17 +515,31 @@ class PatientApiService {
     return this.transformVitalReading(latestVital);
   }
 
-  // Get filtered vitals data for charts
+  // Get filtered vitals data for charts (point-based, not time-based)
   getFilteredVitals(bedId: string, hours: number = 24): APIVitalReading[] {
     const patient = this.getPatientByBedId(bedId);
-    if (!patient) return [];
+    if (!patient || !patient.Vitals || patient.Vitals.length === 0) return [];
 
-    const now = new Date();
-    const startTime = new Date(now.getTime() - hours * 60 * 60 * 1000);
+    // Calculate approximate points for time range
+    // Assuming ~5 min intervals (12 points per hour)
+    const pointsPerHour = 12;
+    let maxPoints = hours * pointsPerHour;
 
-    return patient.Vitals.filter(vital =>
-      new Date(vital.time) >= startTime
-    );
+    // For week view, cap at reasonable amount
+    if (hours > 168) { // 1 week
+      maxPoints = Math.min(maxPoints, 500);
+    }
+
+    // Cap at available data
+    maxPoints = Math.min(maxPoints, patient.Vitals.length);
+
+    // Just take the last N points, treating them as continuous
+    const vitals = [...patient.Vitals];
+    const filteredVitals = vitals.slice(-maxPoints);
+
+    console.log(`Filtering for ${hours}h view: Requested ${maxPoints} points, Returning ${filteredVitals.length} points from ${vitals.length} total`);
+
+    return filteredVitals;
   }
 
   // Get complete vital history for a patient (for graphs)
@@ -481,17 +559,19 @@ class PatientApiService {
     return [];
   }
 
-  // Subscribe to patient updates
-  subscribe(callback: (patients: APIPatient[]) => void): () => void {
+  // Subscribe to patient updates with version tracking
+  subscribe(callback: (patients: APIPatient[], updateVersion?: number) => void): () => void {
     this.listeners.push(callback);
     return () => {
       this.listeners = this.listeners.filter(listener => listener !== callback);
     };
   }
 
-  // Notify all listeners
+  // Notify all listeners with update version
   private notifyListeners(): void {
-    this.listeners.forEach(listener => listener(this.patients));
+    this.updateVersion++;
+    console.log(`Notifying listeners with update version: ${this.updateVersion}`);
+    this.listeners.forEach(listener => listener(this.patients, this.updateVersion));
   }
 
   // Check if currently loading
@@ -502,7 +582,6 @@ class PatientApiService {
   // Clean up method to stop polling
   cleanup(): void {
     this.stopSnapshotPolling();
-    this.stopAutoRefresh();
   }
 
   // Clear all cached data
@@ -513,6 +592,8 @@ class PatientApiService {
       this.patients = [];
       this.lastFetchTime = null;
       this.lastSnapshotIdentifier = -1;
+      this.vitalCycleRunning = false;
+      this.updateVersion = 0;
       console.log('Cache and vital history cleared successfully');
     } catch (error) {
       console.error('Failed to clear cache:', error);

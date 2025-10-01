@@ -64,8 +64,8 @@ export const Dashboard: React.FC = () => {
 
     loadInitialPatient();
 
-    // Subscribe to patient updates
-    const unsubscribe = patientApiService.subscribe(() => {
+    // Subscribe to patient updates with version tracking
+    const unsubscribe = patientApiService.subscribe((updatedPatients, updateVersion) => {
       // Update selected patient when data changes
       const patient = patientApiService.getPatientByBedId(selectedPatientId);
       if (patient) {

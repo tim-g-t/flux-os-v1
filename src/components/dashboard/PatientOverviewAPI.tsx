@@ -91,9 +91,10 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
 
     loadPatients();
 
-    // Subscribe to updates
-    const unsubscribe = patientApiService.subscribe((updatedPatients) => {
+    // Subscribe to updates with version tracking
+    const unsubscribe = patientApiService.subscribe((updatedPatients, updateVersion) => {
       setPatients(updatedPatients);
+      console.log(`PatientOverview updated with version: ${updateVersion}`);
     });
 
     return () => {
