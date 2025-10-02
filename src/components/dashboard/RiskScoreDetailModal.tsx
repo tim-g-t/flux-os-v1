@@ -134,7 +134,13 @@ export const RiskScoreDetailModal: React.FC<RiskScoreDetailModalProps> = ({
   const config = SCORE_CONFIGS[scoreType];
 
   const processedData = useMemo(() => {
-    const now = new Date();
+    // Use the data's actual time range, not current system time
+    // This prevents "No data" when historical data doesn't match current date
+    if (scoreData.length === 0) return [];
+
+    // Get the latest timestamp from the actual data
+    const latestDataTime = Math.max(...scoreData.map(d => d.timestamp.getTime()));
+    const now = new Date(latestDataTime);
     let cutoffTime: Date;
 
     switch (timeRange) {

@@ -6,22 +6,30 @@ import { APIPatient, APIVitalReading } from '@/types/patient';
 import { VitalReading } from '@/types/vitals';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
+import { parseTimestamp, formatTimestamp } from '@/utils/timestampParser';
 
 // Generate time series data for mini charts from API vitals
 const generateChartDataFromVitals = (vitals: APIVitalReading[], vitalType: string) => {
-  // Get last 12 hours of data
-  const now = new Date();
-  const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+  // Get last 12 hours of data - use the actual data's timestamp, not system time!
+  if (vitals.length === 0) return [];
 
-  const recentVitals = vitals.filter(v => new Date(v.time) >= twelveHoursAgo);
+  // Get the latest timestamp from the actual data using proper parser
+  const latestVital = vitals[vitals.length - 1];
+  const latestTime = parseTimestamp(latestVital.time);
+  const twelveHoursAgo = new Date(latestTime.getTime() - 12 * 60 * 60 * 1000);
+
+  const recentVitals = vitals.filter(v => parseTimestamp(v.time) >= twelveHoursAgo);
+
+  // If we don't have 12h of data, use what we have (but at least 20 points for a meaningful chart)
+  const dataToUse = recentVitals.length >= 20 ? recentVitals : vitals.slice(-Math.min(100, vitals.length));
 
   // Sample data if too many points (max 50 points for performance)
-  const sampledVitals = recentVitals.length > 50
-    ? recentVitals.filter((_, index) => index % Math.ceil(recentVitals.length / 50) === 0)
-    : recentVitals;
+  const sampledVitals = dataToUse.length > 50
+    ? dataToUse.filter((_, index) => index % Math.ceil(dataToUse.length / 50) === 0)
+    : dataToUse;
 
   return sampledVitals.map(vital => {
-    const time = new Date(vital.time);
+    const time = parseTimestamp(vital.time);
     let value = 0;
 
     switch (vitalType) {
@@ -34,7 +42,7 @@ const generateChartDataFromVitals = (vitals: APIVitalReading[], vitalType: strin
     }
 
     return {
-      time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      time: formatTimestamp(time, 'time'),
       value: Math.round(value * 10) / 10
     };
   });
@@ -93,8 +101,9 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
 
     // Subscribe to updates with version tracking
     const unsubscribe = patientApiService.subscribe((updatedPatients, updateVersion) => {
-      setPatients(updatedPatients);
-      console.log(`PatientOverview updated with version: ${updateVersion}`);
+      // CRITICAL: Create new array reference to force React re-render
+      setPatients([...updatedPatients]);
+      console.log(`🔄 PatientOverview updated with version: ${updateVersion}, ${updatedPatients.length} patients`);
     });
 
     return () => {
@@ -267,7 +276,7 @@ export const PatientOverviewAPI: React.FC<PatientOverviewAPIProps> = ({ onPatien
 
               return (
                 <div
-                  key={bedId}
+                  key={`${bedId}-${latestVital.time}`}
                   className={`
                     bg-black rounded-3xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 cursor-pointer
                     ${overallStatus === 'critical'

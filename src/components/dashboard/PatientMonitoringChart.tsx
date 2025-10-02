@@ -17,11 +17,33 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0]?.payload;
+
+      // Parse timestamp correctly - handle DD/MM/YYYY format from API
+      const formatTimestamp = (timestamp: string) => {
+        if (!timestamp) return label;
+
+        // Check if timestamp is in DD/MM/YYYY, HH:MM:SS format
+        if (timestamp.includes(',')) {
+          const [datePart, timePart] = timestamp.split(', ');
+          const [day, month, year] = datePart.split('/');
+          // Create date in correct format (month is 0-indexed in JS)
+          const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          if (timePart) {
+            const [hours, minutes, seconds] = timePart.split(':');
+            date.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds));
+          }
+          return date.toLocaleString();
+        }
+
+        // Fallback to direct parsing
+        return new Date(timestamp).toLocaleString();
+      };
+
       return (
         <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
           {/* Show actual timestamp from data */}
           <p className="text-white font-medium mb-2">
-            {dataPoint?.actualTimestamp ? new Date(dataPoint.actualTimestamp).toLocaleString() : label}
+            {formatTimestamp(dataPoint?.actualTimestamp)}
           </p>
           {payload.map((entry: any, index: number) => {
             const metricNames = {
@@ -56,6 +78,16 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
 
   const chartData = useMemo(() => {
     const data = getFilteredData(timeRange);
+
+    // Log first and last timestamps to verify we're using correct data
+    if (data.length > 0) {
+      console.log('Chart data time range:', {
+        first: data[0].timestamp,
+        last: data[data.length - 1].timestamp,
+        count: data.length
+      });
+    }
+
     return data.map((item, index) => {
       // Use index for continuous display, preserve timestamp for tooltip
       const date = new Date(item.timestamp);

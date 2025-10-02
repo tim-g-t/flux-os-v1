@@ -24,6 +24,7 @@ export const useVitals = (bedId: string = 'bed_01') => {
             setPatient(patientData);
             setLoading(false);
             setError(null);
+            // Don't start polling here - it's already handled by the service
           } else {
             setError(`Patient with bed ID ${bedId} not found`);
             setLoading(false);
@@ -54,10 +55,13 @@ export const useVitals = (bedId: string = 'bed_01') => {
     const unsubscribe = patientApiService.subscribe((updatedPatients, updateVersion) => {
       const updatedPatient = patientApiService.getPatientByBedId(bedId);
       if (updatedPatient) {
-        setPatient(updatedPatient);
+        // CRITICAL: Create a new object reference to trigger React re-render
+        // React won't re-render if the object reference is the same
+        setPatient({...updatedPatient});
         setLoading(false);
         // Force re-render with update version
         setUpdateTrigger(updateVersion || 0);
+        console.log(`🔄 Hook received update v${updateVersion} for ${bedId}`);
       }
     });
 
@@ -97,12 +101,13 @@ export const useVitals = (bedId: string = 'bed_01') => {
   }, [bedId, patient, updateTrigger]); // Add updateTrigger to dependencies
 
   // For backward compatibility, create a data object similar to the old format
-  const data = {
+  // Use updateTrigger to ensure this recalculates on updates
+  const data = useCallback(() => ({
     readings: patient?.Vitals?.map(vital => ({
       timestamp: vital.time,
       [bedId]: patientApiService.transformVitalReading(vital)
     })) || []
-  };
+  }), [patient, bedId, updateTrigger])();
 
   return {
     data,

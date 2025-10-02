@@ -1,5 +1,6 @@
 import { APIPatient, APIVitalReading, TransformedPatient } from '@/types/patient';
 import { VitalReading } from '@/types/vitals';
+import { parseTimestamp } from '@/utils/timestampParser';
 
 // Use proxied endpoint in development to avoid CORS issues
 const API_URL = import.meta.env.DEV
@@ -25,6 +26,9 @@ const LOCAL_FILE_PATH = '/Users/timtoepper/Downloads/code-of-website/patient-dat
 const SNAPSHOT_INTERVAL = 5000; // 5 seconds
 
 class PatientApiService {
+  // Static instance for singleton pattern
+  private static instance: PatientApiService | null = null;
+
   private patients: APIPatient[] = [];
   private loading = false;
   private lastFetchTime: number | null = null;
@@ -34,6 +38,20 @@ class PatientApiService {
   private isUsingSnapshot = false;
   private vitalCycleRunning = false;
   private updateVersion = 0;
+  private pollingLock = false; // Mutex to prevent race conditions
+
+  // Private constructor for singleton
+  private constructor() {
+    console.log('🔒 PatientApiService singleton instance created');
+  }
+
+  // Get singleton instance
+  static getInstance(): PatientApiService {
+    if (!PatientApiService.instance) {
+      PatientApiService.instance = new PatientApiService();
+    }
+    return PatientApiService.instance;
+  }
 
   // Transform API vital reading to internal format
   transformVitalReading(apiVital: APIVitalReading): VitalReading {
@@ -139,7 +157,7 @@ class PatientApiService {
   private async tryLoadFromLocalFile(): Promise<APIPatient[] | null> {
     try {
       // Try the local file endpoint first (will be proxied in dev)
-      const localUrl = import.meta.env.DEV ? '/api/local-data' : 'http://localhost:5173/api/local-data';
+      const localUrl = import.meta.env.DEV ? '/api/local-data' : 'http://localhost:5174/api/local-data';
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 500); // Very short timeout for local file
 
@@ -221,15 +239,19 @@ class PatientApiService {
       }
 
       const snapshotData = await response.json();
+      console.log(`📡 Fetched snapshot - ID: ${snapshotData.identifier}, Patients: ${snapshotData.patients?.length || 0}`);
 
       // Check if identifier has changed
       if (snapshotData.identifier !== this.lastSnapshotIdentifier && snapshotData.identifier !== undefined) {
+        console.log(`✅ New snapshot detected! Old ID: ${this.lastSnapshotIdentifier}, New ID: ${snapshotData.identifier}`);
         this.lastSnapshotIdentifier = snapshotData.identifier;
 
         // Process the new vital data
         if (snapshotData.patients && Array.isArray(snapshotData.patients)) {
           this.updatePatientsWithSnapshot(snapshotData.patients);
         }
+      } else {
+        console.log(`⏭️  Snapshot ID unchanged (${snapshotData.identifier}), skipping update`);
       }
     } catch (error) {
       console.error('Failed to fetch snapshot:', error);
@@ -272,6 +294,148 @@ class PatientApiService {
     }
   }
 
+  // Intelligently merge vitals to maintain continuity without data loss
+  private mergeVitalsIntelligently(patient: APIPatient): void {
+    if (patient.Vitals.length === 0) return;
+
+    console.log(`\n🔄 Starting merge for ${patient.Name} with ${patient.Vitals.length} vitals`);
+
+    // Sort vitals by timestamp to ensure chronological order
+    patient.Vitals.sort((a, b) => {
+      const timeA = parseTimestamp(a.time).getTime();
+      const timeB = parseTimestamp(b.time).getTime();
+      return timeA - timeB;
+    });
+
+    const vitals = patient.Vitals;
+
+    // Log time range of data
+    if (vitals.length > 0) {
+      const firstTime = parseTimestamp(vitals[0].time);
+      const lastTime = parseTimestamp(vitals[vitals.length - 1].time);
+      console.log(`📅 Data range: ${firstTime.toISOString()} to ${lastTime.toISOString()}`);
+    }
+
+    // Find boundary between historical and live data by detecting month/year changes
+    // September 2025 data = historical (from local file), October 2025 data = API/live
+    let boundaryIndex = -1;
+    let hasSeptemberData = false;
+    let hasOctoberData = false;
+
+    for (let i = 0; i < vitals.length; i++) {
+      const vitalDate = parseTimestamp(vitals[i].time);
+      const month = vitalDate.getMonth(); // 8 = September, 9 = October
+      const year = vitalDate.getFullYear();
+
+      // Check for September 2025 (historical from local file)
+      if (year === 2025 && month === 8) {
+        hasSeptemberData = true;
+      }
+      // Check for October 2025 (live API data)
+      else if (year === 2025 && month === 9) {
+        hasOctoberData = true;
+        // Mark the first October data point as boundary
+        if (boundaryIndex === -1) {
+          boundaryIndex = i;
+        }
+      }
+    }
+
+    console.log(`📅 Data analysis: September data: ${hasSeptemberData}, October data: ${hasOctoberData}`);
+    if (boundaryIndex > 0) {
+      console.log(`🔍 Found data boundary at index ${boundaryIndex}`);
+    }
+
+    // If we have mixed September and October data, ALWAYS merge them
+    if (hasSeptemberData && hasOctoberData && boundaryIndex > 0) {
+      const apiVitals = vitals.slice(boundaryIndex);
+      const historicalVitals = vitals.slice(0, boundaryIndex);
+      const apiStartTime = parseTimestamp(apiVitals[0].time);
+
+      console.log(`📊 Data split: ${historicalVitals.length} historical (Sept), ${apiVitals.length} live (Oct) vitals`);
+
+      if (historicalVitals.length > 0) {
+        // Keep enough historical data for the longest view (1 week = 7 days)
+        const maxViewDuration = 7 * 24 * 60 * 60 * 1000; // 7 days for weekly view
+        const lastHistoricalTimestamp = parseTimestamp(historicalVitals[historicalVitals.length - 1].time).getTime();
+        const firstHistoricalTimestamp = parseTimestamp(historicalVitals[0].time).getTime();
+        const historicalSpan = lastHistoricalTimestamp - firstHistoricalTimestamp;
+
+        // If we have less than 7 days of historical data, keep it all
+        // Otherwise, keep the most recent 7 days
+        let relevantHistorical = historicalVitals;
+        if (historicalSpan > maxViewDuration) {
+          relevantHistorical = historicalVitals.filter(v => {
+            const vTime = parseTimestamp(v.time).getTime();
+            return vTime >= lastHistoricalTimestamp - maxViewDuration;
+          });
+          console.log(`📝 Filtered to last 7 days: ${relevantHistorical.length} vitals from ${historicalVitals.length} total`);
+        } else {
+          console.log(`📝 Keeping all ${relevantHistorical.length} historical vitals (less than 7 days of data)`);
+        }
+
+        if (relevantHistorical.length > 0) {
+          // Calculate duration of historical data
+          const firstHistTime = parseTimestamp(relevantHistorical[0].time);
+          const lastHistTime = parseTimestamp(relevantHistorical[relevantHistorical.length - 1].time);
+          const historicalDuration = lastHistTime.getTime() - firstHistTime.getTime();
+
+          // Calculate how much to shift historical data to connect seamlessly
+          // We want the last historical point to be just before the first API point
+          const lastHistoricalOriginalTime = lastHistTime.getTime();
+          const desiredEndTime = apiStartTime.getTime() - 1; // 1ms before API start
+          const timeShift = desiredEndTime - lastHistoricalOriginalTime;
+
+          console.log(`🔧 Shifting historical data by ${(timeShift / (1000 * 60 * 60)).toFixed(2)} hours`);
+          console.log(`   Historical will end at: ${new Date(desiredEndTime).toISOString()}`);
+          console.log(`   API data starts at: ${apiStartTime.toISOString()}`);
+
+          // Shift all historical timestamps by the same amount
+          const alignedHistorical = relevantHistorical.map(v => {
+            const originalTime = parseTimestamp(v.time).getTime();
+            const shiftedTime = new Date(originalTime + timeShift);
+
+            return {
+              ...v,
+              time: shiftedTime.toISOString()
+            };
+          });
+
+          // Combine datasets seamlessly
+          patient.Vitals = [...alignedHistorical, ...apiVitals];
+
+          // Log the seamless merge
+          const mergedFirst = parseTimestamp(patient.Vitals[0].time);
+          const mergedLast = parseTimestamp(patient.Vitals[patient.Vitals.length - 1].time);
+          const totalDuration = (mergedLast.getTime() - mergedFirst.getTime()) / (1000 * 60 * 60);
+          const totalDays = totalDuration / 24;
+
+          console.log(`✅ Merged seamlessly: ${patient.Vitals.length} total vitals`);
+          console.log(`   Total duration: ${totalDuration.toFixed(2)} hours (${totalDays.toFixed(1)} days)`);
+          console.log(`   Historical: ${alignedHistorical.length} vitals ending at ${alignedHistorical[alignedHistorical.length - 1].time}`);
+          console.log(`   Live: ${apiVitals.length} vitals starting at ${apiVitals[0].time}`);
+          console.log(`   View coverage: 1h ✓, 4h ✓, 12h ✓, 24h ${totalDuration >= 24 ? '✓' : '✗'}, 1w ${totalDuration >= 168 ? '✓' : '✗'}`);
+        } else {
+          // No relevant historical data, use API only
+          patient.Vitals = apiVitals;
+          console.log(`📊 Using ${apiVitals.length} live vitals only`);
+        }
+      } else {
+        // No historical data
+        patient.Vitals = apiVitals;
+        console.log(`📊 Using ${apiVitals.length} live vitals only (no historical)`);
+      }
+    } else {
+      // No clear boundary found, keep data as is but limit if too large
+      if (patient.Vitals.length > 2000) {
+        patient.Vitals = vitals.slice(-1500);
+        console.log(`📊 No boundary found, kept most recent 1500 vitals`);
+      } else {
+        console.log(`📊 No boundary found, keeping all ${patient.Vitals.length} vitals`);
+      }
+    }
+  }
+
   // Update patients with snapshot data
   private updatePatientsWithSnapshot(snapshotPatients: Array<{
     Identifier: number;
@@ -293,13 +457,34 @@ class PatientApiService {
     };
   }>): void {
     let updated = false;
+    console.log(`\n🔄 DEEP ANALYSIS: Processing snapshot with ${snapshotPatients.length} patients...`);
+    console.log(`   Current patients in memory: ${this.patients.length}`);
+
+    // Log existing patients for debugging
+    console.log(`   Existing patients:`);
+    this.patients.forEach(p => {
+      console.log(`     - ID: ${p.Identifier}, Name: "${p.Name}", Vitals: ${p.Vitals?.length || 0}`);
+    });
 
     snapshotPatients.forEach(snapshotPatient => {
+      console.log(`\n   🔍 Looking for patient: ID=${snapshotPatient.Identifier}, Name="${snapshotPatient.Name}"`);
+
       // Find existing patient by BOTH identifier AND name for exact matching
       const existingPatient = this.patients.find(p =>
         p.Identifier === snapshotPatient.Identifier &&
         p.Name === snapshotPatient.Name
       );
+
+      if (existingPatient) {
+        console.log(`     ✅ FOUND existing patient with ${existingPatient.Vitals?.length || 0} vitals`);
+      } else {
+        console.log(`     ❌ NOT FOUND - will create new patient`);
+        // Also check if we have same ID but different name
+        const sameIdPatient = this.patients.find(p => p.Identifier === snapshotPatient.Identifier);
+        if (sameIdPatient) {
+          console.log(`     ⚠️ Found patient with same ID but different name: "${sameIdPatient.Name}" vs "${snapshotPatient.Name}"`);
+        }
+      }
 
       if (existingPatient && snapshotPatient.Vital) {
         // Convert snapshot vital to API format (Temp comes as string, needs conversion)
@@ -319,15 +504,21 @@ class PatientApiService {
         // Check if this vital reading already exists (prevent duplicates)
         const existingVitalIndex = existingPatient.Vitals.findIndex(v => v.time === newVital.time);
         if (existingVitalIndex === -1) {
-          // Add new vital to existing patient's vitals (preserving history)
-          existingPatient.Vitals.push(newVital);
+          console.log(`     📊 BEFORE adding vital: Patient has ${existingPatient.Vitals.length} vitals`);
 
-          // Keep only last 1000 vitals to prevent memory issues
-          if (existingPatient.Vitals.length > 1000) {
-            existingPatient.Vitals = existingPatient.Vitals.slice(-1000);
-          }
+          // Simply add new vital without complex cutoff logic
+          existingPatient.Vitals.push(newVital);
+          console.log(`     ✅ Added new vital at ${newVital.time}`);
+          console.log(`     📊 AFTER adding vital: Patient has ${existingPatient.Vitals.length} vitals`);
+
+          // Apply intelligent merging instead of truncating
+          console.log(`     🔧 Calling mergeVitalsIntelligently...`);
+          this.mergeVitalsIntelligently(existingPatient);
+          console.log(`     📊 AFTER merge: Patient has ${existingPatient.Vitals.length} vitals`);
 
           updated = true;
+        } else {
+          console.log(`     ⏭️ Duplicate vital skipped at ${newVital.time}`);
         }
       } else if (!existingPatient && snapshotPatient.Vital) {
         // Create new patient from snapshot if doesn't exist
@@ -366,20 +557,66 @@ class PatientApiService {
 
   // Start snapshot polling with vital cycle
   startSnapshotPolling(): void {
-    if (this.snapshotInterval) {
+    // Use lock to prevent race conditions
+    if (this.pollingLock) {
+      console.log('⚠️ Polling start in progress, skipping duplicate request');
+      return;
+    }
+
+    // Double-check to prevent any possibility of duplicate polling
+    if (this.snapshotInterval || this.isUsingSnapshot) {
+      console.log('⚠️ Snapshot polling already active, not starting duplicate');
       return; // Already polling
     }
 
-    console.log('Starting vital snapshot cycle (increment->wait->save->fetch)...');
+    // Set lock to prevent race conditions
+    this.pollingLock = true;
+
+    console.log('🚀 Starting vital snapshot polling...');
+    console.log(`   Polling interval: 5 seconds`);
     this.isUsingSnapshot = true;
 
     // Fetch initial snapshot immediately
+    console.log('📡 Fetching initial snapshot...');
     this.fetchSnapshot();
 
-    // Set up interval for the complete cycle
+    // Set up interval for updates - EVERY 5 SECONDS
     this.snapshotInterval = setInterval(async () => {
-      await this.executeVitalCycle();
-    }, 15000); // Run cycle every 15 seconds (includes 5s wait in cycle)
+      console.log(`\n⏰ 5-second interval - triggering update cycle...`);
+
+      try {
+        // Step 1: Trigger increment to get new data
+        const incrementResponse = await fetch(INCREMENT_API_URL, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (incrementResponse.ok) {
+          const result = await incrementResponse.json();
+          console.log(`   📈 Incremented to index: ${result.new_index}`);
+        }
+
+        // Step 2: Save the current vitals as snapshot
+        const saveResponse = await fetch(SAVE_API_URL, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (saveResponse.ok) {
+          const saveResult = await saveResponse.json();
+          console.log(`   💾 Saved snapshot ID: ${saveResult.snapshot_id}`);
+        }
+
+        // Step 3: Fetch the updated snapshot
+        await this.fetchSnapshot();
+
+      } catch (error) {
+        console.error('   ❌ Update cycle failed:', error);
+      }
+    }, 5000); // Run every 5 seconds for real-time updates
+
+    console.log('✅ Snapshot polling interval started (ID:', this.snapshotInterval, ')');
+
+    // Release lock after setup
+    this.pollingLock = false;
   }
 
   // Stop snapshot polling
@@ -395,28 +632,11 @@ class PatientApiService {
 
   // Fetch patients from API with timeout handling
   async fetchPatients(forceRefresh = false): Promise<APIPatient[]> {
+    console.log('🏥 fetchPatients called - forceRefresh:', forceRefresh);
+
     // Clear cache if forcing refresh
     if (forceRefresh) {
       this.clearCache();
-    }
-
-    // Return cached data if valid and not forcing refresh
-    if (!forceRefresh && this.isCacheValid()) {
-      // Start snapshot polling after returning cached data
-      this.startSnapshotPolling();
-      return this.patients;
-    }
-
-    // Check localStorage cache
-    if (!forceRefresh) {
-      const cached = this.loadFromCache();
-      if (cached) {
-        this.patients = cached;
-        this.notifyListeners();
-        // Start snapshot polling after loading cached data
-        this.startSnapshotPolling();
-        return cached;
-      }
     }
 
     // Prevent multiple simultaneous fetches
@@ -426,18 +646,46 @@ class PatientApiService {
 
     this.loading = true;
 
-    // First, try to load from local file (super fast)
+    // ALWAYS TRY LOCAL FILE FIRST (before cache) to get September data!
     if (!forceRefresh) {
       const localData = await this.tryLoadFromLocalFile();
       if (localData) {
+        console.log(`📂 Loaded ${localData.length} patients from local file with September 2025 data`);
+        // Log vital counts for each patient
+        localData.forEach(p => {
+          if (p.Vitals && p.Vitals.length > 0) {
+            const firstTime = parseTimestamp(p.Vitals[0].time);
+            const lastTime = parseTimestamp(p.Vitals[p.Vitals.length - 1].time);
+            console.log(`   ${p.Name}: ${p.Vitals.length} vitals (${firstTime.toISOString().split('T')[0]} to ${lastTime.toISOString().split('T')[0]})`);
+          }
+        });
         this.patients = localData;
         this.lastFetchTime = Date.now();
         this.saveToCache(localData);
         this.notifyListeners();
         this.loading = false;
-        // Start snapshot polling after loading local data - this will merge new data
-        this.startSnapshotPolling();
+        // Polling is managed by App.tsx
         return localData;
+      }
+    }
+
+    // If no local file, check cache
+    if (!forceRefresh) {
+      // Check in-memory cache
+      if (this.isCacheValid()) {
+        console.log('📦 Using in-memory cached data (no local file available)');
+        this.loading = false;
+        return this.patients;
+      }
+
+      // Check localStorage cache
+      const cached = this.loadFromCache();
+      if (cached) {
+        console.log('💾 Loading from localStorage cache (no local file available)');
+        this.patients = cached;
+        this.notifyListeners();
+        this.loading = false;
+        return cached;
       }
     }
 
@@ -472,8 +720,7 @@ class PatientApiService {
 
       console.log(`Successfully loaded ${data.length} patients with historical data from main API`);
 
-      // Start snapshot polling after loading API data for real-time updates
-      this.startSnapshotPolling();
+      // Polling is now managed by App.tsx
 
       return data;
     } catch (error) {
@@ -515,32 +762,190 @@ class PatientApiService {
     return this.transformVitalReading(latestVital);
   }
 
-  // Get filtered vitals data for charts (point-based, not time-based)
+  // Get filtered vitals data for charts (TRUE time-based filtering)
   getFilteredVitals(bedId: string, hours: number = 24): APIVitalReading[] {
     const patient = this.getPatientByBedId(bedId);
-    if (!patient || !patient.Vitals || patient.Vitals.length === 0) return [];
-
-    // Calculate approximate points for time range
-    // Assuming ~5 min intervals (12 points per hour)
-    const pointsPerHour = 12;
-    let maxPoints = hours * pointsPerHour;
-
-    // For week view, cap at reasonable amount
-    if (hours > 168) { // 1 week
-      maxPoints = Math.min(maxPoints, 500);
+    if (!patient || !patient.Vitals || patient.Vitals.length === 0) {
+      console.log(`⚠️ No patient or vitals found for ${bedId}`);
+      return [];
     }
 
-    // Cap at available data
-    maxPoints = Math.min(maxPoints, patient.Vitals.length);
-
-    // Just take the last N points, treating them as continuous
     const vitals = [...patient.Vitals];
-    const filteredVitals = vitals.slice(-maxPoints);
 
-    console.log(`Filtering for ${hours}h view: Requested ${maxPoints} points, Returning ${filteredVitals.length} points from ${vitals.length} total`);
+    // If we have no data or very little data, just return what we have
+    if (vitals.length === 0) return [];
+
+    // Get the latest timestamp from the data using universal parser
+    const latestVital = vitals[vitals.length - 1];
+    const latestTime = parseTimestamp(latestVital.time);
+
+    // Get earliest timestamp
+    const earliestVital = vitals[0];
+    const earliestTime = parseTimestamp(earliestVital.time);
+
+    // Calculate the cutoff time (latest time minus requested hours)
+    const cutoffTime = new Date(latestTime.getTime() - (hours * 60 * 60 * 1000));
+
+    console.log(`\n📊 DEEP CHART FILTER: ${bedId} for ${hours}h view:`);
+    console.log(`   Latest time: ${latestTime.toISOString()}`);
+    console.log(`   Earliest time: ${earliestTime.toISOString()}`);
+    console.log(`   Cutoff time: ${cutoffTime.toISOString()}`);
+    console.log(`   Total vitals available: ${vitals.length}`);
+
+    // Check for September and October data
+    let hasSeptemberData = false;
+    let hasOctoberData = false;
+    let septemberCount = 0;
+    let octoberCount = 0;
+
+    vitals.forEach(vital => {
+      const vitalDate = parseTimestamp(vital.time);
+      const month = vitalDate.getMonth(); // 8 = September, 9 = October
+      const year = vitalDate.getFullYear();
+
+      if (year === 2025 && month === 8) {
+        hasSeptemberData = true;
+        septemberCount++;
+      } else if (year === 2025 && month === 9) {
+        hasOctoberData = true;
+        octoberCount++;
+      }
+    });
+
+    console.log(`   📅 Data composition: Sept 2025: ${septemberCount} vitals, Oct 2025: ${octoberCount} vitals`);
+
+    // Filter vitals to only include those within the time range
+    const filteredVitals = vitals.filter(vital => {
+      const vitalTime = parseTimestamp(vital.time);
+      return vitalTime >= cutoffTime;
+    });
+
+    console.log(`   Filtered vitals (standard): ${filteredVitals.length}`);
+
+    // SPECIAL HANDLING FOR MERGED SEPTEMBER-OCTOBER DATA
+    // If we have both datasets and limited October data, intelligently combine them
+    if (hasSeptemberData && hasOctoberData && octoberCount < 200) {
+      console.log(`   🔧 SMART MERGE MODE: Limited October data (${octoberCount} points), intelligently combining with September data`);
+
+      // For different time ranges, use different strategies
+      if (hours <= 12) {
+        // For 12h view: Use all October data + recent September data to fill
+        const octoberVitals = vitals.filter(v => {
+          const vDate = parseTimestamp(v.time);
+          return vDate.getMonth() === 9 && vDate.getFullYear() === 2025;
+        });
+
+        const targetPoints = 100;
+        if (octoberVitals.length < targetPoints) {
+          // Add September data to reach target
+          const septemberVitals = vitals.filter(v => {
+            const vDate = parseTimestamp(v.time);
+            return vDate.getMonth() === 8 && vDate.getFullYear() === 2025;
+          });
+
+          const septemberNeeded = targetPoints - octoberVitals.length;
+          const septemberToAdd = septemberVitals.slice(-septemberNeeded);
+
+          console.log(`   📊 12h view: ${octoberVitals.length} Oct + ${septemberToAdd.length} Sept = ${octoberVitals.length + septemberToAdd.length} total`);
+          return [...septemberToAdd, ...octoberVitals];
+        }
+        return octoberVitals;
+
+      } else if (hours <= 24) {
+        // For 24h view: Use all October + enough September to show 24h worth
+        const octoberVitals = vitals.filter(v => {
+          const vDate = parseTimestamp(v.time);
+          return vDate.getMonth() === 9 && vDate.getFullYear() === 2025;
+        });
+
+        const targetPoints = 200;
+        if (octoberVitals.length < targetPoints) {
+          const septemberVitals = vitals.filter(v => {
+            const vDate = parseTimestamp(v.time);
+            return vDate.getMonth() === 8 && vDate.getFullYear() === 2025;
+          });
+
+          const septemberNeeded = targetPoints - octoberVitals.length;
+          const septemberToAdd = septemberVitals.slice(-septemberNeeded);
+
+          console.log(`   📊 24h view: ${octoberVitals.length} Oct + ${septemberToAdd.length} Sept = ${octoberVitals.length + septemberToAdd.length} total`);
+          return [...septemberToAdd, ...octoberVitals];
+        }
+        return octoberVitals;
+
+      } else {
+        // For week view: Use proportional mix of both datasets
+        const targetPoints = hours >= 168 ? 500 : 300;
+
+        // Take all October data
+        const octoberVitals = vitals.filter(v => {
+          const vDate = parseTimestamp(v.time);
+          return vDate.getMonth() === 9 && vDate.getFullYear() === 2025;
+        });
+
+        // Fill rest with September data
+        if (octoberVitals.length < targetPoints) {
+          const septemberVitals = vitals.filter(v => {
+            const vDate = parseTimestamp(v.time);
+            return vDate.getMonth() === 8 && vDate.getFullYear() === 2025;
+          });
+
+          const septemberNeeded = targetPoints - octoberVitals.length;
+          const septemberToAdd = septemberVitals.slice(-septemberNeeded);
+
+          console.log(`   📊 Week view: ${octoberVitals.length} Oct + ${septemberToAdd.length} Sept = ${octoberVitals.length + septemberToAdd.length} total`);
+          return [...septemberToAdd, ...octoberVitals];
+        }
+        return octoberVitals;
+      }
+    }
+
+    // Progressive search expansion if not enough data found
+    const minPointsNeeded = hours >= 168 ? 100 : hours >= 24 ? 50 : 20;
+
+    if (filteredVitals.length < minPointsNeeded && vitals.length > filteredVitals.length) {
+      console.log(`   📈 Only ${filteredVitals.length} points found, expanding search...`);
+
+      // Try doubling the time range
+      const expandedCutoff = new Date(latestTime.getTime() - (hours * 2 * 60 * 60 * 1000));
+      const expandedFiltered = vitals.filter(vital => {
+        const vitalTime = parseTimestamp(vital.time);
+        return vitalTime >= expandedCutoff;
+      });
+
+      if (expandedFiltered.length > filteredVitals.length) {
+        console.log(`   ✅ Expanded search found ${expandedFiltered.length} points`);
+        return expandedFiltered;
+      }
+    }
+
+    // If still no data, return what we have or fallback
+    if (filteredVitals.length === 0 && vitals.length > 0) {
+      // Dynamic fallback based on requested view duration
+      let fallbackPoints = 100; // default
+      if (hours >= 168) { // 1 week
+        fallbackPoints = Math.min(500, vitals.length);
+      } else if (hours >= 24) { // 1 day
+        fallbackPoints = Math.min(300, vitals.length);
+      } else if (hours >= 12) { // 12 hours
+        fallbackPoints = Math.min(200, vitals.length);
+      }
+
+      console.log(`   ⚠️ No data within ${hours}h range, returning last ${fallbackPoints} points as fallback`);
+      return vitals.slice(-fallbackPoints);
+    }
+
+    if (filteredVitals.length > 0) {
+      const firstFiltered = parseTimestamp(filteredVitals[0].time);
+      const lastFiltered = parseTimestamp(filteredVitals[filteredVitals.length - 1].time);
+      const duration = (lastFiltered.getTime() - firstFiltered.getTime()) / (1000 * 60 * 60);
+      console.log(`   ✅ Returning ${filteredVitals.length} vitals covering ${duration.toFixed(2)}h`);
+      console.log(`   Time range: ${firstFiltered.toISOString()} to ${lastFiltered.toISOString()}`);
+    }
 
     return filteredVitals;
   }
+
 
   // Get complete vital history for a patient (for graphs)
   getPatientVitalHistory(patientId: number): APIVitalReading[] {
@@ -601,4 +1006,5 @@ class PatientApiService {
   }
 }
 
-export const patientApiService = new PatientApiService();
+// Export singleton instance
+export const patientApiService = PatientApiService.getInstance();
