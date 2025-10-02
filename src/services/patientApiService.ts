@@ -1,6 +1,7 @@
 import { APIPatient, APIVitalReading, TransformedPatient } from '@/types/patient';
 import { VitalReading } from '@/types/vitals';
 import { parseTimestamp } from '@/utils/timestampParser';
+import { downsampleData, getOptimalSampleSize } from '@/utils/dataDownsampling';
 
 // Use proxied endpoint in development to avoid CORS issues
 const API_URL = import.meta.env.DEV
@@ -939,6 +940,18 @@ class PatientApiService {
       const firstFiltered = parseTimestamp(filteredVitals[0].time);
       const lastFiltered = parseTimestamp(filteredVitals[filteredVitals.length - 1].time);
       const duration = (lastFiltered.getTime() - firstFiltered.getTime()) / (1000 * 60 * 60);
+
+      // Apply intelligent downsampling for performance
+      const optimalSampleSize = getOptimalSampleSize(hours, filteredVitals.length);
+
+      if (filteredVitals.length > optimalSampleSize) {
+        console.log(`   📉 Downsampling from ${filteredVitals.length} to ${optimalSampleSize} points for performance`);
+        const downsampledVitals = downsampleData(filteredVitals, optimalSampleSize);
+        console.log(`   ✅ Returning ${downsampledVitals.length} downsampled vitals covering ${duration.toFixed(2)}h`);
+        console.log(`   Time range: ${firstFiltered.toISOString()} to ${lastFiltered.toISOString()}`);
+        return downsampledVitals;
+      }
+
       console.log(`   ✅ Returning ${filteredVitals.length} vitals covering ${duration.toFixed(2)}h`);
       console.log(`   Time range: ${firstFiltered.toISOString()} to ${lastFiltered.toISOString()}`);
     }

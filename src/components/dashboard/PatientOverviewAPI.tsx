@@ -7,8 +7,9 @@ import { VitalReading } from '@/types/vitals';
 import { MiniChart } from './MiniChart';
 import { Header } from './Header';
 import { parseTimestamp, formatTimestamp } from '@/utils/timestampParser';
+import { downsampleData, getOptimalSampleSize } from '@/utils/dataDownsampling';
 
-// Generate time series data for mini charts from API vitals
+// Generate time series data for mini charts from API vitals with intelligent downsampling
 const generateChartDataFromVitals = (vitals: APIVitalReading[], vitalType: string) => {
   // Get last 12 hours of data - use the actual data's timestamp, not system time!
   if (vitals.length === 0) return [];
@@ -23,10 +24,9 @@ const generateChartDataFromVitals = (vitals: APIVitalReading[], vitalType: strin
   // If we don't have 12h of data, use what we have (but at least 20 points for a meaningful chart)
   const dataToUse = recentVitals.length >= 20 ? recentVitals : vitals.slice(-Math.min(100, vitals.length));
 
-  // Sample data if too many points (max 50 points for performance)
-  const sampledVitals = dataToUse.length > 50
-    ? dataToUse.filter((_, index) => index % Math.ceil(dataToUse.length / 50) === 0)
-    : dataToUse;
+  // Use intelligent downsampling for mini charts (max 50 points for good visual quality)
+  const optimalSize = Math.min(50, getOptimalSampleSize(12, dataToUse.length));
+  const sampledVitals = downsampleData(dataToUse, optimalSize);
 
   return sampledVitals.map(vital => {
     const time = parseTimestamp(vital.time);

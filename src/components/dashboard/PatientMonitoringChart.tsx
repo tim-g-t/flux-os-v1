@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { ComposedChart, Area, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useVitals } from '@/hooks/useVitals';
+import { debounce } from '@/utils/dataDownsampling';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 type TimeRange = '1h' | '4h' | '12h' | '24h' | '1w';
@@ -10,9 +11,11 @@ interface PatientMonitoringChartProps {
   patientId?: string;
 }
 
-export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics, patientId = 'bed_01' }) => {
+const PatientMonitoringChartComponent: React.FC<PatientMonitoringChartProps> = ({ selectedMetrics, patientId = 'bed_01' }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { getFilteredData, loading } = useVitals(patientId);
+  const renderTimeoutRef = useRef<NodeJS.Timeout>();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -76,6 +79,34 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     return null;
   };
 
+  // Debounced time range handler to prevent rapid re-renders
+  const debouncedSetTimeRange = useCallback(
+    debounce((newRange: TimeRange) => {
+      setTimeRange(newRange);
+      setIsInitialLoad(false);
+    }, 300),
+    []
+  );
+
+  // Progressive rendering with requestAnimationFrame
+  useEffect(() => {
+    if (renderTimeoutRef.current) {
+      clearTimeout(renderTimeoutRef.current);
+    }
+
+    renderTimeoutRef.current = setTimeout(() => {
+      requestAnimationFrame(() => {
+        setIsInitialLoad(false);
+      });
+    }, 100);
+
+    return () => {
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+    };
+  }, [timeRange]);
+
   const chartData = useMemo(() => {
     const data = getFilteredData(timeRange);
 
@@ -84,7 +115,8 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       console.log('Chart data time range:', {
         first: data[0].timestamp,
         last: data[data.length - 1].timestamp,
-        count: data.length
+        count: data.length,
+        isInitialLoad
       });
     }
 
@@ -92,13 +124,35 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       // Use index for continuous display, preserve timestamp for tooltip
       const date = new Date(item.timestamp);
 
-      // Show every Nth label to avoid overcrowding
-      const showLabel = index % Math.max(1, Math.floor(data.length / 10)) === 0 || index === data.length - 1;
-      const timeLabel = showLabel ? `Point ${index + 1}` : '';
+      // Format labels with clean, predictable intervals
+      let displayLabel = '';
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+
+      if (timeRange === '1w') {
+        // For weekly view, show dates
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        displayLabel = `${months[date.getMonth()]} ${date.getDate()}`;
+      } else if (timeRange === '24h' || timeRange === '12h') {
+        // For 24h and 12h views, round to nearest hour
+        const roundedHour = minutes >= 30 ? (hours + 1) % 24 : hours;
+        displayLabel = `${roundedHour.toString().padStart(2, '0')}:00`;
+      } else if (timeRange === '4h') {
+        // For 4h view, show hour and rounded minutes (00 or 30)
+        const roundedMinutes = minutes >= 45 ? 0 : minutes >= 15 ? 30 : 0;
+        const adjustedHour = roundedMinutes === 0 && minutes >= 45 ? (hours + 1) % 24 : hours;
+        displayLabel = `${adjustedHour.toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
+      } else if (timeRange === '1h') {
+        // For 1h view, round to nearest 10 minutes
+        const roundedMinutes = Math.round(minutes / 10) * 10;
+        const adjustedMinutes = roundedMinutes === 60 ? 0 : roundedMinutes;
+        const adjustedHour = roundedMinutes === 60 ? (hours + 1) % 24 : hours;
+        displayLabel = `${adjustedHour.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}`;
+      }
 
       return {
-        // For display: use index or simplified label
-        time: timeLabel,
+        // Always return a label - let XAxis interval prop handle which ones to show
+        time: displayLabel || `${hours.toString().padStart(2, '0')}:00`,
         // Preserve actual timestamp for tooltip
         actualTimestamp: item.timestamp,
         // Vital values
@@ -125,7 +179,7 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
           {['1h', '4h', '12h', '24h', '1w'].map((range) => (
             <button
               key={range}
-              onClick={() => setTimeRange(range as TimeRange)}
+              onClick={() => debouncedSetTimeRange(range as TimeRange)}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 timeRange === range 
                   ? 'bg-blue-600 text-white shadow-md' 
@@ -141,7 +195,15 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData}>
-            <XAxis dataKey="time" />
+            <XAxis
+              dataKey="time"
+              interval={Math.max(0, Math.floor(chartData.length / 10) - 1)}
+              tick={{ fontSize: 11, fill: '#9CA3AF' }}
+              stroke="#4B5563"
+              angle={0}
+              textAnchor="middle"
+              height={60}
+            />
             <YAxis domain={['dataMin - 5', 'dataMax + 5']} />
             <Tooltip content={<CustomTooltip />} />
             
@@ -170,3 +232,11 @@ export const PatientMonitoringChart: React.FC<PatientMonitoringChartProps> = ({ 
     </div>
   );
 };
+
+// Memoized export to prevent unnecessary re-renders
+export const PatientMonitoringChart = React.memo(PatientMonitoringChartComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.patientId === nextProps.patientId &&
+    JSON.stringify(prevProps.selectedMetrics) === JSON.stringify(nextProps.selectedMetrics)
+  );
+});
