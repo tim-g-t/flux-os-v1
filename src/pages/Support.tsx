@@ -27,6 +27,15 @@ export const Support: React.FC = () => {
     }
   };
 
+  // Clickable but obfuscated contact helpers
+  const handleEmailClick = (user: string) => {
+    const domain = 'withflux.ai';
+    window.location.href = `mailto:${user}@${domain}`;
+  };
+  const handlePhoneClick = () => {
+    window.location.href = `tel:+16464188070`;
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -121,8 +130,10 @@ export const Support: React.FC = () => {
                         </div>
                       </div>
                       <a 
-                        href="tel:+16464188070" 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); handlePhoneClick(); }}
                         className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                        aria-label="Call 646 418 807-0"
                       >
                         646 418 807 - 0
                       </a>
@@ -140,8 +151,10 @@ export const Support: React.FC = () => {
                         </div>
                       </div>
                       <a 
-                        href="mailto:founders@withflux.ai" 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); handleEmailClick('founders'); }}
                         className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                        aria-label="Email founders at withflux dot ai"
                       >
                         founders[at]withflux.ai
                       </a>
@@ -166,8 +179,10 @@ export const Support: React.FC = () => {
                         </div>
                       </div>
                       <a 
-                        href="mailto:tim@withflux.ai" 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); handleEmailClick('tim'); }}
                         className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                        aria-label="Email tim at withflux dot ai"
                       >
                         tim[at]withflux.ai
                       </a>
@@ -185,8 +200,10 @@ export const Support: React.FC = () => {
                         </div>
                       </div>
                       <a 
-                        href="mailto:philipp@withflux.ai" 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); handleEmailClick('philipp'); }}
                         className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                        aria-label="Email philipp at withflux dot ai"
                       >
                         philipp[at]withflux.ai
                       </a>
