@@ -23,7 +23,6 @@ const SAVE_API_URL = import.meta.env.DEV
 const CACHE_KEY = 'patient_data_cache';
 const VITAL_HISTORY_KEY = 'patient_vital_history';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const LOCAL_FILE_PATH = '/Users/timtoepper/Downloads/code-of-website/patient-data.json';
 const SNAPSHOT_INTERVAL = 5000; // 5 seconds
 
 class PatientApiService {
@@ -154,33 +153,6 @@ class PatientApiService {
     return null;
   }
 
-  // Try to load from local file via API endpoint (silently fail if not available)
-  private async tryLoadFromLocalFile(): Promise<APIPatient[] | null> {
-    try {
-      // Try the local file endpoint first (will be proxied in dev)
-      const localUrl = import.meta.env.DEV ? '/api/local-data' : 'http://localhost:5174/api/local-data';
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 500); // Very short timeout for local file
-
-      const response = await fetch(localUrl, {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Loaded data from local cache (fast)');
-        return data;
-      }
-    } catch {
-      // Silently fail - this is expected if file doesn't exist
-    }
-    return null;
-  }
 
   // Trigger vital signs increment
   private async triggerVitalIncrement(): Promise<void> {
@@ -647,34 +619,11 @@ class PatientApiService {
 
     this.loading = true;
 
-    // ALWAYS TRY LOCAL FILE FIRST (before cache) to get September data!
-    if (!forceRefresh) {
-      const localData = await this.tryLoadFromLocalFile();
-      if (localData) {
-        console.log(`📂 Loaded ${localData.length} patients from local file with September 2025 data`);
-        // Log vital counts for each patient
-        localData.forEach(p => {
-          if (p.Vitals && p.Vitals.length > 0) {
-            const firstTime = parseTimestamp(p.Vitals[0].time);
-            const lastTime = parseTimestamp(p.Vitals[p.Vitals.length - 1].time);
-            console.log(`   ${p.Name}: ${p.Vitals.length} vitals (${firstTime.toISOString().split('T')[0]} to ${lastTime.toISOString().split('T')[0]})`);
-          }
-        });
-        this.patients = localData;
-        this.lastFetchTime = Date.now();
-        this.saveToCache(localData);
-        this.notifyListeners();
-        this.loading = false;
-        // Polling is managed by App.tsx
-        return localData;
-      }
-    }
-
-    // If no local file, check cache
+    // Check cache first (unless force refresh)
     if (!forceRefresh) {
       // Check in-memory cache
       if (this.isCacheValid()) {
-        console.log('📦 Using in-memory cached data (no local file available)');
+        console.log('📦 Using in-memory cached data');
         this.loading = false;
         return this.patients;
       }
@@ -682,7 +631,7 @@ class PatientApiService {
       // Check localStorage cache
       const cached = this.loadFromCache();
       if (cached) {
-        console.log('💾 Loading from localStorage cache (no local file available)');
+        console.log('💾 Loading from localStorage cache');
         this.patients = cached;
         this.notifyListeners();
         this.loading = false;
