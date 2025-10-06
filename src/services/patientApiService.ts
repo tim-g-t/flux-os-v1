@@ -3,23 +3,32 @@ import { VitalReading } from '@/types/vitals';
 import { parseTimestamp } from '@/utils/timestampParser';
 import { downsampleData, getOptimalSampleSize } from '@/utils/dataDownsampling';
 
+// Helper function to wrap URLs with CORS proxy for production
+const withCorsProxy = (url: string): string => {
+  if (import.meta.env.DEV) {
+    return url; // In dev, use Vite proxy
+  }
+  // In production, use CORS proxy to handle mixed content
+  return 'https://corsproxy.io/?' + encodeURIComponent(url);
+};
+
 // Use proxied endpoint in development to avoid CORS issues
 const API_URL = import.meta.env.DEV
   ? '/api/patient-data'  // Proxied through Vite in development
-  : 'http://a0g88w80ssoos8gkgcs408gs.157.90.23.234.sslip.io/data';
-// Use proxied endpoints in development to avoid CORS, direct URLs in production
+  : withCorsProxy('http://a0g88w80ssoos8gkgcs408gs.157.90.23.234.sslip.io/data');
+// Use proxied endpoints in development to avoid CORS, CORS proxy in production
 const SNAPSHOT_API_URL = import.meta.env.DEV
   ? '/api/vitals/snapshot'
-  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/snapshot';
+  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/snapshot');
 const CURRENT_API_URL = import.meta.env.DEV
   ? '/api/vitals/current'
-  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/current';
+  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/current');
 const INCREMENT_API_URL = import.meta.env.DEV
   ? '/api/vitals/increment'
-  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/increment';
+  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/increment');
 const SAVE_API_URL = import.meta.env.DEV
   ? '/api/vitals/save'
-  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/save';
+  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/save');
 const CACHE_KEY = 'patient_data_cache';
 const VITAL_HISTORY_KEY = 'patient_vital_history';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
