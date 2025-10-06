@@ -13,9 +13,7 @@ export const Settings: React.FC = () => {
     } else if (view === 'Patient Detail') {
       navigate('/patient/bed_01');
     } else if (view === 'Reports') {
-      navigate('/reports');
-    } else if (view === 'Settings') {
-      navigate('/settings');
+      navigate('/');
     } else if (view === 'Help & Support') {
       navigate('/support');
     }

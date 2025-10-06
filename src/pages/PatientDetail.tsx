@@ -123,10 +123,6 @@ export const PatientDetail: React.FC = () => {
     setActiveView(view);
     if (view === 'Dashboard') {
       navigate('/');
-    } else if (view === 'Reports') {
-      navigate('/reports');
-    } else if (view === 'Settings') {
-      navigate('/settings');
     } else if (view === 'Help & Support') {
       navigate('/support');
     }
