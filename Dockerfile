@@ -1,17 +1,31 @@
-# Base image
-FROM node:20-alpine
+# Build stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependencies
+# Copy package files
 COPY package*.json ./
+
+# Install dependencies
 RUN npm ci
 
-# Copy source
+# Copy source code
 COPY . .
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+# Copy built assets from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 8050
 EXPOSE 8050
 
-# Start your app (be sure your app listens on port 8050)
-CMD ["npm", "start"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
