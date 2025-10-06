@@ -3,12 +3,23 @@ import { VitalReading } from '@/types/vitals';
 import { parseTimestamp } from '@/utils/timestampParser';
 import { downsampleData, getOptimalSampleSize } from '@/utils/dataDownsampling';
 
-// Use relative paths for all API calls - Nginx will proxy them in production
-const API_URL = '/api/patient-data';
-const SNAPSHOT_API_URL = '/api/vitals/snapshot';
-const CURRENT_API_URL = '/api/vitals/current';
-const INCREMENT_API_URL = '/api/vitals/increment';
-const SAVE_API_URL = '/api/vitals/save';
+// Use proxied endpoint in development to avoid CORS issues
+const API_URL = import.meta.env.DEV
+  ? '/api/patient-data'  // Proxied through Vite in development
+  : 'http://a0g88w80ssoos8gkgcs408gs.157.90.23.234.sslip.io/data';
+// Use proxied endpoints in development to avoid CORS, direct URLs in production
+const SNAPSHOT_API_URL = import.meta.env.DEV
+  ? '/api/vitals/snapshot'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/snapshot';
+const CURRENT_API_URL = import.meta.env.DEV
+  ? '/api/vitals/current'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/current';
+const INCREMENT_API_URL = import.meta.env.DEV
+  ? '/api/vitals/increment'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/increment';
+const SAVE_API_URL = import.meta.env.DEV
+  ? '/api/vitals/save'
+  : 'http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/save';
 const CACHE_KEY = 'patient_data_cache';
 const VITAL_HISTORY_KEY = 'patient_vital_history';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
