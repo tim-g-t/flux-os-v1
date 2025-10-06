@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FileDown, Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sidebar } from '@/components/dashboard/Sidebar';
+import { Header } from '@/components/dashboard/Header';
 import { patientApiService } from '@/services/patientApiService';
 import { TransformedPatient } from '@/types/patient';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,6 +21,7 @@ type TimeRange = '1h' | '4h' | '12h' | '24h' | '7d';
 type ExportFormat = 'csv' | 'xlsx';
 
 export const Reports: React.FC = () => {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<TransformedPatient[]>([]);
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [selectedVitals, setSelectedVitals] = useState<VitalMetric[]>(['heartRate', 'bloodPressure', 'spo2']);
@@ -26,6 +30,18 @@ export const Reports: React.FC = () => {
   const [exportFormat, setExportFormat] = useState<ExportFormat>('xlsx');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  const handleViewChange = (view: string) => {
+    if (view === 'Dashboard') {
+      navigate('/');
+    } else if (view === 'Patient Detail') {
+      navigate('/patient/bed_01');
+    } else if (view === 'Settings') {
+      navigate('/settings');
+    } else if (view === 'Help & Support') {
+      navigate('/support');
+    }
+  };
 
   useEffect(() => {
     const loadPatients = async () => {
@@ -295,11 +311,16 @@ export const Reports: React.FC = () => {
   };
 
   return (
-    <div className="w-full">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Clinical Reports</h1>
-        <p className="text-gray-400">Generate and export patient data reports</p>
-      </div>
+    <div className="bg-black min-h-screen pl-[27px] pt-10 pr-6 max-md:pl-5">
+      <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
+        <Sidebar activeView="Reports" onViewChange={handleViewChange} />
+        <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-6">
+          <Header />
+          <div className="w-full mt-8">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-white mb-2">Clinical Reports</h1>
+              <p className="text-gray-400">Generate and export patient data reports</p>
+            </div>
 
       {/* Main grey container wrapping everything */}
       <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-6">
@@ -478,6 +499,9 @@ export const Reports: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+          </div>
+        </main>
       </div>
     </div>
   );

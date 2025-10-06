@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { patientApiService } from "@/services/patientApiService";
 import Index from "./pages/Index";
 import PatientDetail from "./pages/PatientDetail";
+import { Reports } from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
@@ -45,6 +46,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/patient/:patientId" element={<PatientDetail />} />
+          <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/support" element={<Support />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
