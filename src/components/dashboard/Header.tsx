@@ -196,7 +196,7 @@ export const Header: React.FC = () => {
                 Naya Rachel
               </div>
               <div className="text-sm font-light text-[rgba(203,204,209,1)]">
-                rachel@gmail.com
+                rachel@stanford.edu
               </div>
             </div>
             <ChevronDown className="w-4 h-4 text-[rgba(203,204,209,1)] max-md:hidden" />
