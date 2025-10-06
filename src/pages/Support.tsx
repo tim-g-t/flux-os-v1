@@ -120,9 +120,9 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Call us directly</p>
                         </div>
                       </div>
-                      <a href="tel:+16464188070" className="text-white hover:text-blue-400 transition-colors">
-                        646 418 807-0
-                      </a>
+                      <span className="text-white">
+                        646 418 807 - 0
+                      </span>
                     </div>
 
                     {/* Email */}
@@ -136,9 +136,9 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Send us an email</p>
                         </div>
                       </div>
-                      <a href="mailto:founders@withflux.ai" className="text-white hover:text-blue-400 transition-colors">
-                        founders@withflux.ai
-                      </a>
+                      <span className="text-white">
+                        founders[at]withflux.ai
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -159,9 +159,9 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Founder & CEO</p>
                         </div>
                       </div>
-                      <a href="mailto:tim@withflux.ai" className="text-white hover:text-blue-400 transition-colors">
-                        tim@withflux.ai
-                      </a>
+                      <span className="text-white">
+                        tim[at]withflux.ai
+                      </span>
                     </div>
 
                     {/* Philipp - CTO */}
@@ -175,9 +175,9 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Founder & CTO</p>
                         </div>
                       </div>
-                      <a href="mailto:philipp@withflux.ai" className="text-white hover:text-blue-400 transition-colors">
-                        philipp@withflux.ai
-                      </a>
+                      <span className="text-white">
+                        philipp[at]withflux.ai
+                      </span>
                     </div>
                   </div>
                 </div>
