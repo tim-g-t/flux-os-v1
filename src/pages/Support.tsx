@@ -21,7 +21,7 @@ export const Support: React.FC = () => {
     } else if (view === 'Settings') {
       navigate('/settings');
     } else if (view === 'Reports') {
-      navigate('/');
+      navigate('/reports');
     } else if (view === 'Help & Support') {
       navigate('/support');
     }
@@ -120,9 +120,12 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Call us directly</p>
                         </div>
                       </div>
-                      <span className="text-white">
+                      <a 
+                        href="tel:+16464188070" 
+                        className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                      >
                         646 418 807 - 0
-                      </span>
+                      </a>
                     </div>
 
                     {/* Email */}
@@ -136,9 +139,12 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Send us an email</p>
                         </div>
                       </div>
-                      <span className="text-white">
+                      <a 
+                        href="mailto:founders@withflux.ai" 
+                        className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                      >
                         founders[at]withflux.ai
-                      </span>
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -159,9 +165,12 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Founder & CEO</p>
                         </div>
                       </div>
-                      <span className="text-white">
+                      <a 
+                        href="mailto:tim@withflux.ai" 
+                        className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                      >
                         tim[at]withflux.ai
-                      </span>
+                      </a>
                     </div>
 
                     {/* Philipp - CTO */}
@@ -175,9 +184,12 @@ export const Support: React.FC = () => {
                           <p className="text-sm text-gray-400">Founder & CTO</p>
                         </div>
                       </div>
-                      <span className="text-white">
+                      <a 
+                        href="mailto:philipp@withflux.ai" 
+                        className="text-white hover:text-blue-400 transition-colors cursor-pointer"
+                      >
                         philipp[at]withflux.ai
-                      </span>
+                      </a>
                     </div>
                   </div>
                 </div>

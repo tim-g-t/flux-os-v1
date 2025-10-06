@@ -36,6 +36,10 @@ export const Dashboard: React.FC = () => {
       console.log('Navigating to patient detail for:', selectedPatientId);
       navigate(`/patient/${selectedPatientId}`);
     }
+    // Handle navigation to Reports
+    if (view === 'Reports') {
+      navigate('/reports');
+    }
     // If Settings is selected, navigate to settings page
     if (view === 'Settings') {
       navigate('/settings');

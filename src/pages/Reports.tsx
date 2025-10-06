@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileDown, Download } from 'lucide-react';
 import { patientApiService } from '@/services/patientApiService';
 import { TransformedPatient } from '@/types/patient';
+import { Header } from '@/components/dashboard/Header';
 import { Checkbox } from '@/components/ui/checkbox';
 import { generateCSVReport, generateExcelReport, PatientReportData } from '@/utils/reportExport';
 import { toast } from '@/hooks/use-toast';
@@ -296,7 +297,8 @@ export const Reports: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="mb-6">
+      <Header />
+      <div className="mb-6 mt-8">
         <h1 className="text-3xl font-bold text-white mb-2">Clinical Reports</h1>
         <p className="text-gray-400">Generate and export patient data reports</p>
       </div>
