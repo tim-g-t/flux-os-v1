@@ -8,6 +8,7 @@ import { patientApiService } from "@/services/patientApiService";
 import Index from "./pages/Index";
 import PatientDetail from "./pages/PatientDetail";
 import Settings from "./pages/Settings";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => {
           <Route path="/" element={<Index />} />
           <Route path="/patient/:patientId" element={<PatientDetail />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/support" element={<Support />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
