@@ -303,12 +303,12 @@ export const Reports: React.FC = () => {
 
       <div className="space-y-6">
         {/* Patient Selection */}
-        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-white">Select Patients</h2>
+            <h2 className="text-xl font-medium text-white">Select Patients</h2>
             <button
               onClick={toggleAllPatients}
-              className="px-4 py-2 text-sm text-white bg-transparent border border-[rgba(64,66,73,1)] rounded-full hover:bg-white/5 transition-colors"
+              className="px-4 py-2 text-sm text-white bg-transparent border border-white rounded-[32px] hover:bg-white hover:text-black transition-colors"
             >
               {selectedPatients.length === patients.length ? 'Deselect All' : 'Select All'}
             </button>
@@ -348,8 +348,8 @@ export const Reports: React.FC = () => {
         {/* Metrics Selection */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Vital Signs */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Vital Signs</h2>
+          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-medium text-white mb-6">Vital Signs</h2>
             <div className="grid grid-cols-2 gap-3">
               {vitalOptions.map((vital) => {
                 const isSelected = selectedVitals.includes(vital.id);
@@ -375,8 +375,8 @@ export const Reports: React.FC = () => {
           </div>
 
           {/* Risk Scores */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Risk Scores</h2>
+          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-medium text-white mb-6">Risk Scores</h2>
             <div className="grid grid-cols-2 gap-3">
               {scoreOptions.map((score) => {
                 const isSelected = selectedScores.includes(score.id);
@@ -405,30 +405,14 @@ export const Reports: React.FC = () => {
         {/* Time Range & Export Format */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Time Range */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Time Range</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {timeRangeOptions.map((range) => (
-                <button
-                  key={range.id}
-                  onClick={() => setTimeRange(range.id)}
-                  className={`
-                    p-3 rounded-xl text-sm font-medium transition-all
-                    ${timeRange === range.id
-                      ? 'border-2 border-[#4169E1] bg-black text-white'
-                      : 'border border-[rgba(64,66,73,1)] bg-black text-gray-400 hover:border-[rgba(100,102,109,1)]'
-                    }
-                  `}
-                >
-                  {range.label}
-                </button>
-              ))}
-            </div>
+          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-medium text-white mb-6">Time Range</h2>
+...
           </div>
 
           {/* Export Format */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Export Format</h2>
+          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-medium text-white mb-6">Export Format</h2>
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => setExportFormat('csv')}
@@ -463,10 +447,10 @@ export const Reports: React.FC = () => {
         </div>
 
         {/* Summary & Export */}
-        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-3">Export Summary</h3>
+              <h3 className="text-lg font-medium text-white mb-3">Export Summary</h3>
               <div className="space-y-1.5 text-sm text-gray-400">
                 <p>• {selectedPatients.length} patient(s) selected</p>
                 <p>• {selectedVitals.length} vital sign(s) • {selectedScores.length} risk score(s)</p>
