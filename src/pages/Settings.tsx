@@ -14,6 +14,8 @@ export const Settings: React.FC = () => {
       navigate('/patient/bed_01');
     } else if (view === 'Reports') {
       navigate('/');
+    } else if (view === 'Help & Support') {
+      navigate('/support');
     }
   };
 
