@@ -119,9 +119,21 @@ export const Reports: React.FC = () => {
 
         setProgress(((i + 1) / selectedPatients.length) * 50);
 
-        const filteredVitals = patientApiService.getFilteredVitals(bedId, hours);
-        const latestVital = patient.vitals[patient.vitals.length - 1];
+        // Get filtered vitals from the selected timeframe
+        let filteredVitals = patientApiService.getFilteredVitals(bedId, hours);
+        
+        // Fallback: if no filtered vitals, use patient's vitals directly
+        if (!filteredVitals || filteredVitals.length === 0) {
+          const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+          filteredVitals = patient.vitals.filter(v => {
+            const vitalTime = new Date(v.time);
+            return vitalTime >= cutoffTime;
+          });
+        }
 
+        const latestVital = filteredVitals.length > 0 ? filteredVitals[filteredVitals.length - 1] : patient.vitals[patient.vitals.length - 1];
+
+        // Map vitals to trend format
         const vitalsTrend = filteredVitals.map(v => ({
           timestamp: v.time,
           hr: v.Pulse,
@@ -132,6 +144,7 @@ export const Reports: React.FC = () => {
           temp: v.Temp,
         }));
 
+        // Calculate risk scores for the latest vital
         const riskScores = latestVital ? {
           news2: calculateNEWS2({
             hr: latestVital.Pulse,
@@ -162,11 +175,34 @@ export const Reports: React.FC = () => {
           shockIndex: latestVital.Pulse / latestVital.BloodPressure.Systolic,
         } : undefined;
 
+        // Calculate risk scores for EACH vital in the timeframe
+        const riskScoresTrend = filteredVitals.map(v => {
+          const vitalReading = {
+            hr: v.Pulse,
+            bps: v.BloodPressure.Systolic,
+            bpd: v.BloodPressure.Diastolic,
+            rr: v.RespirationRate,
+            temp: v.Temp,
+            spo2: v.SpO2,
+          };
+
+          return {
+            timestamp: v.time,
+            news2: calculateNEWS2(vitalReading),
+            msi: calculateModifiedShockIndex(vitalReading),
+            respiratory: calculateRespiratoryIndex(vitalReading),
+            map: (v.BloodPressure.Systolic + 2 * v.BloodPressure.Diastolic) / 3,
+            pulsePressure: v.BloodPressure.Systolic - v.BloodPressure.Diastolic,
+            shockIndex: v.Pulse / v.BloodPressure.Systolic,
+          };
+        });
+
         reportData.push({
           patient,
           currentVitals: latestVital,
           riskScores,
           vitalsTrend,
+          riskScoresTrend,
         });
       }
 

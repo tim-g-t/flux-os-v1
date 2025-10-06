@@ -47,6 +47,15 @@ export interface PatientReportData {
     spo2: number;
     temp: number;
   }[];
+  riskScoresTrend?: {
+    timestamp: string;
+    news2: ClinicalScore;
+    msi: ClinicalScore;
+    respiratory: ClinicalScore;
+    map: number;
+    pulsePressure: number;
+    shockIndex: number;
+  }[];
 }
 
 const getRiskColor = (risk: 'low' | 'medium' | 'high' | 'critical'): string => {
@@ -311,14 +320,14 @@ export const generateCSVReport = (
   ];
 
   if (options.includeRiskScores) {
-    headers.push('NEWS2', 'NEWS2 Risk', 'MSI', 'MSI Risk', 'Respiratory Index', 'Resp Risk');
+    headers.push('NEWS2', 'NEWS2 Risk', 'MSI', 'MSI Risk', 'Respiratory Index', 'Resp Risk', 'MAP', 'Pulse Pressure', 'Shock Index');
   }
 
   const rows: string[][] = [];
 
   data.forEach(patientData => {
-    if (patientData.vitalsTrend) {
-      patientData.vitalsTrend.forEach(vital => {
+    if (patientData.vitalsTrend && patientData.vitalsTrend.length > 0) {
+      patientData.vitalsTrend.forEach((vital, index) => {
         const row = [
           patientData.patient.name,
           patientData.patient.bed,
@@ -333,14 +342,18 @@ export const generateCSVReport = (
           vital.temp.toFixed(1)
         ];
 
-        if (options.includeRiskScores && patientData.riskScores) {
+        if (options.includeRiskScores && patientData.riskScoresTrend && patientData.riskScoresTrend[index]) {
+          const riskScore = patientData.riskScoresTrend[index];
           row.push(
-            patientData.riskScores.news2.value.toString(),
-            patientData.riskScores.news2.risk,
-            patientData.riskScores.msi.value.toFixed(2),
-            patientData.riskScores.msi.risk,
-            patientData.riskScores.respiratory.value.toString(),
-            patientData.riskScores.respiratory.risk
+            riskScore.news2.value.toString(),
+            riskScore.news2.risk,
+            riskScore.msi.value.toFixed(2),
+            riskScore.msi.risk,
+            riskScore.respiratory.value.toString(),
+            riskScore.respiratory.risk,
+            riskScore.map.toFixed(0),
+            riskScore.pulsePressure.toFixed(0),
+            riskScore.shockIndex.toFixed(2)
           );
         }
 
@@ -457,32 +470,35 @@ export const generateExcelReport = async (
     XLSX.utils.book_append_sheet(wb, vitalsSheet, 'Vitals Time Series');
   }
 
-  // Create Risk Scores Sheet (if requested)
+  // Create Risk Scores Time Series Sheet (if requested)
   if (options.includeRiskScores) {
-    const scoresData: (string | number)[][] = [
-      ['Patient', 'Bed', 'NEWS2', 'NEWS2 Risk', 'Modified Shock Index', 'MSI Risk', 'Respiratory Index', 'Resp Risk', 'MAP', 'Pulse Pressure', 'Shock Index']
+    const scoresTimeSeriesData: (string | number)[][] = [
+      ['Patient', 'Bed', 'Timestamp', 'NEWS2', 'NEWS2 Risk', 'Modified Shock Index', 'MSI Risk', 'Respiratory Index', 'Resp Risk', 'MAP', 'Pulse Pressure', 'Shock Index']
     ];
 
     data.forEach(patientData => {
-      if (patientData.riskScores) {
-        scoresData.push([
-          patientData.patient.name,
-          patientData.patient.bed,
-          patientData.riskScores.news2.value,
-          patientData.riskScores.news2.risk,
-          patientData.riskScores.msi.value.toFixed(2),
-          patientData.riskScores.msi.risk,
-          patientData.riskScores.respiratory.value,
-          patientData.riskScores.respiratory.risk,
-          patientData.riskScores.map?.toFixed(0) || 'N/A',
-          patientData.riskScores.pulsePressure?.toFixed(0) || 'N/A',
-          patientData.riskScores.shockIndex?.toFixed(2) || 'N/A'
-        ]);
+      if (patientData.riskScoresTrend) {
+        patientData.riskScoresTrend.forEach(score => {
+          scoresTimeSeriesData.push([
+            patientData.patient.name,
+            patientData.patient.bed,
+            score.timestamp,
+            score.news2.value,
+            score.news2.risk,
+            score.msi.value.toFixed(2),
+            score.msi.risk,
+            score.respiratory.value,
+            score.respiratory.risk,
+            score.map.toFixed(0),
+            score.pulsePressure.toFixed(0),
+            score.shockIndex.toFixed(2)
+          ]);
+        });
       }
     });
 
-    const scoresSheet = XLSX.utils.aoa_to_sheet(scoresData);
-    XLSX.utils.book_append_sheet(wb, scoresSheet, 'Risk Scores');
+    const scoresTimeSeriesSheet = XLSX.utils.aoa_to_sheet(scoresTimeSeriesData);
+    XLSX.utils.book_append_sheet(wb, scoresTimeSeriesSheet, 'Risk Scores Time Series');
   }
 
   // Create Report Info Sheet
