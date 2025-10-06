@@ -303,12 +303,12 @@ export const Reports: React.FC = () => {
 
       <div className="space-y-6">
         {/* Patient Selection */}
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-medium text-white">Select Patients</h2>
+            <h2 className="text-xl font-semibold text-white">Select Patients</h2>
             <button
               onClick={toggleAllPatients}
-              className="px-4 py-2 text-sm text-white bg-transparent border border-white rounded-[32px] hover:bg-white hover:text-black transition-colors"
+              className="px-4 py-2 text-sm text-white bg-transparent border border-[rgba(64,66,73,1)] rounded-full hover:bg-white/5 transition-colors"
             >
               {selectedPatients.length === patients.length ? 'Deselect All' : 'Select All'}
             </button>
@@ -322,10 +322,10 @@ export const Reports: React.FC = () => {
                   key={patient.bed}
                   onClick={() => togglePatient(patient.bed)}
                   className={`
-                    relative p-5 rounded-3xl cursor-pointer transition-all bg-[rgba(20,21,25,1)]
+                    relative p-5 rounded-2xl cursor-pointer transition-all
                     ${isSelected 
-                      ? 'ring-2 ring-blue-500 bg-[rgba(30,31,40,1)]' 
-                      : 'hover:bg-[rgba(30,31,35,1)]'
+                      ? 'border-2 border-[#4169E1] bg-black' 
+                      : 'border border-[rgba(64,66,73,1)] bg-black hover:border-[rgba(100,102,109,1)]'
                     }
                   `}
                 >
@@ -336,7 +336,7 @@ export const Reports: React.FC = () => {
                     </span>
                   </div>
                   <h3 className="font-semibold text-white mb-1">{patient.name}</h3>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500">
                     {patient.bed} • {patient.age}y • {patient.gender}
                   </p>
                 </div>
@@ -348,56 +348,38 @@ export const Reports: React.FC = () => {
         {/* Metrics Selection */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Vital Signs */}
-          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-medium text-white mb-6">Vital Signs</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {vitalOptions.map((vital) => {
-                const isSelected = selectedVitals.includes(vital.id);
-                return (
-                  <div
-                    key={vital.id}
-                    onClick={() => toggleVital(vital.id)}
-                    className={`
-                      p-4 rounded-3xl cursor-pointer transition-all bg-[rgba(20,21,25,1)]
-                      ${isSelected 
-                        ? 'ring-2 ring-blue-500 bg-[rgba(30,31,40,1)]' 
-                        : 'hover:bg-[rgba(30,31,35,1)]'
-                      }
-                    `}
-                  >
-                    <div className="text-white text-sm font-medium text-center">
-                      {vital.label}
-                    </div>
-                  </div>
-                );
-              })}
+          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-semibold text-white mb-6">Vital Signs</h2>
+            <div className="space-y-4">
+              {vitalOptions.map((vital) => (
+                <div key={vital.id} className="flex items-center space-x-3">
+                  <Checkbox
+                    checked={selectedVitals.includes(vital.id)}
+                    onCheckedChange={() => toggleVital(vital.id)}
+                  />
+                  <label className="text-sm text-gray-300 cursor-pointer" onClick={() => toggleVital(vital.id)}>
+                    {vital.label}
+                  </label>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Risk Scores */}
-          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-medium text-white mb-6">Risk Scores</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {scoreOptions.map((score) => {
-                const isSelected = selectedScores.includes(score.id);
-                return (
-                  <div
-                    key={score.id}
-                    onClick={() => toggleScore(score.id)}
-                    className={`
-                      p-4 rounded-3xl cursor-pointer transition-all bg-[rgba(20,21,25,1)]
-                      ${isSelected 
-                        ? 'ring-2 ring-blue-500 bg-[rgba(30,31,40,1)]' 
-                        : 'hover:bg-[rgba(30,31,35,1)]'
-                      }
-                    `}
-                  >
-                    <div className="text-white text-sm font-medium text-center">
-                      {score.label}
-                    </div>
-                  </div>
-                );
-              })}
+          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-semibold text-white mb-6">Risk Scores</h2>
+            <div className="space-y-4">
+              {scoreOptions.map((score) => (
+                <div key={score.id} className="flex items-center space-x-3">
+                  <Checkbox
+                    checked={selectedScores.includes(score.id)}
+                    onCheckedChange={() => toggleScore(score.id)}
+                  />
+                  <label className="text-sm text-gray-300 cursor-pointer" onClick={() => toggleScore(score.id)}>
+                    {score.label}
+                  </label>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -405,14 +387,30 @@ export const Reports: React.FC = () => {
         {/* Time Range & Export Format */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Time Range */}
-          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-medium text-white mb-6">Time Range</h2>
-...
+          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-semibold text-white mb-6">Time Range</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {timeRangeOptions.map((range) => (
+                <button
+                  key={range.id}
+                  onClick={() => setTimeRange(range.id)}
+                  className={`
+                    p-3 rounded-xl text-sm font-medium transition-all
+                    ${timeRange === range.id
+                      ? 'border-2 border-[#4169E1] bg-black text-white'
+                      : 'border border-[rgba(64,66,73,1)] bg-black text-gray-400 hover:border-[rgba(100,102,109,1)]'
+                    }
+                  `}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Export Format */}
-          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-medium text-white mb-6">Export Format</h2>
+          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <h2 className="text-xl font-semibold text-white mb-6">Export Format</h2>
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => setExportFormat('csv')}
@@ -447,10 +445,10 @@ export const Reports: React.FC = () => {
         </div>
 
         {/* Summary & Export */}
-        <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-              <h3 className="text-lg font-medium text-white mb-3">Export Summary</h3>
+              <h3 className="text-lg font-semibold text-white mb-3">Export Summary</h3>
               <div className="space-y-1.5 text-sm text-gray-400">
                 <p>• {selectedPatients.length} patient(s) selected</p>
                 <p>• {selectedVitals.length} vital sign(s) • {selectedScores.length} risk score(s)</p>
