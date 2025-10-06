@@ -46,6 +46,7 @@ const App = () => {
           <Route path="/" element={<Index />} />
           <Route path="/patient/:patientId" element={<PatientDetail />} />
           <Route path="/settings" element={<Settings />} />
+          {/* Support page route */}
           <Route path="/support" element={<Support />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
