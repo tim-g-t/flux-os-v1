@@ -21,7 +21,7 @@ export const Support: React.FC = () => {
     } else if (view === 'Settings') {
       navigate('/settings');
     } else if (view === 'Reports') {
-      navigate('/');
+      navigate('/reports');
     } else if (view === 'Help & Support') {
       navigate('/support');
     }
