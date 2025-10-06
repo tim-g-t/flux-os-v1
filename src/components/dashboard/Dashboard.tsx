@@ -9,6 +9,7 @@ import { PatientMonitoringChart } from './PatientMonitoringChart';
 import { PatientOverviewAPI } from './PatientOverviewAPI';
 import { patientApiService } from '@/services/patientApiService';
 import { APIPatient } from '@/types/patient';
+import { Reports } from '@/pages/Reports';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -87,6 +88,8 @@ export const Dashboard: React.FC = () => {
             <div className="w-full">
               <PatientOverviewAPI onPatientSelect={handlePatientSelect} />
             </div>
+          ) : activeView === 'Reports' ? (
+            <Reports />
           ) : (
             <>
               <Header />
