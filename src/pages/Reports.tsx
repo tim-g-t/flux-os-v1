@@ -317,11 +317,6 @@ export const Reports: React.FC = () => {
         <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-6">
           <Header />
           <div className="w-full mt-8">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-white mb-2">Clinical Reports</h1>
-              <p className="text-gray-400">Generate and export patient data reports</p>
-            </div>
-
       {/* Main grey container wrapping everything */}
       <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-6">
         <div className="space-y-6">
