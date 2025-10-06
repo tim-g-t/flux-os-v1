@@ -6,14 +6,14 @@ import { Phone, Mail, Clock } from "lucide-react";
 
 const Support = () => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState("support");
+  const [activeView, setActiveView] = useState("Help & Support");
 
   const handleViewChange = (view: string) => {
     setActiveView(view);
-    if (view === "dashboard") navigate("/");
-    else if (view === "patient-detail") navigate("/patient/1");
-    else if (view === "settings") navigate("/settings");
-    else if (view === "support") navigate("/support");
+    if (view === "Dashboard") navigate("/");
+    else if (view === "Patient Detail") navigate("/patient/1");
+    else if (view === "Settings") navigate("/settings");
+    else if (view === "Help & Support") navigate("/support");
   };
 
   return (

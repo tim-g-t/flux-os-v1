@@ -40,6 +40,10 @@ export const Dashboard: React.FC = () => {
     if (view === 'Settings') {
       navigate('/settings');
     }
+    // If Help & Support is selected, navigate to support page
+    if (view === 'Help & Support') {
+      navigate('/support');
+    }
   };
 
   const handlePatientSelect = (patientId: string) => {
