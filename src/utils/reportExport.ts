@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
 import { TransformedPatient, APIVitalReading } from '@/types/patient';
 import {
   calculateNEWS2,
@@ -399,50 +400,120 @@ export const generateExcelReport = async (
   data: PatientReportData[],
   options: ReportOptions
 ): Promise<void> => {
-  const workbook: ExcelSheetData[] = [];
+  // Create a new workbook
+  const wb = XLSX.utils.book_new();
+
+  // Create Summary Sheet
+  const summaryData: (string | number)[][] = [
+    ['FLUX-OS Medical Report'],
+    ['Generated:', format(new Date(), 'PPpp')],
+    [],
+    ['Patient', 'Bed', 'Age', 'Gender', 'Current HR', 'Current BP', 'SpO2', 'Temp (°F)']
+  ];
 
   data.forEach(patientData => {
-    const sheetData: (string | number)[][] = [];
-
-    sheetData.push(['Patient Information']);
-    sheetData.push(['Name', patientData.patient.name]);
-    sheetData.push(['Bed', patientData.patient.bed]);
-    sheetData.push(['Age', patientData.patient.age]);
-    sheetData.push(['Gender', patientData.patient.gender]);
-    sheetData.push([]);
-
-    if (options.includeVitals && patientData.currentVitals) {
-      sheetData.push(['Current Vitals']);
-      sheetData.push(['Vital Sign', 'Value', 'Unit']);
-      sheetData.push(['Heart Rate', patientData.currentVitals.Pulse, 'bpm']);
-      sheetData.push(['Blood Pressure', `${patientData.currentVitals.BloodPressure.Systolic}/${patientData.currentVitals.BloodPressure.Diastolic}`, 'mmHg']);
-      sheetData.push(['Respiratory Rate', patientData.currentVitals.RespirationRate, 'breaths/min']);
-      sheetData.push(['SpO2', patientData.currentVitals.SpO2, '%']);
-      sheetData.push(['Temperature', patientData.currentVitals.Temp.toFixed(1), '°F']);
-      sheetData.push([]);
+    if (patientData.currentVitals) {
+      summaryData.push([
+        patientData.patient.name,
+        patientData.patient.bed,
+        patientData.patient.age,
+        patientData.patient.gender,
+        patientData.currentVitals.Pulse,
+        `${patientData.currentVitals.BloodPressure.Systolic}/${patientData.currentVitals.BloodPressure.Diastolic}`,
+        patientData.currentVitals.SpO2,
+        patientData.currentVitals.Temp.toFixed(1)
+      ]);
     }
-
-    if (options.includeRiskScores && patientData.riskScores) {
-      sheetData.push(['Clinical Risk Scores']);
-      sheetData.push(['Score', 'Value', 'Risk Level']);
-      sheetData.push(['NEWS2', patientData.riskScores.news2.value, patientData.riskScores.news2.risk]);
-      sheetData.push(['Modified Shock Index', patientData.riskScores.msi.value.toFixed(2), patientData.riskScores.msi.risk]);
-      sheetData.push(['Respiratory Index', patientData.riskScores.respiratory.value, patientData.riskScores.respiratory.risk]);
-    }
-
-    workbook.push({
-      name: patientData.patient.name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30),
-      data: sheetData
-    });
   });
 
-  const csvContent = workbook.map(sheet =>
-    sheet.data.map((row) => row.join(',')).join('\n')
-  ).join('\n\n');
+  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+  // Create Vitals Time Series Sheet (if requested)
+  if (options.includeVitals && options.includeTrends) {
+    const vitalsData: (string | number)[][] = [
+      ['Patient', 'Bed', 'Timestamp', 'Heart Rate (bpm)', 'BP Systolic', 'BP Diastolic', 'Respiratory Rate', 'SpO2 (%)', 'Temperature (°F)']
+    ];
+
+    data.forEach(patientData => {
+      if (patientData.vitalsTrend) {
+        patientData.vitalsTrend.forEach(vital => {
+          vitalsData.push([
+            patientData.patient.name,
+            patientData.patient.bed,
+            vital.timestamp,
+            vital.hr,
+            vital.bps,
+            vital.bpd,
+            vital.rr,
+            vital.spo2,
+            vital.temp.toFixed(1)
+          ]);
+        });
+      }
+    });
+
+    const vitalsSheet = XLSX.utils.aoa_to_sheet(vitalsData);
+    XLSX.utils.book_append_sheet(wb, vitalsSheet, 'Vitals Time Series');
+  }
+
+  // Create Risk Scores Sheet (if requested)
+  if (options.includeRiskScores) {
+    const scoresData: (string | number)[][] = [
+      ['Patient', 'Bed', 'NEWS2', 'NEWS2 Risk', 'Modified Shock Index', 'MSI Risk', 'Respiratory Index', 'Resp Risk', 'MAP', 'Pulse Pressure', 'Shock Index']
+    ];
+
+    data.forEach(patientData => {
+      if (patientData.riskScores) {
+        scoresData.push([
+          patientData.patient.name,
+          patientData.patient.bed,
+          patientData.riskScores.news2.value,
+          patientData.riskScores.news2.risk,
+          patientData.riskScores.msi.value.toFixed(2),
+          patientData.riskScores.msi.risk,
+          patientData.riskScores.respiratory.value,
+          patientData.riskScores.respiratory.risk,
+          patientData.riskScores.map?.toFixed(0) || 'N/A',
+          patientData.riskScores.pulsePressure?.toFixed(0) || 'N/A',
+          patientData.riskScores.shockIndex?.toFixed(2) || 'N/A'
+        ]);
+      }
+    });
+
+    const scoresSheet = XLSX.utils.aoa_to_sheet(scoresData);
+    XLSX.utils.book_append_sheet(wb, scoresSheet, 'Risk Scores');
+  }
+
+  // Create Report Info Sheet
+  const infoData: (string | number)[][] = [
+    ['Report Metadata'],
+    [],
+    ['Generated At:', format(new Date(), 'PPpp')],
+    ['Number of Patients:', data.length],
+    ['Includes Vitals:', options.includeVitals ? 'Yes' : 'No'],
+    ['Includes Risk Scores:', options.includeRiskScores ? 'Yes' : 'No'],
+    ['Includes Trends:', options.includeTrends ? 'Yes' : 'No'],
+    [],
+    ['Patients Included:'],
+    ['Name', 'Bed', 'Age', 'Gender']
+  ];
+
+  data.forEach(patientData => {
+    infoData.push([
+      patientData.patient.name,
+      patientData.patient.bed,
+      patientData.patient.age,
+      patientData.patient.gender
+    ]);
+  });
+
+  const infoSheet = XLSX.utils.aoa_to_sheet(infoData);
+  XLSX.utils.book_append_sheet(wb, infoSheet, 'Report Info');
+
+  // Generate and download the file
   const timestamp = format(new Date(), 'yyyy-MM-dd_HHmmss');
-  saveAs(blob, `FLUX-OS_Report_${timestamp}.xlsx`);
+  XLSX.writeFile(wb, `FLUX-OS_Report_${timestamp}.xlsx`);
 };
 
 interface RiskScoresData {
