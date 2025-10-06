@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { patientApiService } from "@/services/patientApiService";
 import Index from "./pages/Index";
 import PatientDetail from "./pages/PatientDetail";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/patient/:patientId" element={<PatientDetail />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

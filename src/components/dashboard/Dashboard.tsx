@@ -10,6 +10,7 @@ import { PatientOverviewAPI } from './PatientOverviewAPI';
 import { patientApiService } from '@/services/patientApiService';
 import { APIPatient } from '@/types/patient';
 import { Reports } from '@/pages/Reports';
+import Settings from '@/pages/Settings';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
@@ -34,6 +35,10 @@ export const Dashboard: React.FC = () => {
     if (view === 'Patient Detail') {
       console.log('Navigating to patient detail for:', selectedPatientId);
       navigate(`/patient/${selectedPatientId}`);
+    }
+    // If Settings is selected, navigate to settings page
+    if (view === 'Settings') {
+      navigate('/settings');
     }
   };
 
@@ -90,6 +95,13 @@ export const Dashboard: React.FC = () => {
             </div>
           ) : activeView === 'Reports' ? (
             <Reports />
+          ) : activeView === 'Settings' ? (
+            <>
+              <Header />
+              <div className="mt-8">
+                <Settings />
+              </div>
+            </>
           ) : (
             <>
               <Header />

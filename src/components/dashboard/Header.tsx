@@ -1,30 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Settings, Search, X, Loader2, ExternalLink } from 'lucide-react';
+import { Bell, Settings, Search, X, Loader2, ExternalLink, LogOut, User, FileText, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { askMedicalQuestion, MedicalResponse } from '../../services/geminiApiService';
 
 export const Header: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<MedicalResponse | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Handle click outside to close results
+  // Handle click outside to close results and profile menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
       }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
     };
 
-    if (showResults) {
+    if (showResults || showProfileMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showResults]);
+  }, [showResults, showProfileMenu]);
+
+  const handleLogout = () => {
+    console.log('Logging out...');
+    setShowProfileMenu(false);
+  };
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
@@ -169,20 +181,96 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Right User Profile */}
-        <div className="flex items-center gap-3 text-white pr-8 max-md:gap-2 max-md:pr-0">
-          <img
-            src="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/86424b5c1fe3cde9a22ae1043b230b6d1f8c873f?placeholderIfAbsent=true"
-            alt="User avatar"
-            className="w-[61px] h-[61px] rounded-[50px] object-cover max-md:w-[50px] max-md:h-[50px]"
-          />
-          <div className="flex flex-col max-md:hidden">
-            <div className="text-lg font-normal">
-              Naya Rachel
+        <div className="relative flex items-center gap-3 text-white pr-8 max-md:gap-2 max-md:pr-0" ref={profileRef}>
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            <img
+              src="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/86424b5c1fe3cde9a22ae1043b230b6d1f8c873f?placeholderIfAbsent=true"
+              alt="User avatar"
+              className="w-[61px] h-[61px] rounded-[50px] object-cover max-md:w-[50px] max-md:h-[50px]"
+            />
+            <div className="flex flex-col max-md:hidden">
+              <div className="text-lg font-normal">
+                Naya Rachel
+              </div>
+              <div className="text-sm font-light text-[rgba(203,204,209,1)]">
+                rachel@gmail.com
+              </div>
             </div>
-            <div className="text-sm font-light text-[rgba(203,204,209,1)]">
-              rachel@gmail.com
+            <ChevronDown className="w-4 h-4 text-[rgba(203,204,209,1)] max-md:hidden" />
+          </button>
+
+          {/* Profile Dropdown Menu */}
+          {showProfileMenu && (
+            <div className="absolute right-0 top-full mt-2 w-64 bg-[rgba(26,27,32,1)] rounded-2xl border border-[rgba(64,66,73,1)] shadow-2xl overflow-hidden z-50">
+              <div className="p-2">
+                <button
+                  onClick={() => {
+                    navigate('/settings');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[rgba(36,37,42,1)] transition-colors text-left"
+                >
+                  <div className="w-10 h-10 bg-[rgba(20,21,25,1)] rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Profile</div>
+                    <div className="text-gray-400 text-xs">View your profile</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    navigate('/settings');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[rgba(36,37,42,1)] transition-colors text-left"
+                >
+                  <div className="w-10 h-10 bg-[rgba(20,21,25,1)] rounded-full flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Settings</div>
+                    <div className="text-gray-400 text-xs">Manage preferences</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    navigate('/settings');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[rgba(36,37,42,1)] transition-colors text-left"
+                >
+                  <div className="w-10 h-10 bg-[rgba(20,21,25,1)] rounded-full flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">License</div>
+                    <div className="text-gray-400 text-xs">View license info</div>
+                  </div>
+                </button>
+
+                <div className="border-t border-[rgba(64,66,73,1)] my-2"></div>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-900/20 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 bg-red-900/30 rounded-full flex items-center justify-center">
+                    <LogOut className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <div className="text-red-500 font-medium text-sm">Log Out</div>
+                    <div className="text-gray-400 text-xs">Sign out of your account</div>
+                  </div>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </header>
