@@ -20,9 +20,9 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
   
   if (loading || !latestVitals) {
     return (
-      <section className="w-[82%] ml-5 max-md:w-full max-md:ml-0">
-        <div className="bg-black w-full mx-auto px-8 py-5 rounded-3xl max-md:max-w-full max-md:mt-10 max-md:px-5">
-          <div className="text-white text-xl font-medium">Loading vital signs...</div>
+      <section className="flex-1 xl:ml-5 max-xl:mt-4">
+        <div className="bg-black w-full px-4 lg:px-8 py-4 lg:py-5 rounded-2xl lg:rounded-3xl">
+          <div className="text-white text-lg lg:text-xl font-medium">Loading vital signs...</div>
         </div>
       </section>
     );
@@ -81,28 +81,26 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
   };
   
   return (
-    <section className="w-[82%] ml-5 max-md:w-full max-md:ml-0">
-      <div className="bg-black border border-[rgba(64,66,73,1)] w-full mx-auto px-8 py-5 rounded-[32px] max-md:max-w-full max-md:mt-10 max-md:px-5">
-        <div className="flex w-full items-stretch gap-[40px_100px] flex-wrap max-md:max-w-full">
-          <h2 className="text-white text-xl font-medium my-auto">
+    <section className="flex-1 xl:ml-5 max-xl:mt-4">
+      <div className="bg-black border border-[rgba(64,66,73,1)] w-full px-4 lg:px-8 py-4 lg:py-5 rounded-2xl lg:rounded-[32px]">
+        <div className="flex w-full items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-white text-lg lg:text-xl font-medium">
             Current Vital Signs
           </h2>
-          <div className="flex flex-1 justify-end">
-            <button className="border flex items-center gap-2.5 text-base text-white font-normal justify-center px-[26px] py-[18px] rounded-[32px] border-white border-solid max-md:px-5 hover:bg-white hover:text-black transition-colors">
-              <div className="self-stretch my-auto">
-                See all
-              </div>
+          <div className="flex gap-2">
+            <button className="border flex items-center gap-2 text-sm lg:text-base text-white font-normal justify-center px-4 lg:px-6 py-2.5 lg:py-3.5 rounded-3xl border-white border-solid hover:bg-white hover:text-black transition-colors">
+              <span>See all</span>
             </button>
-            <button className="border flex gap-2.5 p-[13px] rounded-[50px] border-white border-solid hover:bg-white hover:border-gray-300 transition-colors">
+            <button className="border flex p-2.5 lg:p-3 rounded-full border-white border-solid hover:bg-white hover:border-gray-300 transition-colors">
               <img
                 src="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/7e63f46350fe5103317be6aea16e4200977ace33?placeholderIfAbsent=true"
                 alt="Export data"
-                className="aspect-[1] object-contain w-[30px]"
+                className="aspect-square object-contain w-5 lg:w-7"
               />
             </button>
           </div>
         </div>
-        <div className="flex items-stretch gap-[21px] flex-wrap mt-4 max-md:max-w-full">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 lg:gap-4 mt-4">
           <MetricCard
             value={
               <span>
@@ -114,7 +112,6 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             changeType={hrChange.type as 'positive' | 'negative'}
             trendIndicator={hrChange.trendIndicator}
             label="Heart Rate"
-            className="pl-4 pr-[34px]"
             onClick={() => onMetricToggle('heartRate')}
             isSelected={selectedMetrics.includes('heartRate')}
           />
@@ -143,7 +140,6 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             changeType={spo2Change.type as 'positive' | 'negative'}
             trendIndicator={spo2Change.trendIndicator}
             label="SpO2"
-            className="pl-4 pr-[34px]"
             onClick={() => onMetricToggle('spo2')}
             isSelected={selectedMetrics.includes('spo2')}
           />
@@ -158,7 +154,6 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             changeType={tempChange.type as 'positive' | 'negative'}
             trendIndicator={tempChange.trendIndicator}
             label="Temp"
-            className="pl-[15px] pr-[34px]"
             onClick={() => onMetricToggle('temperature')}
             isSelected={selectedMetrics.includes('temperature')}
           />
@@ -173,7 +168,6 @@ export const VitalSigns: React.FC<VitalSignsProps> = ({ selectedMetrics, onMetri
             changeType={rrChange.type as 'positive' | 'negative'}
             trendIndicator={rrChange.trendIndicator}
             label="Respiratory Rate"
-            className="pl-4 pr-[34px]"
             onClick={() => onMetricToggle('respiratoryRate')}
             isSelected={selectedMetrics.includes('respiratoryRate')}
           />

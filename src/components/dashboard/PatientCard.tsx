@@ -16,23 +16,23 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   backgroundImage
 }) => {
   return (
-    <article className="w-[18%] max-md:w-full max-md:ml-0">
-      <div className="flex flex-col relative h-full grow text-xl text-white font-medium rounded-[32px] max-md:mt-10">
+    <article className="w-full xl:w-[240px] xl:min-w-[240px]">
+      <div className="flex flex-col relative h-full min-h-[280px] lg:min-h-[320px] text-xl text-white font-medium rounded-2xl lg:rounded-[32px]">
         <img
           src={backgroundImage}
           alt={`Patient ${patientName} background`}
-          className="absolute h-full w-full object-cover inset-0 rounded-[32px]"
+          className="absolute h-full w-full object-cover inset-0 rounded-2xl lg:rounded-[32px]"
         />
-        <div className="relative bg-black bg-opacity-60 flex flex-col h-full py-5 px-4 rounded-[32px] max-md:px-3">
-          <div className="text-xl font-medium text-white mb-auto">{bedNumber}</div>
-          <div className="flex flex-col gap-[9px] mt-auto">
-            <div className="text-xl font-medium">
+        <div className="relative bg-black bg-opacity-60 flex flex-col h-full py-4 lg:py-5 px-3 lg:px-4 rounded-2xl lg:rounded-[32px]">
+          <div className="text-lg lg:text-xl font-medium text-white mb-auto">{bedNumber}</div>
+          <div className="flex flex-col gap-2 lg:gap-[9px] mt-auto">
+            <div className="text-lg lg:text-xl font-medium">
               {patientName}
             </div>
-            <div className="text-xl font-medium">
+            <div className="text-lg lg:text-xl font-medium">
               {demographics}
             </div>
-            <div className="text-[44px] font-bold">
+            <div className="text-3xl lg:text-[44px] font-bold">
               {duration}
             </div>
           </div>
