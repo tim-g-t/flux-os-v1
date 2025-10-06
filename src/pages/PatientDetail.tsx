@@ -8,12 +8,14 @@ import { ClinicalRiskDashboard } from '@/components/dashboard/ClinicalRiskDashbo
 import { PatientMonitoringChart } from '@/components/dashboard/PatientMonitoringChart';
 import { VitalReading } from '@/types/vitals';
 import { patientApiService } from '@/services/patientApiService';
+import { useICUTimer } from '@/hooks/useICUTimer';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
 export const PatientDetail: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
+  const icuDuration = useICUTimer(142);
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Patient Detail');
   const [patient, setPatient] = useState<{
@@ -145,7 +147,7 @@ export const PatientDetail: React.FC = () => {
                   bedNumber={patient.bed || patient.id.replace('bed_', 'Bed ')}
                   patientName={patient.name}
                   demographics={`${patient.age}y / ${patient.gender}`}
-                  duration="142h"
+                  duration={icuDuration}
                   backgroundImage={patient.backgroundImage}
                 />
                 <VitalSigns

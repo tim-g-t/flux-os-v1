@@ -10,11 +10,13 @@ import { PatientOverviewAPI } from './PatientOverviewAPI';
 import { patientApiService } from '@/services/patientApiService';
 import { APIPatient } from '@/types/patient';
 import Settings from '@/pages/Settings';
+import { useICUTimer } from '@/hooks/useICUTimer';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const icuDuration = useICUTimer(142);
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(['heartRate']);
   const [activeView, setActiveView] = useState<string>('Dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string>('bed_01'); // Default to first patient
@@ -117,7 +119,7 @@ export const Dashboard: React.FC = () => {
                       bedNumber={selectedPatient ? selectedPatient.Bed : 'Loading...'}
                       patientName={selectedPatient ? selectedPatient.Name : 'Loading...'}
                       demographics={selectedPatient ? `${selectedPatient.Age} y / ${selectedPatient.Gender.toLowerCase()}` : 'Loading...'}
-                      duration="142h"
+                      duration={icuDuration}
                       backgroundImage="https://api.builder.io/api/v1/image/assets/8db776b9454a43dcb87153b359c694ad/2220c47d41763dce90f54255d3e777f05d747c07?placeholderIfAbsent=true"
                     />
                     <VitalSigns
