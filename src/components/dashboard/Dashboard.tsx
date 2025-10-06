@@ -9,7 +9,6 @@ import { PatientMonitoringChart } from './PatientMonitoringChart';
 import { PatientOverviewAPI } from './PatientOverviewAPI';
 import { patientApiService } from '@/services/patientApiService';
 import { APIPatient } from '@/types/patient';
-import { Reports } from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 
 type MetricType = 'heartRate' | 'bloodPressure' | 'temperature' | 'spo2' | 'respiratoryRate';
@@ -35,6 +34,10 @@ export const Dashboard: React.FC = () => {
     if (view === 'Patient Detail') {
       console.log('Navigating to patient detail for:', selectedPatientId);
       navigate(`/patient/${selectedPatientId}`);
+    }
+    // If Reports is selected, navigate to reports page
+    if (view === 'Reports') {
+      navigate('/reports');
     }
     // If Settings is selected, navigate to settings page
     if (view === 'Settings') {
@@ -97,8 +100,6 @@ export const Dashboard: React.FC = () => {
             <div className="w-full">
               <PatientOverviewAPI onPatientSelect={handlePatientSelect} />
             </div>
-          ) : activeView === 'Reports' ? (
-            <Reports />
           ) : activeView === 'Settings' ? (
             <>
               <Header />
