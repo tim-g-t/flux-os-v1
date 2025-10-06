@@ -301,178 +301,181 @@ export const Reports: React.FC = () => {
         <p className="text-gray-400">Generate and export patient data reports</p>
       </div>
 
-      <div className="space-y-6">
-        {/* Patient Selection */}
-        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-white">Select Patients</h2>
-            <button
-              onClick={toggleAllPatients}
-              className="px-4 py-2 text-sm text-white bg-transparent border border-[rgba(64,66,73,1)] rounded-full hover:bg-white/5 transition-colors"
-            >
-              {selectedPatients.length === patients.length ? 'Deselect All' : 'Select All'}
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {patients.map((patient) => {
-              const isSelected = selectedPatients.includes(patient.bed);
-              const risk = getRiskLevel(patient);
-              return (
-                <div
-                  key={patient.bed}
-                  onClick={() => togglePatient(patient.bed)}
-                  className={`
-                    relative p-5 rounded-2xl cursor-pointer transition-all
-                    ${isSelected 
-                      ? 'border-2 border-[#4169E1] bg-black' 
-                      : 'border border-[rgba(64,66,73,1)] bg-black hover:border-[rgba(100,102,109,1)]'
-                    }
-                  `}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <Checkbox checked={isSelected} />
-                    <span className={`text-xs font-semibold ${getRiskColor(risk)}`}>
-                      {risk.toUpperCase()}
-                    </span>
+      {/* Main grey container wrapping everything */}
+      <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-6">
+        <div className="space-y-6">
+          {/* Patient Selection - BLACK box */}
+          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-white">Select Patients</h2>
+              <button
+                onClick={toggleAllPatients}
+                className="px-4 py-2 text-sm text-white bg-transparent border border-[rgba(64,66,73,1)] rounded-full hover:bg-white/5 transition-colors"
+              >
+                {selectedPatients.length === patients.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {patients.map((patient) => {
+                const isSelected = selectedPatients.includes(patient.bed);
+                const risk = getRiskLevel(patient);
+                return (
+                  <div
+                    key={patient.bed}
+                    onClick={() => togglePatient(patient.bed)}
+                    className={`
+                      relative p-5 rounded-2xl cursor-pointer transition-all
+                      ${isSelected 
+                        ? 'border-2 border-[#4169E1] bg-[rgba(20,21,25,1)]' 
+                        : 'border border-[rgba(64,66,73,1)] bg-[rgba(20,21,25,1)] hover:border-[rgba(100,102,109,1)]'
+                      }
+                    `}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <Checkbox checked={isSelected} />
+                      <span className={`text-xs font-semibold ${getRiskColor(risk)}`}>
+                        {risk.toUpperCase()}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-white mb-1">{patient.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {patient.bed} • {patient.age}y • {patient.gender}
+                    </p>
                   </div>
-                  <h3 className="font-semibold text-white mb-1">{patient.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {patient.bed} • {patient.age}y • {patient.gender}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Metrics Selection */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Vital Signs */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Vital Signs</h2>
-            <div className="space-y-4">
-              {vitalOptions.map((vital) => (
-                <div key={vital.id} className="flex items-center space-x-3">
-                  <Checkbox
-                    checked={selectedVitals.includes(vital.id)}
-                    onCheckedChange={() => toggleVital(vital.id)}
-                  />
-                  <label className="text-sm text-gray-300 cursor-pointer" onClick={() => toggleVital(vital.id)}>
-                    {vital.label}
-                  </label>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Risk Scores */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Risk Scores</h2>
-            <div className="space-y-4">
-              {scoreOptions.map((score) => (
-                <div key={score.id} className="flex items-center space-x-3">
-                  <Checkbox
-                    checked={selectedScores.includes(score.id)}
-                    onCheckedChange={() => toggleScore(score.id)}
-                  />
-                  <label className="text-sm text-gray-300 cursor-pointer" onClick={() => toggleScore(score.id)}>
-                    {score.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Time Range & Export Format */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Time Range */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Time Range</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {timeRangeOptions.map((range) => (
-                <button
-                  key={range.id}
-                  onClick={() => setTimeRange(range.id)}
-                  className={`
-                    p-3 rounded-xl text-sm font-medium transition-all
-                    ${timeRange === range.id
-                      ? 'border-2 border-[#4169E1] bg-black text-white'
-                      : 'border border-[rgba(64,66,73,1)] bg-black text-gray-400 hover:border-[rgba(100,102,109,1)]'
-                    }
-                  `}
-                >
-                  {range.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Export Format */}
-          <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Export Format</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setExportFormat('csv')}
-                className={`
-                  p-5 rounded-xl transition-all
-                  ${exportFormat === 'csv'
-                    ? 'border-2 border-[#4169E1] bg-black'
-                    : 'border border-[rgba(64,66,73,1)] bg-black hover:border-[rgba(100,102,109,1)]'
-                  }
-                `}
-              >
-                <FileDown className="h-6 w-6 mx-auto mb-2 text-white" />
-                <p className="text-sm font-medium text-white">CSV</p>
-                <p className="text-xs text-gray-500">Spreadsheet</p>
-              </button>
-              <button
-                onClick={() => setExportFormat('xlsx')}
-                className={`
-                  p-5 rounded-xl transition-all
-                  ${exportFormat === 'xlsx'
-                    ? 'border-2 border-[#4169E1] bg-black'
-                    : 'border border-[rgba(64,66,73,1)] bg-black hover:border-[rgba(100,102,109,1)]'
-                  }
-                `}
-              >
-                <FileDown className="h-6 w-6 mx-auto mb-2 text-white" />
-                <p className="text-sm font-medium text-white">XLSX</p>
-                <p className="text-xs text-gray-500">Excel</p>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Summary & Export */}
-        <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-3">Export Summary</h3>
-              <div className="space-y-1.5 text-sm text-gray-400">
-                <p>• {selectedPatients.length} patient(s) selected</p>
-                <p>• {selectedVitals.length} vital sign(s) • {selectedScores.length} risk score(s)</p>
-                <p>• Time range: {timeRangeOptions.find(r => r.id === timeRange)?.label}</p>
-                <p>• Format: {exportFormat.toUpperCase()}</p>
+          {/* Metrics Selection */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Vital Signs - BLACK box */}
+            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+              <h2 className="text-xl font-semibold text-white mb-6">Vital Signs</h2>
+              <div className="space-y-4">
+                {vitalOptions.map((vital) => (
+                  <div key={vital.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      checked={selectedVitals.includes(vital.id)}
+                      onCheckedChange={() => toggleVital(vital.id)}
+                    />
+                    <label className="text-sm text-gray-300 cursor-pointer" onClick={() => toggleVital(vital.id)}>
+                      {vital.label}
+                    </label>
+                  </div>
+                ))}
               </div>
             </div>
-            <button
-              onClick={handleExport}
-              disabled={isGenerating || selectedPatients.length === 0}
-              className="rounded-full px-8 py-3 text-base font-semibold bg-[#4169E1] hover:bg-[#3559d1] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                  Generating {progress}%
-                </>
-              ) : (
-                <>
-                  <Download className="h-5 w-5 mr-2" />
-                  Export Report
-                </>
-              )}
-            </button>
+
+            {/* Risk Scores - BLACK box */}
+            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+              <h2 className="text-xl font-semibold text-white mb-6">Risk Scores</h2>
+              <div className="space-y-4">
+                {scoreOptions.map((score) => (
+                  <div key={score.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      checked={selectedScores.includes(score.id)}
+                      onCheckedChange={() => toggleScore(score.id)}
+                    />
+                    <label className="text-sm text-gray-300 cursor-pointer" onClick={() => toggleScore(score.id)}>
+                      {score.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Time Range & Export Format */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Time Range - BLACK box */}
+            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+              <h2 className="text-xl font-semibold text-white mb-6">Time Range</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {timeRangeOptions.map((range) => (
+                  <button
+                    key={range.id}
+                    onClick={() => setTimeRange(range.id)}
+                    className={`
+                      p-3 rounded-xl text-sm font-medium transition-all
+                      ${timeRange === range.id
+                        ? 'border-2 border-[#4169E1] bg-[rgba(20,21,25,1)] text-white'
+                        : 'border border-[rgba(64,66,73,1)] bg-[rgba(20,21,25,1)] text-gray-400 hover:border-[rgba(100,102,109,1)]'
+                      }
+                    `}
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Export Format - BLACK box */}
+            <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+              <h2 className="text-xl font-semibold text-white mb-6">Export Format</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => setExportFormat('csv')}
+                  className={`
+                    p-5 rounded-xl transition-all
+                    ${exportFormat === 'csv'
+                      ? 'border-2 border-[#4169E1] bg-[rgba(20,21,25,1)]'
+                      : 'border border-[rgba(64,66,73,1)] bg-[rgba(20,21,25,1)] hover:border-[rgba(100,102,109,1)]'
+                    }
+                  `}
+                >
+                  <FileDown className="h-6 w-6 mx-auto mb-2 text-white" />
+                  <p className="text-sm font-medium text-white">CSV</p>
+                  <p className="text-xs text-gray-500">Spreadsheet</p>
+                </button>
+                <button
+                  onClick={() => setExportFormat('xlsx')}
+                  className={`
+                    p-5 rounded-xl transition-all
+                    ${exportFormat === 'xlsx'
+                      ? 'border-2 border-[#4169E1] bg-[rgba(20,21,25,1)]'
+                      : 'border border-[rgba(64,66,73,1)] bg-[rgba(20,21,25,1)] hover:border-[rgba(100,102,109,1)]'
+                    }
+                  `}
+                >
+                  <FileDown className="h-6 w-6 mx-auto mb-2 text-white" />
+                  <p className="text-sm font-medium text-white">XLSX</p>
+                  <p className="text-xs text-gray-500">Excel</p>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary & Export - BLACK box */}
+          <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Export Summary</h3>
+                <div className="space-y-1.5 text-sm text-gray-400">
+                  <p>• {selectedPatients.length} patient(s) selected</p>
+                  <p>• {selectedVitals.length} vital sign(s) • {selectedScores.length} risk score(s)</p>
+                  <p>• Time range: {timeRangeOptions.find(r => r.id === timeRange)?.label}</p>
+                  <p>• Format: {exportFormat.toUpperCase()}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleExport}
+                disabled={isGenerating || selectedPatients.length === 0}
+                className="rounded-full px-8 py-3 text-base font-semibold bg-[#4169E1] hover:bg-[#3559d1] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                    Generating {progress}%
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-5 w-5 mr-2" />
+                    Export Report
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
