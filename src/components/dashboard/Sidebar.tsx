@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logo from '@/assets/logo.png';
 
 interface SidebarProps {
   activeView: string;
@@ -11,9 +12,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
       <div className="flex flex-col items-stretch pb-8">
         <div className="flex flex-col items-stretch pl-[23px] max-md:pl-5">
           <div className="flex items-center h-[97px] max-md:h-[80px]">
-            <div className="text-white text-[40px] font-bold ml-[41px] max-md:ml-2.5">
-              Flux
-            </div>
+            <img 
+              src={logo} 
+              alt="Flux Logo" 
+              className="w-20 h-20 ml-[41px] max-md:ml-2.5 max-md:w-16 max-md:h-16 object-contain"
+            />
           </div>
           <div className="mt-6 max-md:mt-10">
             <div className="text-white text-[32px] font-medium">
