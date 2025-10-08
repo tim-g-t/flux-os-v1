@@ -311,14 +311,14 @@ export const Reports: React.FC = () => {
   };
 
   return (
-    <div className="bg-black min-h-screen pl-4 lg:pl-6 pt-6 lg:pt-10 pr-4 lg:pr-6">
-      <div className="gap-3 lg:gap-5 flex max-md:flex-col max-md:items-stretch">
+    <div className="bg-black min-h-screen pl-[27px] pt-10 pr-6 max-md:pl-5">
+      <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
         <Sidebar activeView="Reports" onViewChange={handleViewChange} />
-        <main className="flex-1 lg:ml-5 max-md:ml-0 pb-8 lg:pb-16">
+        <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-6">
           <Header />
-          <div className="w-full mt-4 lg:mt-8">
+          <div className="w-full mt-8">
       {/* Main grey container wrapping everything */}
-      <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-2xl lg:rounded-[32px] p-4 lg:p-6">
+      <div className="bg-[rgba(26,27,32,1)] border border-[rgba(64,66,73,1)] rounded-[32px] p-6">
         <div className="space-y-6">
           {/* Patient Selection - BLACK box */}
           <div className="bg-black border border-[rgba(64,66,73,1)] rounded-[32px] p-8">
