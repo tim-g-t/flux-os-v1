@@ -135,14 +135,14 @@ export const PatientDetail: React.FC = () => {
   };
 
   return (
-    <div className="bg-black min-h-screen pl-[27px] pt-10 pr-12 max-md:pl-5">
-      <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
+    <div className="bg-black min-h-screen pl-4 lg:pl-6 pt-6 lg:pt-10 pr-4 lg:pr-6">
+      <div className="gap-3 lg:gap-5 flex max-md:flex-col max-md:items-stretch">
         <Sidebar activeView={activeView} onViewChange={handleViewChange} />
-        <main className="w-[83%] ml-5 max-md:w-full max-md:ml-0 pb-16 pr-6">
+        <main className="flex-1 lg:ml-5 max-md:ml-0 pb-8 lg:pb-16">
           <Header />
-          <div className="bg-[rgba(26,27,32,1)] border w-full mt-8 pt-6 px-6 pb-8 rounded-[32px] border-[rgba(64,66,73,1)] border-solid max-md:max-w-full max-md:px-5">
-            <div className="max-md:max-w-full max-md:mr-[9px]">
-              <div className="gap-5 flex items-stretch max-md:flex-col">
+          <div className="bg-[rgba(26,27,32,1)] border w-full mt-4 lg:mt-8 pt-4 lg:pt-6 px-3 lg:px-6 pb-6 lg:pb-8 rounded-2xl lg:rounded-[32px] border-[rgba(64,66,73,1)] border-solid">
+            <div className="w-full">
+              <div className="gap-3 lg:gap-5 flex items-stretch flex-col xl:flex-row">
                 <PatientCard
                   bedNumber={patient.bed || patient.id.replace('bed_', 'Bed ')}
                   patientName={patient.name}
@@ -157,7 +157,7 @@ export const PatientDetail: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="mt-6">
+            <div className="mt-4 lg:mt-6">
               <PatientMonitoringChart
                 selectedMetrics={selectedMetrics}
                 patientId={patientId}
