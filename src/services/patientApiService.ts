@@ -15,20 +15,20 @@ const withCorsProxy = (url: string): string => {
 // Use proxied endpoint in development to avoid CORS issues
 const API_URL = import.meta.env.DEV
   ? '/api/patient-data'  // Proxied through Vite in development
-  : withCorsProxy('http://a0g88w80ssoos8gkgcs408gs.157.90.23.234.sslip.io/data');
+  : withCorsProxy('http://hogksk4cswcw4w84os4cw4wg.94.130.27.224.sslip.io/data');
 // Use proxied endpoints in development to avoid CORS, CORS proxy in production
 const SNAPSHOT_API_URL = import.meta.env.DEV
   ? '/api/vitals/snapshot'
-  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/snapshot');
+  : withCorsProxy('http://s8cck0wcgw0scgw8cc8swg80.94.130.27.224.sslip.io/vitals/snapshot');
 const CURRENT_API_URL = import.meta.env.DEV
   ? '/api/vitals/current'
-  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/current');
+  : withCorsProxy('http://s8cck0wcgw0scgw8cc8swg80.94.130.27.224.sslip.io/vitals/current');
 const INCREMENT_API_URL = import.meta.env.DEV
   ? '/api/vitals/increment'
-  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/increment');
+  : withCorsProxy('http://s8cck0wcgw0scgw8cc8swg80.94.130.27.224.sslip.io/vitals/increment');
 const SAVE_API_URL = import.meta.env.DEV
   ? '/api/vitals/save'
-  : withCorsProxy('http://g04swcgcwsco40kw4s4gwko8.157.90.23.234.sslip.io/vitals/save');
+  : withCorsProxy('http://s8cck0wcgw0scgw8cc8swg80.94.130.27.224.sslip.io/vitals/save');
 const CACHE_KEY = 'patient_data_cache';
 const VITAL_HISTORY_KEY = 'patient_vital_history';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
